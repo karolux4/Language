@@ -1,0 +1,10 @@
+pickle f1 (int a, int b[]){
+	print(a);
+	print(b[0]);
+}
+pickle f2 () {
+   f1(0,[3]);
+}
+cannon {
+	f2();
+}

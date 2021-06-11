@@ -127,6 +127,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitProgram(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitProgram(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final ProgramContext program() throws RecognitionException {
@@ -198,6 +203,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitProc(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitProc(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -284,6 +294,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitArrayArg(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitArrayArg(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class VarArgContext extends ParsContext {
 		public TypeContext type() {
@@ -298,6 +313,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitVarArg(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitVarArg(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -365,6 +385,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitBlock(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitBlock(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -440,6 +465,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitIfStat(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitIfStat(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class BlockStatContext extends StatContext {
 		public BlockContext block() {
@@ -453,6 +483,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitBlockStat(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitBlockStat(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class PrintStatContext extends StatContext {
@@ -472,6 +507,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitPrintStat(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitPrintStat(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class SyncStatContext extends StatContext {
 		public TerminalNode SYNC() { return getToken(PickleCannonParser.SYNC, 0); }
@@ -486,6 +526,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitSyncStat(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitSyncStat(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class CallStatContext extends StatContext {
@@ -503,6 +548,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitCallStat(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitCallStat(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class ForkStatContext extends StatContext {
 		public TerminalNode FORK() { return getToken(PickleCannonParser.FORK, 0); }
@@ -517,6 +567,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitForkStat(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitForkStat(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class AssignStatContext extends StatContext {
@@ -537,6 +592,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitAssignStat(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitAssignStat(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class JoinStatContext extends StatContext {
 		public TerminalNode JOIN() { return getToken(PickleCannonParser.JOIN, 0); }
@@ -549,6 +609,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitJoinStat(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitJoinStat(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class VarDeclContext extends StatContext {
@@ -572,6 +637,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitVarDecl(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitVarDecl(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class WhileStatContext extends StatContext {
 		public TerminalNode WHILE() { return getToken(PickleCannonParser.WHILE, 0); }
@@ -591,6 +661,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitWhileStat(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitWhileStat(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -785,6 +860,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitIdTarget(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitIdTarget(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class ArrayTargetContext extends TargetContext {
 		public TerminalNode ID() { return getToken(PickleCannonParser.ID, 0); }
@@ -801,6 +881,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitArrayTarget(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitArrayTarget(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -870,6 +955,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitArgs(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitArgs(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -950,6 +1040,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitIndexExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitIndexExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class ParExprContext extends ExprContext {
 		public TerminalNode LPAR() { return getToken(PickleCannonParser.LPAR, 0); }
@@ -965,6 +1060,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitParExpr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitParExpr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class ArrayExprContext extends ExprContext {
@@ -989,6 +1089,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitArrayExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitArrayExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class TrueExprContext extends ExprContext {
 		public TerminalNode TRUE() { return getToken(PickleCannonParser.TRUE, 0); }
@@ -1000,6 +1105,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitTrueExpr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitTrueExpr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class CompExprContext extends ExprContext {
@@ -1021,6 +1131,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitCompExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitCompExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class PrfExprContext extends ExprContext {
 		public PrfOpContext prfOp() {
@@ -1038,6 +1153,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitPrfExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitPrfExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class FalseExprContext extends ExprContext {
 		public TerminalNode FALSE() { return getToken(PickleCannonParser.FALSE, 0); }
@@ -1049,6 +1169,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitFalseExpr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitFalseExpr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class BoolExprContext extends ExprContext {
@@ -1070,6 +1195,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitBoolExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitBoolExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class MultExprContext extends ExprContext {
 		public List<ExprContext> expr() {
@@ -1090,6 +1220,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitMultExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitMultExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class NumExprContext extends ExprContext {
 		public TerminalNode NUM() { return getToken(PickleCannonParser.NUM, 0); }
@@ -1101,6 +1236,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitNumExpr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitNumExpr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class PlusExprContext extends ExprContext {
@@ -1122,6 +1262,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitPlusExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitPlusExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class IdExprContext extends ExprContext {
 		public TerminalNode ID() { return getToken(PickleCannonParser.ID, 0); }
@@ -1133,6 +1278,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitIdExpr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitIdExpr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1364,6 +1514,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitPrfOp(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitPrfOp(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final PrfOpContext prfOp() throws RecognitionException {
@@ -1410,6 +1565,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitMultOp(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitMultOp(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1458,6 +1618,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitPlusOp(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitPlusOp(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final PlusOpContext plusOp() throws RecognitionException {
@@ -1504,6 +1669,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitBoolOp(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitBoolOp(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1555,6 +1725,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitCompOp(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitCompOp(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1610,6 +1785,11 @@ public class PickleCannonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitIntType(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitIntType(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class BoolTypeContext extends TypeContext {
 		public TerminalNode BOOL() { return getToken(PickleCannonParser.BOOL, 0); }
@@ -1621,6 +1801,11 @@ public class PickleCannonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitBoolType(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitBoolType(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
