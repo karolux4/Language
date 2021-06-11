@@ -1,13 +1,13 @@
-grammar Grammar;
+grammar PickleCannon;
 
 import Vocab;
 
 /** Program (functions are declared before) */
-program: proc* PROGRAM block EOF
+program: proc* CANNON block EOF
 	   ;
 
 /** Procedure declaration */
-proc: PROC ID LPAR (pars (COMMA pars)* )? RPAR block
+proc: PICKLE ID LPAR (pars (COMMA pars)* )? RPAR block
 	;
 
 /** Procedure parameters */
