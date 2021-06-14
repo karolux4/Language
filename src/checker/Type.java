@@ -2,6 +2,10 @@ package checker;
 
 public abstract class Type {
 
+	/** The singleton instance of the {@link Bool} type. */
+	public static final Type BOOL = new Bool();
+	/** The singleton instance of the {@link Int} type. */
+	public static final Type INT = new Int();
 	private final TypeKind kind;
 	
 	/** Constructor for subclasses. */
@@ -51,7 +55,7 @@ public abstract class Type {
 		}
 	}
 	
-	/** Representation of Pascal Array types. */
+	/** Representation of Array types. */
 	static public class Array extends Type {
 		private final int size;
 		private final Type elemType;

@@ -9,7 +9,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.Assert;
 import org.junit.Test;
 
-import checker.ErrorListener;
+import compiler.ErrorListener;
 import grammar.PickleCannonLexer;
 import grammar.PickleCannonParser;
 

@@ -43,12 +43,19 @@ public interface PickleCannonVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBlock(PickleCannonParser.BlockContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code varDecl}
+	 * Visit a parse tree produced by the {@code simpleVarStat}
 	 * labeled alternative in {@link PickleCannonParser#stat}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitVarDecl(PickleCannonParser.VarDeclContext ctx);
+	T visitSimpleVarStat(PickleCannonParser.SimpleVarStatContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code arrayVarStat}
+	 * labeled alternative in {@link PickleCannonParser#stat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayVarStat(PickleCannonParser.ArrayVarStatContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code assignStat}
 	 * labeled alternative in {@link PickleCannonParser#stat}.
@@ -99,19 +106,19 @@ public interface PickleCannonVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBlockStat(PickleCannonParser.BlockStatContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code callStat}
-	 * labeled alternative in {@link PickleCannonParser#stat}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitCallStat(PickleCannonParser.CallStatContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code printStat}
 	 * labeled alternative in {@link PickleCannonParser#stat}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitPrintStat(PickleCannonParser.PrintStatContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code callStat}
+	 * labeled alternative in {@link PickleCannonParser#stat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCallStat(PickleCannonParser.CallStatContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code idTarget}
 	 * labeled alternative in {@link PickleCannonParser#target}.

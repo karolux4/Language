@@ -62,17 +62,29 @@ public interface PickleCannonListener extends ParseTreeListener {
 	 */
 	void exitBlock(PickleCannonParser.BlockContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code varDecl}
+	 * Enter a parse tree produced by the {@code simpleVarStat}
 	 * labeled alternative in {@link PickleCannonParser#stat}.
 	 * @param ctx the parse tree
 	 */
-	void enterVarDecl(PickleCannonParser.VarDeclContext ctx);
+	void enterSimpleVarStat(PickleCannonParser.SimpleVarStatContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code varDecl}
+	 * Exit a parse tree produced by the {@code simpleVarStat}
 	 * labeled alternative in {@link PickleCannonParser#stat}.
 	 * @param ctx the parse tree
 	 */
-	void exitVarDecl(PickleCannonParser.VarDeclContext ctx);
+	void exitSimpleVarStat(PickleCannonParser.SimpleVarStatContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code arrayVarStat}
+	 * labeled alternative in {@link PickleCannonParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void enterArrayVarStat(PickleCannonParser.ArrayVarStatContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code arrayVarStat}
+	 * labeled alternative in {@link PickleCannonParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void exitArrayVarStat(PickleCannonParser.ArrayVarStatContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code assignStat}
 	 * labeled alternative in {@link PickleCannonParser#stat}.
@@ -158,18 +170,6 @@ public interface PickleCannonListener extends ParseTreeListener {
 	 */
 	void exitBlockStat(PickleCannonParser.BlockStatContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code callStat}
-	 * labeled alternative in {@link PickleCannonParser#stat}.
-	 * @param ctx the parse tree
-	 */
-	void enterCallStat(PickleCannonParser.CallStatContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code callStat}
-	 * labeled alternative in {@link PickleCannonParser#stat}.
-	 * @param ctx the parse tree
-	 */
-	void exitCallStat(PickleCannonParser.CallStatContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code printStat}
 	 * labeled alternative in {@link PickleCannonParser#stat}.
 	 * @param ctx the parse tree
@@ -181,6 +181,18 @@ public interface PickleCannonListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitPrintStat(PickleCannonParser.PrintStatContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code callStat}
+	 * labeled alternative in {@link PickleCannonParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void enterCallStat(PickleCannonParser.CallStatContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code callStat}
+	 * labeled alternative in {@link PickleCannonParser#stat}.
+	 * @param ctx the parse tree
+	 */
+	void exitCallStat(PickleCannonParser.CallStatContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code idTarget}
 	 * labeled alternative in {@link PickleCannonParser#target}.

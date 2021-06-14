@@ -76,13 +76,25 @@ public class PickleCannonBaseListener implements PickleCannonListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterVarDecl(PickleCannonParser.VarDeclContext ctx) { }
+	@Override public void enterSimpleVarStat(PickleCannonParser.SimpleVarStatContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitVarDecl(PickleCannonParser.VarDeclContext ctx) { }
+	@Override public void exitSimpleVarStat(PickleCannonParser.SimpleVarStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterArrayVarStat(PickleCannonParser.ArrayVarStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitArrayVarStat(PickleCannonParser.ArrayVarStatContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -172,18 +184,6 @@ public class PickleCannonBaseListener implements PickleCannonListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCallStat(PickleCannonParser.CallStatContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitCallStat(PickleCannonParser.CallStatContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterPrintStat(PickleCannonParser.PrintStatContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -191,6 +191,18 @@ public class PickleCannonBaseListener implements PickleCannonListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitPrintStat(PickleCannonParser.PrintStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterCallStat(PickleCannonParser.CallStatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCallStat(PickleCannonParser.CallStatContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

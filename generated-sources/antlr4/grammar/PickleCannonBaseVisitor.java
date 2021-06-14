@@ -52,7 +52,14 @@ public class PickleCannonBaseVisitor<T> extends AbstractParseTreeVisitor<T> impl
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitVarDecl(PickleCannonParser.VarDeclContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSimpleVarStat(PickleCannonParser.SimpleVarStatContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitArrayVarStat(PickleCannonParser.ArrayVarStatContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -108,14 +115,14 @@ public class PickleCannonBaseVisitor<T> extends AbstractParseTreeVisitor<T> impl
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitCallStat(PickleCannonParser.CallStatContext ctx) { return visitChildren(ctx); }
+	@Override public T visitPrintStat(PickleCannonParser.PrintStatContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitPrintStat(PickleCannonParser.PrintStatContext ctx) { return visitChildren(ctx); }
+	@Override public T visitCallStat(PickleCannonParser.CallStatContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

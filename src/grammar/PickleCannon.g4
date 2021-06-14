@@ -2,7 +2,7 @@ grammar PickleCannon;
 
 import Vocab;
 
-/** Program (functions are declared before) */
+/** Program (functions are declared before main program) */
 program: proc* CANNON block EOF
 	   ;
 
@@ -20,7 +20,8 @@ block: LBRACE stat* RBRACE
      ; 
 
 /** Statements */
-stat: type target (ASSIGN expr)? SEMI			#varDecl
+stat: type ID (ASSIGN expr)? SEMI				#simpleVarStat
+	| type ID LSQ expr RSQ (ASSIGN expr)? SEMI	#arrayVarStat
 	| target ASSIGN expr SEMI					#assignStat
 	| IF LPAR expr RPAR block (ELSE block)? 	#ifStat 
 	| WHILE LPAR expr RPAR block			    #whileStat 
@@ -28,8 +29,8 @@ stat: type target (ASSIGN expr)? SEMI			#varDecl
 	| JOIN SEMI									#joinStat
 	| SYNC block								#syncStat
 	| block										#blockStat
-	| ID args SEMI								#callStat
 	| PRINT LPAR expr RPAR SEMI					#printStat
+	| ID args SEMI								#callStat
 	;
 	
 /** Target of an assignment */

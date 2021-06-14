@@ -1,4 +1,4 @@
-package checker;
+package compiler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,5 +37,16 @@ public class ErrorListener  extends BaseErrorListener {
 	/** Returns the (possibly empty) list of errors collected by the listener. */
 	public List<String> getErrors() {
 		return this.errors;
+	}
+	
+	/** Throws an exception if any errors were reported;
+	 * does nothing otherwise.
+	 * @throws ParseException an exception containing all errors found 
+	 * during listening
+	 */
+	public void throwException() throws ParseException {
+		if (hasErrors()) {
+			throw new ParseException(getErrors());
+		}
 	}
 }
