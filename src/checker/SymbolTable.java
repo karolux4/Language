@@ -10,12 +10,14 @@ public class SymbolTable {
 
 	/** Constructs a fresh, initially empty symbol table. */
 	public SymbolTable() {
+		System.out.println("Initial scope");
 		this.scopes = new Stack<>();
 		this.sharedScope = new Scope();
 		openScope();
 	}
 	/** Adds a next deeper scope level. */
 	public void openScope() {
+		System.out.println("Open new scope");
 		this.scopes.push(new Scope());
 	}
 
@@ -23,6 +25,7 @@ public class SymbolTable {
 	 * @throws RuntimeException if the table only contains the outer scope.
 	 */
 	public void closeScope() {
+		System.out.println("Close scope");
 		if (this.scopes.size() == 1) {
 			throw new IllegalStateException("Can't close outer scope");
 		}
@@ -31,6 +34,7 @@ public class SymbolTable {
 	
 	/** Adds a new nested level in a scope. */
 	public void openNestedLevel() {
+		System.out.println("Open new nested level");
 		this.scopes.peek().openNestedLevel();
 	}
 
@@ -38,6 +42,7 @@ public class SymbolTable {
 	 * @throws RuntimeException if the scope only contains the outer level.
 	 */
 	public void closeNestedLevel() {
+		System.out.println("Close new nested level");
 		this.scopes.peek().closeNestedLevel();
 	}
 

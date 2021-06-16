@@ -8,7 +8,6 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
-import checker.Type.Array;
 import compiler.ParseException;
 import grammar.PickleCannonBaseListener;
 import grammar.PickleCannonParser.ArrayExprContext;
@@ -34,6 +33,7 @@ import grammar.PickleCannonParser.ParExprContext;
 import grammar.PickleCannonParser.PlusExprContext;
 import grammar.PickleCannonParser.PrfExprContext;
 import grammar.PickleCannonParser.PrintStatContext;
+import grammar.PickleCannonParser.ProcContext;
 import grammar.PickleCannonParser.ProgramContext;
 import grammar.PickleCannonParser.SimpleVarStatContext;
 import grammar.PickleCannonParser.SyncStatContext;
@@ -67,6 +67,11 @@ public class Checker extends PickleCannonBaseListener {
 	@Override
 	public void exitProgram(ProgramContext ctx) {
 		setEntry(ctx,entry(ctx.block()));
+	}
+	
+	@Override
+	public void enterProc(ProcContext ctx) {
+		
 	}
 	
 	@Override
@@ -232,6 +237,9 @@ public class Checker extends PickleCannonBaseListener {
 	@Override
 	public void exitCompExpr(CompExprContext ctx) {
 		if (ctx.compOp().EQ() != null || ctx.compOp().NE() != null) {
+			if(getType(ctx.expr(0)).getKind()==TypeKind.PROC) {
+				addError(ctx,"Procedure type cannot be compared");
+			}
 			checkType(ctx.expr(1), getType(ctx.expr(0)));
 		} else {
 			checkType(ctx.expr(0), Type.INT);

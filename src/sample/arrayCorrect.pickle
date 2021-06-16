@@ -16,6 +16,8 @@ cannon{
 			c[1]=true;
 		}
 	}
+	int d[2];
+	bool e = d==b;
 	print(a);
 	print(b);
 	print(c);

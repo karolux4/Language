@@ -1,5 +1,8 @@
 package checker;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class Type {
 
 	/** The singleton instance of the {@link Bool} type. */
@@ -98,6 +101,7 @@ public abstract class Type {
 		}
 
 		@Override
+		/** Returns if types are equal by type and class (not by value or size)*/
 		public boolean equals(Object obj) {
 			if (this == obj) {
 				return true;
@@ -109,12 +113,77 @@ public abstract class Type {
 			if (!this.elemType.equals(other.elemType)) {
 				return false;
 			}
-			if (this.size != other.size) {
+			return true;
+		}
+		
+		/** Returns if types are equal by type and class (not by value or size)*/
+		public boolean equalsBySize(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof Array)) {
+				return false;
+			}
+			Array other = (Array) obj;
+			if (!this.elemType.equals(other.elemType)) {
+				return false;
+			}
+			if(this.size!=other.size) {
 				return false;
 			}
 			return true;
 		}
 
+	}
+	
+	/** Representation of Pascal Function types. */
+	static public class Proc extends Type {
+		/** List of parameter types. */
+		private final List<Type> paramTypes;
+
+		/** Constructs a new function type. */
+		public Proc(List<Type> paramTypes) {
+			super(TypeKind.PROC);
+			this.paramTypes = new ArrayList<>(paramTypes);
+		}
+
+		/** Returns the list of parameter types of this function type. */
+		public List<Type> getParamTypes() {
+			return this.paramTypes;
+		}
+
+		@Override
+		public int size() {
+			return 4;
+		}
+
+		@Override
+		public String toString() {
+			return "Proc " + this.paramTypes + " -> ";
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + this.paramTypes.hashCode();
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof Proc)) {
+				return false;
+			}
+			Proc other = (Proc) obj;
+			if (!this.paramTypes.equals(other.paramTypes)) {
+				return false;
+			}
+			return true;
+		}
 	}
 	
 }
