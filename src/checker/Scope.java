@@ -36,6 +36,14 @@ public class Scope {
 		types.pop();
 		offsets.pop();
 	}
+	
+	/**
+	 * Return current scope depth
+	 * @return current scope depth
+	 */
+	public int getScopeDepth() {
+		return this.types.size();
+	}
 
 	/** Tests if a given identifier is declared in this scope. */
 	public boolean contains(String id) {

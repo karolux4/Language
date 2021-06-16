@@ -1,0 +1,24 @@
+pickle p1 (int a, bool c[]){
+	a=3;
+	c[2]=false;
+	int b = 2;
+	print(b+a);
+}
+
+pickle p2 (){
+	int e=3;
+	int k=5;
+	k=k*e;
+	print(k);
+}
+
+cannon{
+	int shared c=2;
+	fork{
+		int a=3;
+		print(a);
+	}
+	join;
+	int a=2;
+	print(a);
+}

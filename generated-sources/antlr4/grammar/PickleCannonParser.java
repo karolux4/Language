@@ -278,45 +278,45 @@ public class PickleCannonParser extends Parser {
 			super.copyFrom(ctx);
 		}
 	}
-	public static class ArrayArgContext extends ParsContext {
+	public static class ArrayParContext extends ParsContext {
 		public TypeContext type() {
 			return getRuleContext(TypeContext.class,0);
 		}
 		public TerminalNode ID() { return getToken(PickleCannonParser.ID, 0); }
 		public TerminalNode LSQ() { return getToken(PickleCannonParser.LSQ, 0); }
 		public TerminalNode RSQ() { return getToken(PickleCannonParser.RSQ, 0); }
-		public ArrayArgContext(ParsContext ctx) { copyFrom(ctx); }
+		public ArrayParContext(ParsContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).enterArrayArg(this);
+			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).enterArrayPar(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitArrayArg(this);
+			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitArrayPar(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitArrayArg(this);
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitArrayPar(this);
 			else return visitor.visitChildren(this);
 		}
 	}
-	public static class VarArgContext extends ParsContext {
+	public static class VarParContext extends ParsContext {
 		public TypeContext type() {
 			return getRuleContext(TypeContext.class,0);
 		}
 		public TerminalNode ID() { return getToken(PickleCannonParser.ID, 0); }
-		public VarArgContext(ParsContext ctx) { copyFrom(ctx); }
+		public VarParContext(ParsContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).enterVarArg(this);
+			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).enterVarPar(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitVarArg(this);
+			if ( listener instanceof PickleCannonListener ) ((PickleCannonListener)listener).exitVarPar(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitVarArg(this);
+			if ( visitor instanceof PickleCannonVisitor ) return ((PickleCannonVisitor<? extends T>)visitor).visitVarPar(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -329,7 +329,7 @@ public class PickleCannonParser extends Parser {
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,3,_ctx) ) {
 			case 1:
-				_localctx = new VarArgContext(_localctx);
+				_localctx = new VarParContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(54);
@@ -339,7 +339,7 @@ public class PickleCannonParser extends Parser {
 				}
 				break;
 			case 2:
-				_localctx = new ArrayArgContext(_localctx);
+				_localctx = new ArrayParContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(57);

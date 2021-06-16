@@ -17,6 +17,7 @@ public class CheckerTest {
 	public void checkerTest() {
 		checkSuccess("src/sample/fork.pickle");
 		checkSuccess("src/sample/arrayCorrect.pickle");
+		checkSuccess("src/sample/procCorrect.pickle");
 		checkFail("src/sample/arrayError.pickle");
 		checkFail("src/sample/error1.pickle");
 		checkFail("src/sample/error2.pickle");

@@ -2,7 +2,7 @@ grammar PickleCannon;
 
 import Vocab;
 
-/** Program (functions are declared before main program) */
+/** Program (procedures are declared before main program) */
 program: proc* CANNON block EOF
 	   ;
 
@@ -11,8 +11,8 @@ proc: PICKLE ID LPAR (pars (COMMA pars)* )? RPAR block
 	;
 
 /** Procedure parameters */
-pars : type ID			#varArg
-     | type ID LSQ RSQ	#arrayArg
+pars : type ID			#varPar
+     | type ID LSQ RSQ	#arrayPar
      ;
 
 /** Block */

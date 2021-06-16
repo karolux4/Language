@@ -125,4 +125,12 @@ public class SymbolTable {
 		return result == null ? -1 : result;
 	}
 	
+	/**
+	 * Returns current scope depth
+	 * @return Current scope depth
+	 */
+	public int scopeDepth() {
+		return this.scopes.peek().getScopeDepth();
+	}
+	
 }

@@ -31,14 +31,14 @@ public class PickleCannonBaseVisitor<T> extends AbstractParseTreeVisitor<T> impl
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitVarArg(PickleCannonParser.VarArgContext ctx) { return visitChildren(ctx); }
+	@Override public T visitVarPar(PickleCannonParser.VarParContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitArrayArg(PickleCannonParser.ArrayArgContext ctx) { return visitChildren(ctx); }
+	@Override public T visitArrayPar(PickleCannonParser.ArrayParContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

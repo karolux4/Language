@@ -28,29 +28,29 @@ public interface PickleCannonListener extends ParseTreeListener {
 	 */
 	void exitProc(PickleCannonParser.ProcContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code varArg}
+	 * Enter a parse tree produced by the {@code varPar}
 	 * labeled alternative in {@link PickleCannonParser#pars}.
 	 * @param ctx the parse tree
 	 */
-	void enterVarArg(PickleCannonParser.VarArgContext ctx);
+	void enterVarPar(PickleCannonParser.VarParContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code varArg}
+	 * Exit a parse tree produced by the {@code varPar}
 	 * labeled alternative in {@link PickleCannonParser#pars}.
 	 * @param ctx the parse tree
 	 */
-	void exitVarArg(PickleCannonParser.VarArgContext ctx);
+	void exitVarPar(PickleCannonParser.VarParContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code arrayArg}
+	 * Enter a parse tree produced by the {@code arrayPar}
 	 * labeled alternative in {@link PickleCannonParser#pars}.
 	 * @param ctx the parse tree
 	 */
-	void enterArrayArg(PickleCannonParser.ArrayArgContext ctx);
+	void enterArrayPar(PickleCannonParser.ArrayParContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code arrayArg}
+	 * Exit a parse tree produced by the {@code arrayPar}
 	 * labeled alternative in {@link PickleCannonParser#pars}.
 	 * @param ctx the parse tree
 	 */
-	void exitArrayArg(PickleCannonParser.ArrayArgContext ctx);
+	void exitArrayPar(PickleCannonParser.ArrayParContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link PickleCannonParser#block}.
 	 * @param ctx the parse tree

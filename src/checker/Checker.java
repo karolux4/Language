@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import compiler.ParseException;
 import grammar.PickleCannonBaseListener;
 import grammar.PickleCannonParser.ArrayExprContext;
+import grammar.PickleCannonParser.ArrayParContext;
 import grammar.PickleCannonParser.ArrayTargetContext;
 import grammar.PickleCannonParser.ArrayVarStatContext;
 import grammar.PickleCannonParser.AssignStatContext;
@@ -30,6 +31,7 @@ import grammar.PickleCannonParser.JoinStatContext;
 import grammar.PickleCannonParser.MultExprContext;
 import grammar.PickleCannonParser.NumExprContext;
 import grammar.PickleCannonParser.ParExprContext;
+import grammar.PickleCannonParser.ParsContext;
 import grammar.PickleCannonParser.PlusExprContext;
 import grammar.PickleCannonParser.PrfExprContext;
 import grammar.PickleCannonParser.PrintStatContext;
@@ -38,6 +40,7 @@ import grammar.PickleCannonParser.ProgramContext;
 import grammar.PickleCannonParser.SimpleVarStatContext;
 import grammar.PickleCannonParser.SyncStatContext;
 import grammar.PickleCannonParser.TrueExprContext;
+import grammar.PickleCannonParser.VarParContext;
 import grammar.PickleCannonParser.WhileStatContext;
 
 public class Checker extends PickleCannonBaseListener {
@@ -47,7 +50,11 @@ public class Checker extends PickleCannonBaseListener {
 	private SymbolTable table;
 	/** List of errors collected in the latest call of {@link #check}. */
 	private List<String> errors;
-
+	/** Boolean used to indicate whether procedure has already opened the scope*/
+	private boolean scopeOpenedByFunction;
+	/** Boolean used to indicate whether listener now is in main scope - cannon, not in procedures*/
+	private boolean isInMainScope;
+	
 	/**
 	 * Runs this checker on a given parse tree, and returns the checker result.
 	 * 
@@ -57,6 +64,7 @@ public class Checker extends PickleCannonBaseListener {
 		this.table = new SymbolTable();
 		this.result = new Result();
 		this.errors = new ArrayList<>();
+		this.isInMainScope = false;
 		new ParseTreeWalker().walk(this, tree);
 		if (hasErrors()) {
 			throw new ParseException(getErrors());
@@ -71,12 +79,59 @@ public class Checker extends PickleCannonBaseListener {
 	
 	@Override
 	public void enterProc(ProcContext ctx) {
-		
+		this.table.openScope();
+		this.table.openNestedLevel();
+		this.scopeOpenedByFunction = true;
+	}
+	
+	
+	@Override
+	public void exitProc(ProcContext ctx) {
+		this.table.closeScope();
+		List<Type> parameters = new ArrayList<>();
+		for(ParsContext p : ctx.pars()) {
+			parameters.add(getType(p));
+		}
+		Type type = new Type.Proc(parameters);		
 	}
 	
 	@Override
+	public void exitVarPar(VarParContext ctx) {
+		boolean isAdded = this.table.put(ctx.ID().getText(), getType(ctx.type()));
+		if(!isAdded) {
+			addError(ctx,"Variable '%s' is already decleared in this scope", ctx.ID().getText());
+		}
+		else {
+			setType(ctx, getType(ctx.type()));
+			setOffset(ctx, this.table.offset(ctx.ID().getText()));
+		}
+	}
+	
+	@Override
+	public void exitArrayPar(ArrayParContext ctx) {
+		Type type = new Type.Array(1, getType(ctx.type()));
+		boolean isAdded = this.table.put(ctx.ID().getText(), type);
+		if(!isAdded) {
+			addError(ctx,"Variable '%s' is already decleared in this scope", ctx.ID().getText());
+		}
+		else {
+			setType(ctx, type);
+			setOffset(ctx, this.table.offset(ctx.ID().getText()));
+		}
+	}
+	
+	
+	@Override
 	public void enterBlock(BlockContext ctx) {
-		this.table.openNestedLevel();;
+		if(!this.scopeOpenedByFunction) {
+			if(ctx.parent instanceof ProgramContext) {
+				this.isInMainScope=true;
+			}
+			this.table.openNestedLevel();
+		}
+		else {
+			this.scopeOpenedByFunction=false;
+		}
 	}
 	
 	@Override
@@ -89,6 +144,11 @@ public class Checker extends PickleCannonBaseListener {
 
 	@Override
 	public void exitSimpleVarStat(SimpleVarStatContext ctx) {
+		if(ctx.SHARED()!=null) {
+			if(!this.isInMainScope||this.table.scopeDepth()>2) {
+				addError(ctx, "Variable '%s' can be declared shared only in cannon outer scope", ctx.ID().getText());
+			}
+		}
 		if(ctx.expr()!=null) {
 			checkType(ctx.type(),getType(ctx.expr()));
 		}
@@ -104,7 +164,11 @@ public class Checker extends PickleCannonBaseListener {
 	
 	@Override
 	public void exitArrayVarStat(ArrayVarStatContext ctx) {
-		//!!!NEEDS IMPLEMENTATION
+		if(ctx.SHARED()!=null) {
+			if(!this.isInMainScope||this.table.scopeDepth()>2) {
+				addError(ctx, "Variable '%s' can be declared shared only in cannon outer scope", ctx.ID().getText());
+			}
+		}
 		if(Integer.parseInt(ctx.NUM().getText())<=0) {
 			addError(ctx, "Array '%s' size must be greater than 0", ctx.ID().getText());
 		}
@@ -240,7 +304,7 @@ public class Checker extends PickleCannonBaseListener {
 			if(getType(ctx.expr(0)).getKind()==TypeKind.PROC) {
 				addError(ctx,"Procedure type cannot be compared");
 			}
-			checkType(ctx.expr(1), getType(ctx.expr(0)));
+			checkTypeWithoutSize(ctx.expr(1), getType(ctx.expr(0)));
 		} else {
 			checkType(ctx.expr(0), Type.INT);
 			checkType(ctx.expr(1), Type.INT);
@@ -354,6 +418,25 @@ public class Checker extends PickleCannonBaseListener {
 		Type actual = getType(node);
 		if (actual == null || expected == null) {
 			//throw new IllegalArgumentException("Missing inferred type of " + node.getText());
+		}
+		else if (!actual.equals(expected)) {
+			addError(node, "Expected type '%s' but found '%s'", expected, actual);
+		}
+	}
+	
+	/**
+	 * Checks the inferred type of a given parse tree, and adds an error if it does
+	 * not correspond to the expected type. (Used for arrays when size does not have to match)
+	 */
+	private void checkTypeWithoutSize(ParserRuleContext node, Type expected) {
+		Type actual = getType(node);
+		if (actual == null || expected == null) {
+			//throw new IllegalArgumentException("Missing inferred type of " + node.getText());
+		}
+		else if(actual instanceof Type.Array){
+			if(!((Type.Array)actual).equalsWithoutSize(expected)) {
+				addError(node, "Expected type '%s' but found '%s'", expected, actual);
+			}
 		}
 		else if (!actual.equals(expected)) {
 			addError(node, "Expected type '%s' but found '%s'", expected, actual);

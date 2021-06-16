@@ -40,25 +40,25 @@ public class PickleCannonBaseListener implements PickleCannonListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterVarArg(PickleCannonParser.VarArgContext ctx) { }
+	@Override public void enterVarPar(PickleCannonParser.VarParContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitVarArg(PickleCannonParser.VarArgContext ctx) { }
+	@Override public void exitVarPar(PickleCannonParser.VarParContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterArrayArg(PickleCannonParser.ArrayArgContext ctx) { }
+	@Override public void enterArrayPar(PickleCannonParser.ArrayParContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitArrayArg(PickleCannonParser.ArrayArgContext ctx) { }
+	@Override public void exitArrayPar(PickleCannonParser.ArrayParContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

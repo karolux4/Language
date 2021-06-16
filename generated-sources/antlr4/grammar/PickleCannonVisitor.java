@@ -23,19 +23,19 @@ public interface PickleCannonVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitProc(PickleCannonParser.ProcContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code varArg}
+	 * Visit a parse tree produced by the {@code varPar}
 	 * labeled alternative in {@link PickleCannonParser#pars}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitVarArg(PickleCannonParser.VarArgContext ctx);
+	T visitVarPar(PickleCannonParser.VarParContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code arrayArg}
+	 * Visit a parse tree produced by the {@code arrayPar}
 	 * labeled alternative in {@link PickleCannonParser#pars}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitArrayArg(PickleCannonParser.ArrayArgContext ctx);
+	T visitArrayPar(PickleCannonParser.ArrayParContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link PickleCannonParser#block}.
 	 * @param ctx the parse tree
