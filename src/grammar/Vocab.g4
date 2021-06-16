@@ -12,6 +12,7 @@ JOIN:    J O I N;
 PRINT:   P R I N T;
 PICKLE:  P I C K L E;
 CANNON:  C A N N O N;
+SHARED:  S H A R E D;
 SYNC:    S Y N C;
 TRUE:    T R U E ;
 WHILE:   W H I L E ;

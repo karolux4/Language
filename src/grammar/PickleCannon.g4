@@ -20,17 +20,17 @@ block: LBRACE stat* RBRACE
      ; 
 
 /** Statements */
-stat: type ID (ASSIGN expr)? SEMI				#simpleVarStat
-	| type ID LSQ expr RSQ (ASSIGN expr)? SEMI	#arrayVarStat
-	| target ASSIGN expr SEMI					#assignStat
-	| IF LPAR expr RPAR block (ELSE block)? 	#ifStat 
-	| WHILE LPAR expr RPAR block			    #whileStat 
-	| FORK block								#forkStat
-	| JOIN SEMI									#joinStat
-	| SYNC block								#syncStat
-	| block										#blockStat
-	| PRINT LPAR expr RPAR SEMI					#printStat
-	| ID args SEMI								#callStat
+stat: type (SHARED)? ID (ASSIGN expr)? SEMI				#simpleVarStat
+	| type (SHARED)? ID LSQ NUM RSQ (ASSIGN expr)? SEMI	#arrayVarStat
+	| target ASSIGN expr SEMI							#assignStat
+	| IF LPAR expr RPAR block (ELSE block)? 			#ifStat 
+	| WHILE LPAR expr RPAR block			    		#whileStat 
+	| FORK block										#forkStat
+	| JOIN SEMI											#joinStat
+	| SYNC block										#syncStat
+	| block												#blockStat
+	| PRINT LPAR expr RPAR SEMI							#printStat
+	| ID args SEMI										#callStat
 	;
 	
 /** Target of an assignment */

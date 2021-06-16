@@ -18,10 +18,10 @@ public class PickleCannonParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		BOOL=1, INT=2, ELSE=3, FALSE=4, FORK=5, IF=6, JOIN=7, PRINT=8, PICKLE=9, 
-		CANNON=10, SYNC=11, TRUE=12, WHILE=13, AND=14, OR=15, ASSIGN=16, COMMA=17, 
-		EQ=18, GE=19, GT=20, LE=21, LBRACE=22, LPAR=23, LSQ=24, LT=25, MINUS=26, 
-		NE=27, NOT=28, PLUS=29, RBRACE=30, RPAR=31, RSQ=32, SEMI=33, SLASH=34, 
-		STAR=35, ID=36, NUM=37, WS=38;
+		CANNON=10, SHARED=11, SYNC=12, TRUE=13, WHILE=14, AND=15, OR=16, ASSIGN=17, 
+		COMMA=18, EQ=19, GE=20, GT=21, LE=22, LBRACE=23, LPAR=24, LSQ=25, LT=26, 
+		MINUS=27, NE=28, NOT=29, PLUS=30, RBRACE=31, RPAR=32, RSQ=33, SEMI=34, 
+		SLASH=35, STAR=36, ID=37, NUM=38, WS=39;
 	public static final int
 		RULE_program = 0, RULE_proc = 1, RULE_pars = 2, RULE_block = 3, RULE_stat = 4, 
 		RULE_target = 5, RULE_args = 6, RULE_expr = 7, RULE_prfOp = 8, RULE_multOp = 9, 
@@ -37,19 +37,19 @@ public class PickleCannonParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, null, null, null, null, null, null, null, null, null, null, null, 
-			null, null, "'&&'", "'||'", "'='", "','", "'=='", "'>='", "'>'", "'<='", 
-			"'{'", "'('", "'['", "'<'", "'-'", "'!='", "'!'", "'+'", "'}'", "')'", 
-			"']'", "';'", "'/'", "'*'"
+			null, null, null, "'&&'", "'||'", "'='", "','", "'=='", "'>='", "'>'", 
+			"'<='", "'{'", "'('", "'['", "'<'", "'-'", "'!='", "'!'", "'+'", "'}'", 
+			"')'", "']'", "';'", "'/'", "'*'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
 			null, "BOOL", "INT", "ELSE", "FALSE", "FORK", "IF", "JOIN", "PRINT", 
-			"PICKLE", "CANNON", "SYNC", "TRUE", "WHILE", "AND", "OR", "ASSIGN", "COMMA", 
-			"EQ", "GE", "GT", "LE", "LBRACE", "LPAR", "LSQ", "LT", "MINUS", "NE", 
-			"NOT", "PLUS", "RBRACE", "RPAR", "RSQ", "SEMI", "SLASH", "STAR", "ID", 
-			"NUM", "WS"
+			"PICKLE", "CANNON", "SHARED", "SYNC", "TRUE", "WHILE", "AND", "OR", "ASSIGN", 
+			"COMMA", "EQ", "GE", "GT", "LE", "LBRACE", "LPAR", "LSQ", "LT", "MINUS", 
+			"NE", "NOT", "PLUS", "RBRACE", "RPAR", "RSQ", "SEMI", "SLASH", "STAR", 
+			"ID", "NUM", "WS"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -477,15 +477,14 @@ public class PickleCannonParser extends Parser {
 		}
 		public TerminalNode ID() { return getToken(PickleCannonParser.ID, 0); }
 		public TerminalNode LSQ() { return getToken(PickleCannonParser.LSQ, 0); }
-		public List<ExprContext> expr() {
-			return getRuleContexts(ExprContext.class);
-		}
-		public ExprContext expr(int i) {
-			return getRuleContext(ExprContext.class,i);
-		}
+		public TerminalNode NUM() { return getToken(PickleCannonParser.NUM, 0); }
 		public TerminalNode RSQ() { return getToken(PickleCannonParser.RSQ, 0); }
 		public TerminalNode SEMI() { return getToken(PickleCannonParser.SEMI, 0); }
+		public TerminalNode SHARED() { return getToken(PickleCannonParser.SHARED, 0); }
 		public TerminalNode ASSIGN() { return getToken(PickleCannonParser.ASSIGN, 0); }
+		public ExprContext expr() {
+			return getRuleContext(ExprContext.class,0);
+		}
 		public ArrayVarStatContext(StatContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
@@ -526,6 +525,7 @@ public class PickleCannonParser extends Parser {
 		}
 		public TerminalNode ID() { return getToken(PickleCannonParser.ID, 0); }
 		public TerminalNode SEMI() { return getToken(PickleCannonParser.SEMI, 0); }
+		public TerminalNode SHARED() { return getToken(PickleCannonParser.SHARED, 0); }
 		public TerminalNode ASSIGN() { return getToken(PickleCannonParser.ASSIGN, 0); }
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
@@ -702,30 +702,40 @@ public class PickleCannonParser extends Parser {
 		enterRule(_localctx, 8, RULE_stat);
 		int _la;
 		try {
-			setState(129);
+			setState(135);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,8,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,10,_ctx) ) {
 			case 1:
 				_localctx = new SimpleVarStatContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(73);
 				type();
-				setState(74);
-				match(ID);
+				setState(75);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+				if (_la==SHARED) {
+					{
+					setState(74);
+					match(SHARED);
+					}
+				}
+
 				setState(77);
+				match(ID);
+				setState(80);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==ASSIGN) {
 					{
-					setState(75);
+					setState(78);
 					match(ASSIGN);
-					setState(76);
+					setState(79);
 					expr(0);
 					}
 				}
 
-				setState(79);
+				setState(82);
 				match(SEMI);
 				}
 				break;
@@ -733,29 +743,39 @@ public class PickleCannonParser extends Parser {
 				_localctx = new ArrayVarStatContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(81);
-				type();
-				setState(82);
-				match(ID);
-				setState(83);
-				match(LSQ);
 				setState(84);
-				expr(0);
-				setState(85);
-				match(RSQ);
+				type();
+				setState(86);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+				if (_la==SHARED) {
+					{
+					setState(85);
+					match(SHARED);
+					}
+				}
+
 				setState(88);
+				match(ID);
+				setState(89);
+				match(LSQ);
+				setState(90);
+				match(NUM);
+				setState(91);
+				match(RSQ);
+				setState(94);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==ASSIGN) {
 					{
-					setState(86);
+					setState(92);
 					match(ASSIGN);
-					setState(87);
+					setState(93);
 					expr(0);
 					}
 				}
 
-				setState(90);
+				setState(96);
 				match(SEMI);
 				}
 				break;
@@ -763,13 +783,13 @@ public class PickleCannonParser extends Parser {
 				_localctx = new AssignStatContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(92);
+				setState(98);
 				target();
-				setState(93);
+				setState(99);
 				match(ASSIGN);
-				setState(94);
+				setState(100);
 				expr(0);
-				setState(95);
+				setState(101);
 				match(SEMI);
 				}
 				break;
@@ -777,24 +797,24 @@ public class PickleCannonParser extends Parser {
 				_localctx = new IfStatContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(97);
+				setState(103);
 				match(IF);
-				setState(98);
-				match(LPAR);
-				setState(99);
-				expr(0);
-				setState(100);
-				match(RPAR);
-				setState(101);
-				block();
 				setState(104);
+				match(LPAR);
+				setState(105);
+				expr(0);
+				setState(106);
+				match(RPAR);
+				setState(107);
+				block();
+				setState(110);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if (_la==ELSE) {
 					{
-					setState(102);
+					setState(108);
 					match(ELSE);
-					setState(103);
+					setState(109);
 					block();
 					}
 				}
@@ -805,15 +825,15 @@ public class PickleCannonParser extends Parser {
 				_localctx = new WhileStatContext(_localctx);
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(106);
+				setState(112);
 				match(WHILE);
-				setState(107);
+				setState(113);
 				match(LPAR);
-				setState(108);
+				setState(114);
 				expr(0);
-				setState(109);
+				setState(115);
 				match(RPAR);
-				setState(110);
+				setState(116);
 				block();
 				}
 				break;
@@ -821,9 +841,9 @@ public class PickleCannonParser extends Parser {
 				_localctx = new ForkStatContext(_localctx);
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(112);
+				setState(118);
 				match(FORK);
-				setState(113);
+				setState(119);
 				block();
 				}
 				break;
@@ -831,9 +851,9 @@ public class PickleCannonParser extends Parser {
 				_localctx = new JoinStatContext(_localctx);
 				enterOuterAlt(_localctx, 7);
 				{
-				setState(114);
+				setState(120);
 				match(JOIN);
-				setState(115);
+				setState(121);
 				match(SEMI);
 				}
 				break;
@@ -841,9 +861,9 @@ public class PickleCannonParser extends Parser {
 				_localctx = new SyncStatContext(_localctx);
 				enterOuterAlt(_localctx, 8);
 				{
-				setState(116);
+				setState(122);
 				match(SYNC);
-				setState(117);
+				setState(123);
 				block();
 				}
 				break;
@@ -851,7 +871,7 @@ public class PickleCannonParser extends Parser {
 				_localctx = new BlockStatContext(_localctx);
 				enterOuterAlt(_localctx, 9);
 				{
-				setState(118);
+				setState(124);
 				block();
 				}
 				break;
@@ -859,15 +879,15 @@ public class PickleCannonParser extends Parser {
 				_localctx = new PrintStatContext(_localctx);
 				enterOuterAlt(_localctx, 10);
 				{
-				setState(119);
+				setState(125);
 				match(PRINT);
-				setState(120);
+				setState(126);
 				match(LPAR);
-				setState(121);
+				setState(127);
 				expr(0);
-				setState(122);
+				setState(128);
 				match(RPAR);
-				setState(123);
+				setState(129);
 				match(SEMI);
 				}
 				break;
@@ -875,11 +895,11 @@ public class PickleCannonParser extends Parser {
 				_localctx = new CallStatContext(_localctx);
 				enterOuterAlt(_localctx, 11);
 				{
-				setState(125);
+				setState(131);
 				match(ID);
-				setState(126);
+				setState(132);
 				args();
-				setState(127);
+				setState(133);
 				match(SEMI);
 				}
 				break;
@@ -951,14 +971,14 @@ public class PickleCannonParser extends Parser {
 		TargetContext _localctx = new TargetContext(_ctx, getState());
 		enterRule(_localctx, 10, RULE_target);
 		try {
-			setState(137);
+			setState(143);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,9,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,11,_ctx) ) {
 			case 1:
 				_localctx = new IdTargetContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(131);
+				setState(137);
 				match(ID);
 				}
 				break;
@@ -966,13 +986,13 @@ public class PickleCannonParser extends Parser {
 				_localctx = new ArrayTargetContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(132);
+				setState(138);
 				match(ID);
-				setState(133);
+				setState(139);
 				match(LSQ);
-				setState(134);
+				setState(140);
 				expr(0);
-				setState(135);
+				setState(141);
 				match(RSQ);
 				}
 				break;
@@ -1028,35 +1048,35 @@ public class PickleCannonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(139);
+			setState(145);
 			match(LPAR);
-			setState(148);
+			setState(154);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << FALSE) | (1L << TRUE) | (1L << LPAR) | (1L << LSQ) | (1L << MINUS) | (1L << NOT) | (1L << ID) | (1L << NUM))) != 0)) {
 				{
-				setState(140);
+				setState(146);
 				expr(0);
-				setState(145);
+				setState(151);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while (_la==COMMA) {
 					{
 					{
-					setState(141);
+					setState(147);
 					match(COMMA);
-					setState(142);
+					setState(148);
 					expr(0);
 					}
 					}
-					setState(147);
+					setState(153);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				}
 				}
 			}
 
-			setState(150);
+			setState(156);
 			match(RPAR);
 			}
 		}
@@ -1360,18 +1380,18 @@ public class PickleCannonParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(181);
+			setState(187);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,14,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,16,_ctx) ) {
 			case 1:
 				{
 				_localctx = new PrfExprContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
 
-				setState(153);
+				setState(159);
 				prfOp();
-				setState(154);
+				setState(160);
 				expr(12);
 				}
 				break;
@@ -1380,11 +1400,11 @@ public class PickleCannonParser extends Parser {
 				_localctx = new ParExprContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(156);
+				setState(162);
 				match(LPAR);
-				setState(157);
+				setState(163);
 				expr(0);
-				setState(158);
+				setState(164);
 				match(RPAR);
 				}
 				break;
@@ -1393,7 +1413,7 @@ public class PickleCannonParser extends Parser {
 				_localctx = new IdExprContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(160);
+				setState(166);
 				match(ID);
 				}
 				break;
@@ -1402,7 +1422,7 @@ public class PickleCannonParser extends Parser {
 				_localctx = new NumExprContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(161);
+				setState(167);
 				match(NUM);
 				}
 				break;
@@ -1411,7 +1431,7 @@ public class PickleCannonParser extends Parser {
 				_localctx = new TrueExprContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(162);
+				setState(168);
 				match(TRUE);
 				}
 				break;
@@ -1420,7 +1440,7 @@ public class PickleCannonParser extends Parser {
 				_localctx = new FalseExprContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(163);
+				setState(169);
 				match(FALSE);
 				}
 				break;
@@ -1429,13 +1449,13 @@ public class PickleCannonParser extends Parser {
 				_localctx = new IndexExprContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(164);
+				setState(170);
 				match(ID);
-				setState(165);
+				setState(171);
 				match(LSQ);
-				setState(166);
+				setState(172);
 				expr(0);
-				setState(167);
+				setState(173);
 				match(RSQ);
 				}
 				break;
@@ -1444,60 +1464,60 @@ public class PickleCannonParser extends Parser {
 				_localctx = new ArrayExprContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(169);
+				setState(175);
 				match(LSQ);
-				setState(178);
+				setState(184);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << FALSE) | (1L << TRUE) | (1L << LPAR) | (1L << LSQ) | (1L << MINUS) | (1L << NOT) | (1L << ID) | (1L << NUM))) != 0)) {
 					{
-					setState(170);
+					setState(176);
 					expr(0);
-					setState(175);
+					setState(181);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 					while (_la==COMMA) {
 						{
 						{
-						setState(171);
+						setState(177);
 						match(COMMA);
-						setState(172);
+						setState(178);
 						expr(0);
 						}
 						}
-						setState(177);
+						setState(183);
 						_errHandler.sync(this);
 						_la = _input.LA(1);
 					}
 					}
 				}
 
-				setState(180);
+				setState(186);
 				match(RSQ);
 				}
 				break;
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(201);
+			setState(207);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,16,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,18,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
 					_prevctx = _localctx;
 					{
-					setState(199);
+					setState(205);
 					_errHandler.sync(this);
-					switch ( getInterpreter().adaptivePredict(_input,15,_ctx) ) {
+					switch ( getInterpreter().adaptivePredict(_input,17,_ctx) ) {
 					case 1:
 						{
 						_localctx = new MultExprContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
-						setState(183);
+						setState(189);
 						if (!(precpred(_ctx, 11))) throw new FailedPredicateException(this, "precpred(_ctx, 11)");
-						setState(184);
+						setState(190);
 						multOp();
-						setState(185);
+						setState(191);
 						expr(12);
 						}
 						break;
@@ -1505,11 +1525,11 @@ public class PickleCannonParser extends Parser {
 						{
 						_localctx = new PlusExprContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
-						setState(187);
+						setState(193);
 						if (!(precpred(_ctx, 10))) throw new FailedPredicateException(this, "precpred(_ctx, 10)");
-						setState(188);
+						setState(194);
 						plusOp();
-						setState(189);
+						setState(195);
 						expr(11);
 						}
 						break;
@@ -1517,11 +1537,11 @@ public class PickleCannonParser extends Parser {
 						{
 						_localctx = new CompExprContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
-						setState(191);
+						setState(197);
 						if (!(precpred(_ctx, 9))) throw new FailedPredicateException(this, "precpred(_ctx, 9)");
-						setState(192);
+						setState(198);
 						compOp();
-						setState(193);
+						setState(199);
 						expr(10);
 						}
 						break;
@@ -1529,20 +1549,20 @@ public class PickleCannonParser extends Parser {
 						{
 						_localctx = new BoolExprContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
-						setState(195);
+						setState(201);
 						if (!(precpred(_ctx, 8))) throw new FailedPredicateException(this, "precpred(_ctx, 8)");
-						setState(196);
+						setState(202);
 						boolOp();
-						setState(197);
+						setState(203);
 						expr(9);
 						}
 						break;
 					}
 					} 
 				}
-				setState(203);
+				setState(209);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,16,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,18,_ctx);
 			}
 			}
 		}
@@ -1586,7 +1606,7 @@ public class PickleCannonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(204);
+			setState(210);
 			_la = _input.LA(1);
 			if ( !(_la==MINUS || _la==NOT) ) {
 			_errHandler.recoverInline(this);
@@ -1638,7 +1658,7 @@ public class PickleCannonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(206);
+			setState(212);
 			_la = _input.LA(1);
 			if ( !(_la==SLASH || _la==STAR) ) {
 			_errHandler.recoverInline(this);
@@ -1690,7 +1710,7 @@ public class PickleCannonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(208);
+			setState(214);
 			_la = _input.LA(1);
 			if ( !(_la==MINUS || _la==PLUS) ) {
 			_errHandler.recoverInline(this);
@@ -1742,7 +1762,7 @@ public class PickleCannonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(210);
+			setState(216);
 			_la = _input.LA(1);
 			if ( !(_la==AND || _la==OR) ) {
 			_errHandler.recoverInline(this);
@@ -1798,7 +1818,7 @@ public class PickleCannonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(212);
+			setState(218);
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << EQ) | (1L << GE) | (1L << GT) | (1L << LE) | (1L << LT) | (1L << NE))) != 0)) ) {
 			_errHandler.recoverInline(this);
@@ -1871,14 +1891,14 @@ public class PickleCannonParser extends Parser {
 		TypeContext _localctx = new TypeContext(_ctx, getState());
 		enterRule(_localctx, 26, RULE_type);
 		try {
-			setState(216);
+			setState(222);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case INT:
 				_localctx = new IntTypeContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(214);
+				setState(220);
 				match(INT);
 				}
 				break;
@@ -1886,7 +1906,7 @@ public class PickleCannonParser extends Parser {
 				_localctx = new BoolTypeContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(215);
+				setState(221);
 				match(BOOL);
 				}
 				break;
@@ -1927,77 +1947,80 @@ public class PickleCannonParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3(\u00dd\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3)\u00e3\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\3\2\7\2 \n\2\f\2\16\2#\13\2\3"+
 		"\2\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\7\3/\n\3\f\3\16\3\62\13\3\5\3\64"+
 		"\n\3\3\3\3\3\3\3\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\5\4A\n\4\3\5\3\5\7\5"+
-		"E\n\5\f\5\16\5H\13\5\3\5\3\5\3\6\3\6\3\6\3\6\5\6P\n\6\3\6\3\6\3\6\3\6"+
-		"\3\6\3\6\3\6\3\6\3\6\5\6[\n\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6"+
-		"\3\6\3\6\3\6\3\6\5\6k\n\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6"+
-		"\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\5\6\u0084\n\6\3\7\3\7"+
-		"\3\7\3\7\3\7\3\7\5\7\u008c\n\7\3\b\3\b\3\b\3\b\7\b\u0092\n\b\f\b\16\b"+
-		"\u0095\13\b\5\b\u0097\n\b\3\b\3\b\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t"+
-		"\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\7\t\u00b0\n\t\f\t\16"+
-		"\t\u00b3\13\t\5\t\u00b5\n\t\3\t\5\t\u00b8\n\t\3\t\3\t\3\t\3\t\3\t\3\t"+
-		"\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\7\t\u00ca\n\t\f\t\16\t\u00cd"+
-		"\13\t\3\n\3\n\3\13\3\13\3\f\3\f\3\r\3\r\3\16\3\16\3\17\3\17\5\17\u00db"+
-		"\n\17\3\17\2\3\20\20\2\4\6\b\n\f\16\20\22\24\26\30\32\34\2\7\4\2\34\34"+
-		"\36\36\3\2$%\4\2\34\34\37\37\3\2\20\21\5\2\24\27\33\33\35\35\2\u00f1\2"+
-		"!\3\2\2\2\4(\3\2\2\2\6@\3\2\2\2\bB\3\2\2\2\n\u0083\3\2\2\2\f\u008b\3\2"+
-		"\2\2\16\u008d\3\2\2\2\20\u00b7\3\2\2\2\22\u00ce\3\2\2\2\24\u00d0\3\2\2"+
-		"\2\26\u00d2\3\2\2\2\30\u00d4\3\2\2\2\32\u00d6\3\2\2\2\34\u00da\3\2\2\2"+
-		"\36 \5\4\3\2\37\36\3\2\2\2 #\3\2\2\2!\37\3\2\2\2!\"\3\2\2\2\"$\3\2\2\2"+
-		"#!\3\2\2\2$%\7\f\2\2%&\5\b\5\2&\'\7\2\2\3\'\3\3\2\2\2()\7\13\2\2)*\7&"+
-		"\2\2*\63\7\31\2\2+\60\5\6\4\2,-\7\23\2\2-/\5\6\4\2.,\3\2\2\2/\62\3\2\2"+
-		"\2\60.\3\2\2\2\60\61\3\2\2\2\61\64\3\2\2\2\62\60\3\2\2\2\63+\3\2\2\2\63"+
-		"\64\3\2\2\2\64\65\3\2\2\2\65\66\7!\2\2\66\67\5\b\5\2\67\5\3\2\2\289\5"+
-		"\34\17\29:\7&\2\2:A\3\2\2\2;<\5\34\17\2<=\7&\2\2=>\7\32\2\2>?\7\"\2\2"+
-		"?A\3\2\2\2@8\3\2\2\2@;\3\2\2\2A\7\3\2\2\2BF\7\30\2\2CE\5\n\6\2DC\3\2\2"+
-		"\2EH\3\2\2\2FD\3\2\2\2FG\3\2\2\2GI\3\2\2\2HF\3\2\2\2IJ\7 \2\2J\t\3\2\2"+
-		"\2KL\5\34\17\2LO\7&\2\2MN\7\22\2\2NP\5\20\t\2OM\3\2\2\2OP\3\2\2\2PQ\3"+
-		"\2\2\2QR\7#\2\2R\u0084\3\2\2\2ST\5\34\17\2TU\7&\2\2UV\7\32\2\2VW\5\20"+
-		"\t\2WZ\7\"\2\2XY\7\22\2\2Y[\5\20\t\2ZX\3\2\2\2Z[\3\2\2\2[\\\3\2\2\2\\"+
-		"]\7#\2\2]\u0084\3\2\2\2^_\5\f\7\2_`\7\22\2\2`a\5\20\t\2ab\7#\2\2b\u0084"+
-		"\3\2\2\2cd\7\b\2\2de\7\31\2\2ef\5\20\t\2fg\7!\2\2gj\5\b\5\2hi\7\5\2\2"+
-		"ik\5\b\5\2jh\3\2\2\2jk\3\2\2\2k\u0084\3\2\2\2lm\7\17\2\2mn\7\31\2\2no"+
-		"\5\20\t\2op\7!\2\2pq\5\b\5\2q\u0084\3\2\2\2rs\7\7\2\2s\u0084\5\b\5\2t"+
-		"u\7\t\2\2u\u0084\7#\2\2vw\7\r\2\2w\u0084\5\b\5\2x\u0084\5\b\5\2yz\7\n"+
-		"\2\2z{\7\31\2\2{|\5\20\t\2|}\7!\2\2}~\7#\2\2~\u0084\3\2\2\2\177\u0080"+
-		"\7&\2\2\u0080\u0081\5\16\b\2\u0081\u0082\7#\2\2\u0082\u0084\3\2\2\2\u0083"+
-		"K\3\2\2\2\u0083S\3\2\2\2\u0083^\3\2\2\2\u0083c\3\2\2\2\u0083l\3\2\2\2"+
-		"\u0083r\3\2\2\2\u0083t\3\2\2\2\u0083v\3\2\2\2\u0083x\3\2\2\2\u0083y\3"+
-		"\2\2\2\u0083\177\3\2\2\2\u0084\13\3\2\2\2\u0085\u008c\7&\2\2\u0086\u0087"+
-		"\7&\2\2\u0087\u0088\7\32\2\2\u0088\u0089\5\20\t\2\u0089\u008a\7\"\2\2"+
-		"\u008a\u008c\3\2\2\2\u008b\u0085\3\2\2\2\u008b\u0086\3\2\2\2\u008c\r\3"+
-		"\2\2\2\u008d\u0096\7\31\2\2\u008e\u0093\5\20\t\2\u008f\u0090\7\23\2\2"+
-		"\u0090\u0092\5\20\t\2\u0091\u008f\3\2\2\2\u0092\u0095\3\2\2\2\u0093\u0091"+
-		"\3\2\2\2\u0093\u0094\3\2\2\2\u0094\u0097\3\2\2\2\u0095\u0093\3\2\2\2\u0096"+
-		"\u008e\3\2\2\2\u0096\u0097\3\2\2\2\u0097\u0098\3\2\2\2\u0098\u0099\7!"+
-		"\2\2\u0099\17\3\2\2\2\u009a\u009b\b\t\1\2\u009b\u009c\5\22\n\2\u009c\u009d"+
-		"\5\20\t\16\u009d\u00b8\3\2\2\2\u009e\u009f\7\31\2\2\u009f\u00a0\5\20\t"+
-		"\2\u00a0\u00a1\7!\2\2\u00a1\u00b8\3\2\2\2\u00a2\u00b8\7&\2\2\u00a3\u00b8"+
-		"\7\'\2\2\u00a4\u00b8\7\16\2\2\u00a5\u00b8\7\6\2\2\u00a6\u00a7\7&\2\2\u00a7"+
-		"\u00a8\7\32\2\2\u00a8\u00a9\5\20\t\2\u00a9\u00aa\7\"\2\2\u00aa\u00b8\3"+
-		"\2\2\2\u00ab\u00b4\7\32\2\2\u00ac\u00b1\5\20\t\2\u00ad\u00ae\7\23\2\2"+
-		"\u00ae\u00b0\5\20\t\2\u00af\u00ad\3\2\2\2\u00b0\u00b3\3\2\2\2\u00b1\u00af"+
-		"\3\2\2\2\u00b1\u00b2\3\2\2\2\u00b2\u00b5\3\2\2\2\u00b3\u00b1\3\2\2\2\u00b4"+
-		"\u00ac\3\2\2\2\u00b4\u00b5\3\2\2\2\u00b5\u00b6\3\2\2\2\u00b6\u00b8\7\""+
-		"\2\2\u00b7\u009a\3\2\2\2\u00b7\u009e\3\2\2\2\u00b7\u00a2\3\2\2\2\u00b7"+
-		"\u00a3\3\2\2\2\u00b7\u00a4\3\2\2\2\u00b7\u00a5\3\2\2\2\u00b7\u00a6\3\2"+
-		"\2\2\u00b7\u00ab\3\2\2\2\u00b8\u00cb\3\2\2\2\u00b9\u00ba\f\r\2\2\u00ba"+
-		"\u00bb\5\24\13\2\u00bb\u00bc\5\20\t\16\u00bc\u00ca\3\2\2\2\u00bd\u00be"+
-		"\f\f\2\2\u00be\u00bf\5\26\f\2\u00bf\u00c0\5\20\t\r\u00c0\u00ca\3\2\2\2"+
-		"\u00c1\u00c2\f\13\2\2\u00c2\u00c3\5\32\16\2\u00c3\u00c4\5\20\t\f\u00c4"+
-		"\u00ca\3\2\2\2\u00c5\u00c6\f\n\2\2\u00c6\u00c7\5\30\r\2\u00c7\u00c8\5"+
-		"\20\t\13\u00c8\u00ca\3\2\2\2\u00c9\u00b9\3\2\2\2\u00c9\u00bd\3\2\2\2\u00c9"+
-		"\u00c1\3\2\2\2\u00c9\u00c5\3\2\2\2\u00ca\u00cd\3\2\2\2\u00cb\u00c9\3\2"+
-		"\2\2\u00cb\u00cc\3\2\2\2\u00cc\21\3\2\2\2\u00cd\u00cb\3\2\2\2\u00ce\u00cf"+
-		"\t\2\2\2\u00cf\23\3\2\2\2\u00d0\u00d1\t\3\2\2\u00d1\25\3\2\2\2\u00d2\u00d3"+
-		"\t\4\2\2\u00d3\27\3\2\2\2\u00d4\u00d5\t\5\2\2\u00d5\31\3\2\2\2\u00d6\u00d7"+
-		"\t\6\2\2\u00d7\33\3\2\2\2\u00d8\u00db\7\4\2\2\u00d9\u00db\7\3\2\2\u00da"+
-		"\u00d8\3\2\2\2\u00da\u00d9\3\2\2\2\u00db\35\3\2\2\2\24!\60\63@FOZj\u0083"+
-		"\u008b\u0093\u0096\u00b1\u00b4\u00b7\u00c9\u00cb\u00da";
+		"E\n\5\f\5\16\5H\13\5\3\5\3\5\3\6\3\6\5\6N\n\6\3\6\3\6\3\6\5\6S\n\6\3\6"+
+		"\3\6\3\6\3\6\5\6Y\n\6\3\6\3\6\3\6\3\6\3\6\3\6\5\6a\n\6\3\6\3\6\3\6\3\6"+
+		"\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\5\6q\n\6\3\6\3\6\3\6\3\6\3\6"+
+		"\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3"+
+		"\6\5\6\u008a\n\6\3\7\3\7\3\7\3\7\3\7\3\7\5\7\u0092\n\7\3\b\3\b\3\b\3\b"+
+		"\7\b\u0098\n\b\f\b\16\b\u009b\13\b\5\b\u009d\n\b\3\b\3\b\3\t\3\t\3\t\3"+
+		"\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t"+
+		"\7\t\u00b6\n\t\f\t\16\t\u00b9\13\t\5\t\u00bb\n\t\3\t\5\t\u00be\n\t\3\t"+
+		"\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\7\t\u00d0"+
+		"\n\t\f\t\16\t\u00d3\13\t\3\n\3\n\3\13\3\13\3\f\3\f\3\r\3\r\3\16\3\16\3"+
+		"\17\3\17\5\17\u00e1\n\17\3\17\2\3\20\20\2\4\6\b\n\f\16\20\22\24\26\30"+
+		"\32\34\2\7\4\2\35\35\37\37\3\2%&\4\2\35\35  \3\2\21\22\5\2\25\30\34\34"+
+		"\36\36\2\u00f9\2!\3\2\2\2\4(\3\2\2\2\6@\3\2\2\2\bB\3\2\2\2\n\u0089\3\2"+
+		"\2\2\f\u0091\3\2\2\2\16\u0093\3\2\2\2\20\u00bd\3\2\2\2\22\u00d4\3\2\2"+
+		"\2\24\u00d6\3\2\2\2\26\u00d8\3\2\2\2\30\u00da\3\2\2\2\32\u00dc\3\2\2\2"+
+		"\34\u00e0\3\2\2\2\36 \5\4\3\2\37\36\3\2\2\2 #\3\2\2\2!\37\3\2\2\2!\"\3"+
+		"\2\2\2\"$\3\2\2\2#!\3\2\2\2$%\7\f\2\2%&\5\b\5\2&\'\7\2\2\3\'\3\3\2\2\2"+
+		"()\7\13\2\2)*\7\'\2\2*\63\7\32\2\2+\60\5\6\4\2,-\7\24\2\2-/\5\6\4\2.,"+
+		"\3\2\2\2/\62\3\2\2\2\60.\3\2\2\2\60\61\3\2\2\2\61\64\3\2\2\2\62\60\3\2"+
+		"\2\2\63+\3\2\2\2\63\64\3\2\2\2\64\65\3\2\2\2\65\66\7\"\2\2\66\67\5\b\5"+
+		"\2\67\5\3\2\2\289\5\34\17\29:\7\'\2\2:A\3\2\2\2;<\5\34\17\2<=\7\'\2\2"+
+		"=>\7\33\2\2>?\7#\2\2?A\3\2\2\2@8\3\2\2\2@;\3\2\2\2A\7\3\2\2\2BF\7\31\2"+
+		"\2CE\5\n\6\2DC\3\2\2\2EH\3\2\2\2FD\3\2\2\2FG\3\2\2\2GI\3\2\2\2HF\3\2\2"+
+		"\2IJ\7!\2\2J\t\3\2\2\2KM\5\34\17\2LN\7\r\2\2ML\3\2\2\2MN\3\2\2\2NO\3\2"+
+		"\2\2OR\7\'\2\2PQ\7\23\2\2QS\5\20\t\2RP\3\2\2\2RS\3\2\2\2ST\3\2\2\2TU\7"+
+		"$\2\2U\u008a\3\2\2\2VX\5\34\17\2WY\7\r\2\2XW\3\2\2\2XY\3\2\2\2YZ\3\2\2"+
+		"\2Z[\7\'\2\2[\\\7\33\2\2\\]\7(\2\2]`\7#\2\2^_\7\23\2\2_a\5\20\t\2`^\3"+
+		"\2\2\2`a\3\2\2\2ab\3\2\2\2bc\7$\2\2c\u008a\3\2\2\2de\5\f\7\2ef\7\23\2"+
+		"\2fg\5\20\t\2gh\7$\2\2h\u008a\3\2\2\2ij\7\b\2\2jk\7\32\2\2kl\5\20\t\2"+
+		"lm\7\"\2\2mp\5\b\5\2no\7\5\2\2oq\5\b\5\2pn\3\2\2\2pq\3\2\2\2q\u008a\3"+
+		"\2\2\2rs\7\20\2\2st\7\32\2\2tu\5\20\t\2uv\7\"\2\2vw\5\b\5\2w\u008a\3\2"+
+		"\2\2xy\7\7\2\2y\u008a\5\b\5\2z{\7\t\2\2{\u008a\7$\2\2|}\7\16\2\2}\u008a"+
+		"\5\b\5\2~\u008a\5\b\5\2\177\u0080\7\n\2\2\u0080\u0081\7\32\2\2\u0081\u0082"+
+		"\5\20\t\2\u0082\u0083\7\"\2\2\u0083\u0084\7$\2\2\u0084\u008a\3\2\2\2\u0085"+
+		"\u0086\7\'\2\2\u0086\u0087\5\16\b\2\u0087\u0088\7$\2\2\u0088\u008a\3\2"+
+		"\2\2\u0089K\3\2\2\2\u0089V\3\2\2\2\u0089d\3\2\2\2\u0089i\3\2\2\2\u0089"+
+		"r\3\2\2\2\u0089x\3\2\2\2\u0089z\3\2\2\2\u0089|\3\2\2\2\u0089~\3\2\2\2"+
+		"\u0089\177\3\2\2\2\u0089\u0085\3\2\2\2\u008a\13\3\2\2\2\u008b\u0092\7"+
+		"\'\2\2\u008c\u008d\7\'\2\2\u008d\u008e\7\33\2\2\u008e\u008f\5\20\t\2\u008f"+
+		"\u0090\7#\2\2\u0090\u0092\3\2\2\2\u0091\u008b\3\2\2\2\u0091\u008c\3\2"+
+		"\2\2\u0092\r\3\2\2\2\u0093\u009c\7\32\2\2\u0094\u0099\5\20\t\2\u0095\u0096"+
+		"\7\24\2\2\u0096\u0098\5\20\t\2\u0097\u0095\3\2\2\2\u0098\u009b\3\2\2\2"+
+		"\u0099\u0097\3\2\2\2\u0099\u009a\3\2\2\2\u009a\u009d\3\2\2\2\u009b\u0099"+
+		"\3\2\2\2\u009c\u0094\3\2\2\2\u009c\u009d\3\2\2\2\u009d\u009e\3\2\2\2\u009e"+
+		"\u009f\7\"\2\2\u009f\17\3\2\2\2\u00a0\u00a1\b\t\1\2\u00a1\u00a2\5\22\n"+
+		"\2\u00a2\u00a3\5\20\t\16\u00a3\u00be\3\2\2\2\u00a4\u00a5\7\32\2\2\u00a5"+
+		"\u00a6\5\20\t\2\u00a6\u00a7\7\"\2\2\u00a7\u00be\3\2\2\2\u00a8\u00be\7"+
+		"\'\2\2\u00a9\u00be\7(\2\2\u00aa\u00be\7\17\2\2\u00ab\u00be\7\6\2\2\u00ac"+
+		"\u00ad\7\'\2\2\u00ad\u00ae\7\33\2\2\u00ae\u00af\5\20\t\2\u00af\u00b0\7"+
+		"#\2\2\u00b0\u00be\3\2\2\2\u00b1\u00ba\7\33\2\2\u00b2\u00b7\5\20\t\2\u00b3"+
+		"\u00b4\7\24\2\2\u00b4\u00b6\5\20\t\2\u00b5\u00b3\3\2\2\2\u00b6\u00b9\3"+
+		"\2\2\2\u00b7\u00b5\3\2\2\2\u00b7\u00b8\3\2\2\2\u00b8\u00bb\3\2\2\2\u00b9"+
+		"\u00b7\3\2\2\2\u00ba\u00b2\3\2\2\2\u00ba\u00bb\3\2\2\2\u00bb\u00bc\3\2"+
+		"\2\2\u00bc\u00be\7#\2\2\u00bd\u00a0\3\2\2\2\u00bd\u00a4\3\2\2\2\u00bd"+
+		"\u00a8\3\2\2\2\u00bd\u00a9\3\2\2\2\u00bd\u00aa\3\2\2\2\u00bd\u00ab\3\2"+
+		"\2\2\u00bd\u00ac\3\2\2\2\u00bd\u00b1\3\2\2\2\u00be\u00d1\3\2\2\2\u00bf"+
+		"\u00c0\f\r\2\2\u00c0\u00c1\5\24\13\2\u00c1\u00c2\5\20\t\16\u00c2\u00d0"+
+		"\3\2\2\2\u00c3\u00c4\f\f\2\2\u00c4\u00c5\5\26\f\2\u00c5\u00c6\5\20\t\r"+
+		"\u00c6\u00d0\3\2\2\2\u00c7\u00c8\f\13\2\2\u00c8\u00c9\5\32\16\2\u00c9"+
+		"\u00ca\5\20\t\f\u00ca\u00d0\3\2\2\2\u00cb\u00cc\f\n\2\2\u00cc\u00cd\5"+
+		"\30\r\2\u00cd\u00ce\5\20\t\13\u00ce\u00d0\3\2\2\2\u00cf\u00bf\3\2\2\2"+
+		"\u00cf\u00c3\3\2\2\2\u00cf\u00c7\3\2\2\2\u00cf\u00cb\3\2\2\2\u00d0\u00d3"+
+		"\3\2\2\2\u00d1\u00cf\3\2\2\2\u00d1\u00d2\3\2\2\2\u00d2\21\3\2\2\2\u00d3"+
+		"\u00d1\3\2\2\2\u00d4\u00d5\t\2\2\2\u00d5\23\3\2\2\2\u00d6\u00d7\t\3\2"+
+		"\2\u00d7\25\3\2\2\2\u00d8\u00d9\t\4\2\2\u00d9\27\3\2\2\2\u00da\u00db\t"+
+		"\5\2\2\u00db\31\3\2\2\2\u00dc\u00dd\t\6\2\2\u00dd\33\3\2\2\2\u00de\u00e1"+
+		"\7\4\2\2\u00df\u00e1\7\3\2\2\u00e0\u00de\3\2\2\2\u00e0\u00df\3\2\2\2\u00e1"+
+		"\35\3\2\2\2\26!\60\63@FMRX`p\u0089\u0091\u0099\u009c\u00b7\u00ba\u00bd"+
+		"\u00cf\u00d1\u00e0";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
