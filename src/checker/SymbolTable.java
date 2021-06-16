@@ -5,10 +5,13 @@ import java.util.Stack;
 public class SymbolTable {
 	/** Stack of name-to-type maps. */
 	private final Stack<Scope> scopes;
+	/**Scope of name-to-type for shared variables*/
+	private final Scope sharedScope;
 
 	/** Constructs a fresh, initially empty symbol table. */
 	public SymbolTable() {
 		this.scopes = new Stack<>();
+		this.sharedScope = new Scope();
 		openScope();
 	}
 	/** Adds a next deeper scope level. */
@@ -24,6 +27,18 @@ public class SymbolTable {
 			throw new IllegalStateException("Can't close outer scope");
 		}
 		this.scopes.pop();
+	}
+	
+	/** Adds a new nested level in a scope. */
+	public void openNestedLevel() {
+		this.scopes.peek().openNestedLevel();
+	}
+
+	/** Closes a nested level in a scope.
+	 * @throws RuntimeException if the scope only contains the outer level.
+	 */
+	public void closeNestedLevel() {
+		this.scopes.peek().closeNestedLevel();
 	}
 
 	/** Tries to declare a given identifier in the deepest scope level.
@@ -73,4 +88,36 @@ public class SymbolTable {
 		}
 		return result == null ? -1 : result;
 	}
+	
+	
+	/** Tries to declare a given identifier in the the shared scope.
+	 * @return <code>true</code> if the identifier was added,
+	 * <code>false</code> if it was already declared in this scope.
+	 */
+	public boolean putShared(String id, Type record) {
+		return this.sharedScope.put(id, record);
+	}
+
+	/** Looks up a given identifier and returns the associated type.
+	 * @return the record associated with the inner (deepest) declaration
+	 * of the identifier; {@code null} if there is none.
+	 */
+	public Type typeShared(String id) {
+		Type result = null;
+		result = this.sharedScope.type(id);
+		return result;
+	}
+	
+	/** Returns the offset of an identifier within shared scope. The
+	 * offset is the sum of the sizes of all types declared before the 
+	 * identifier.
+	 * @return The offset at which {@code id} was declared, or {@code -1}
+	 * if it was not declared.
+	 */
+	public int offsetShared(String id) {
+		Integer result = null;
+		result = this.sharedScope.offset(id);
+		return result == null ? -1 : result;
+	}
+	
 }

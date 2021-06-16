@@ -21,7 +21,7 @@ public class PickleCannonParser extends Parser {
 		CANNON=10, SHARED=11, SYNC=12, TRUE=13, WHILE=14, AND=15, OR=16, ASSIGN=17, 
 		COMMA=18, EQ=19, GE=20, GT=21, LE=22, LBRACE=23, LPAR=24, LSQ=25, LT=26, 
 		MINUS=27, NE=28, NOT=29, PLUS=30, RBRACE=31, RPAR=32, RSQ=33, SEMI=34, 
-		SLASH=35, STAR=36, ID=37, NUM=38, WS=39;
+		SLASH=35, STAR=36, ID=37, NUM=38, WS=39, COMMENT=40;
 	public static final int
 		RULE_program = 0, RULE_proc = 1, RULE_pars = 2, RULE_block = 3, RULE_stat = 4, 
 		RULE_target = 5, RULE_args = 6, RULE_expr = 7, RULE_prfOp = 8, RULE_multOp = 9, 
@@ -49,7 +49,7 @@ public class PickleCannonParser extends Parser {
 			"PICKLE", "CANNON", "SHARED", "SYNC", "TRUE", "WHILE", "AND", "OR", "ASSIGN", 
 			"COMMA", "EQ", "GE", "GT", "LE", "LBRACE", "LPAR", "LSQ", "LT", "MINUS", 
 			"NE", "NOT", "PLUS", "RBRACE", "RPAR", "RSQ", "SEMI", "SLASH", "STAR", 
-			"ID", "NUM", "WS"
+			"ID", "NUM", "WS", "COMMENT"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -1947,7 +1947,7 @@ public class PickleCannonParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3)\u00e3\4\2\t\2\4"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3*\u00e3\4\2\t\2\4"+
 		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
 		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\3\2\7\2 \n\2\f\2\16\2#\13\2\3"+
 		"\2\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\7\3/\n\3\f\3\16\3\62\13\3\5\3\64"+

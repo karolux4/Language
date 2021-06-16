@@ -1,0 +1,22 @@
+cannon{
+	int a = 3;
+	int b[3]=[0,0,5];
+	bool c[3]=[false,true,true];
+	while(c[0]!=c[1]){
+		if(b[2]!=0){
+			if(b[2]>0){
+				b[2]=b[2]-1;
+			}
+			else{
+				b[2]=b[2]+1;
+			}
+		}
+		else{
+			c[0]=true;
+			c[1]=true;
+		}
+	}
+	print(a);
+	print(b);
+	print(c);
+}

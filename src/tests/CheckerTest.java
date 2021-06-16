@@ -16,6 +16,8 @@ public class CheckerTest {
 	@Test
 	public void checkerTest() {
 		checkSuccess("src/sample/fork.pickle");
+		checkSuccess("src/sample/arrayCorrect.pickle");
+		checkFail("src/sample/arrayError.pickle");
 		checkFail("src/sample/error1.pickle");
 		checkFail("src/sample/error2.pickle");
 		checkFail("src/sample/error3.pickle");
@@ -35,7 +37,7 @@ public class CheckerTest {
 			compiler.check(new File(file));
 			Assert.fail("Should have thrown an exception");
 		} catch (ParseException | IOException e) {
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
 	}
 }

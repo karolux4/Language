@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import checker.Type.Array;
 import compiler.ParseException;
 import grammar.PickleCannonBaseListener;
 import grammar.PickleCannonParser.ArrayExprContext;
@@ -70,12 +71,12 @@ public class Checker extends PickleCannonBaseListener {
 	
 	@Override
 	public void enterBlock(BlockContext ctx) {
-		this.table.openScope();
+		this.table.openNestedLevel();;
 	}
 	
 	@Override
 	public void exitBlock(BlockContext ctx) {
-		this.table.closeScope();
+		this.table.closeNestedLevel();
 		if(ctx.stat().size()>0) {
 			setEntry(ctx,entry(ctx.stat(0)));
 		}
@@ -86,14 +87,36 @@ public class Checker extends PickleCannonBaseListener {
 		if(ctx.expr()!=null) {
 			checkType(ctx.type(),getType(ctx.expr()));
 		}
-		this.table.put(ctx.ID().getText(), getType(ctx.type()));
-		setOffset(ctx.ID(),this.table.offset(ctx.ID().getText()));
-		setEntry(ctx, ctx.type());
+		boolean isAdded = this.table.put(ctx.ID().getText(), getType(ctx.type()));
+		if(!isAdded) {
+			addError(ctx, "Variable '%s' is already decleared in this scope", ctx.ID().getText());
+		}
+		else {
+			setOffset(ctx.ID(),this.table.offset(ctx.ID().getText()));
+			setEntry(ctx, ctx.type());
+		}
 	}
 	
 	@Override
 	public void exitArrayVarStat(ArrayVarStatContext ctx) {
 		//!!!NEEDS IMPLEMENTATION
+		if(Integer.parseInt(ctx.NUM().getText())<=0) {
+			addError(ctx, "Array '%s' size must be greater than 0", ctx.ID().getText());
+		}
+		else {
+			Type array = new Type.Array(Integer.parseInt(ctx.NUM().getText()),getType(ctx.type()));
+			boolean isAdded = this.table.put(ctx.ID().getText(), array);
+			if(!isAdded) {
+				addError(ctx, "Variable '%s' is already decleared in this scope", ctx.ID().getText());
+			}
+			else {
+				setOffset(ctx.ID(),this.table.offset(ctx.ID().getText()));
+				setEntry(ctx,ctx.type());
+				if(ctx.expr()!=null) {
+					checkType(ctx.expr(), array);
+				}
+			}
+		}
 	}
 	
 	@Override
@@ -164,11 +187,15 @@ public class Checker extends PickleCannonBaseListener {
 		Type type = this.table.type(id);
 		if (type == null) {
 			addError(ctx, "Array '%s' not declared in this scope", id);
-		} else {
+		}
+		else if(!(type instanceof Type.Array)){
+			addError(ctx, "Variable '%s' is not an array", id);
+		}
+		else {
 			checkType(ctx.expr(), Type.INT);
-			setType(ctx, type);
+			setType(ctx, ((Type.Array) type).getElemType());
 			setOffset(ctx, this.table.offset(id));
-			setEntry(ctx, ctx);
+			setEntry(ctx, ctx.expr());
 		}
 	}
 
@@ -261,12 +288,32 @@ public class Checker extends PickleCannonBaseListener {
 
 	@Override
 	public void exitIndexExpr(IndexExprContext ctx) {
-		// !!!NEEDS IMPLEMENTATION
+		String id = ctx.ID().getText();
+		Type type = this.table.type(id);
+		if (type == null) {
+			addError(ctx, "Array '%s' not declared in this scope", id);
+		}
+		else if(!(type instanceof Type.Array)){
+			addError(ctx, "Variable '%s' is not an array", id);
+		}
+		else {
+			checkType(ctx.expr(), Type.INT);
+			setType(ctx, ((Type.Array) type).getElemType());
+			setOffset(ctx, this.table.offset(id));
+			setEntry(ctx, ctx.expr());
+		}
 	}
 
 	@Override
 	public void exitArrayExpr(ArrayExprContext ctx) {
-		// !!!NEEDS IMPLEMENTATION
+		Type type = getType(ctx.expr(0));
+		for(int i=1;i<ctx.expr().size();i++) {
+			checkType(ctx.expr(i),type);
+		}
+		Type array = new Type.Array(ctx.expr().size(),type);
+		setType(ctx, array);
+		setEntry(ctx, ctx.expr(0));
+		
 	}
 
 	@Override

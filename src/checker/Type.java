@@ -18,6 +18,7 @@ public abstract class Type {
 		return this.kind;
 	}
 	
+	
 	/** returns the size (in bytes) of a value of this type. */
 	abstract public int size();
 	
@@ -60,7 +61,7 @@ public abstract class Type {
 		private final int size;
 		private final Type elemType;
 
-		private Array(int size, Type elemType) {
+		public Array(int size, Type elemType) {
 			super(TypeKind.ARRAY);
 			assert size > 0;
 			this.size = size;

@@ -47,11 +47,14 @@ STAR:   '*';
 ID: LETTER (LETTER | DIGIT)*;
 NUM: DIGIT (DIGIT)*;
 
+
 fragment LETTER: [a-zA-Z];
 fragment DIGIT: [0-9];
 
 // ignore whitespace
 WS : [ \t\n\r] -> skip;
+// ignore comments
+COMMENT: SLASH STAR .*? STAR SLASH -> skip;
 
 fragment A: [aA];
 fragment B: [bB];
