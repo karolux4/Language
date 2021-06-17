@@ -1,0 +1,9 @@
+pickle p1(bool b){
+}
+pickle p2(int a, bool a[], int a[]){
+	print(b);
+}
+pickle p1(int a){
+}
+cannon {
+}

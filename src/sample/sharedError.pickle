@@ -1,0 +1,17 @@
+pickle p1(){
+	int shared a;
+}
+
+cannon{
+	int a;
+	int shared a[2];
+	int shared b[3]=[0,2,3];
+	int b=4;
+	{
+		int shared f;
+		{
+			int b=3;
+		}
+		int b=2;
+	}
+}

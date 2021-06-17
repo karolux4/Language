@@ -92,7 +92,15 @@ public class Checker extends PickleCannonBaseListener {
 		for(ParsContext p : ctx.pars()) {
 			parameters.add(getType(p));
 		}
-		Type type = new Type.Proc(parameters);		
+		Type type = new Type.Proc(parameters);
+		boolean isAdded = this.table.put(ctx.ID().getText(), type);
+		if(!isAdded) {
+			addError(ctx,"Function '%s' is already decleared in this scope", ctx.ID().getText());
+		}
+		else {
+			setType(ctx, type);
+			setOffset(ctx, this.table.offset(ctx.ID().getText()));
+		}
 	}
 	
 	@Override
@@ -124,10 +132,10 @@ public class Checker extends PickleCannonBaseListener {
 	@Override
 	public void enterBlock(BlockContext ctx) {
 		if(!this.scopeOpenedByFunction) {
+			this.table.openNestedLevel();
 			if(ctx.parent instanceof ProgramContext) {
 				this.isInMainScope=true;
 			}
-			this.table.openNestedLevel();
 		}
 		else {
 			this.scopeOpenedByFunction=false;
@@ -140,51 +148,80 @@ public class Checker extends PickleCannonBaseListener {
 		if(ctx.stat().size()>0) {
 			setEntry(ctx,entry(ctx.stat(0)));
 		}
+		else {
+			setEntry(ctx,ctx);
+		}
 	}
 
 	@Override
 	public void exitSimpleVarStat(SimpleVarStatContext ctx) {
-		if(ctx.SHARED()!=null) {
-			if(!this.isInMainScope||this.table.scopeDepth()>2) {
-				addError(ctx, "Variable '%s' can be declared shared only in cannon outer scope", ctx.ID().getText());
-			}
-		}
 		if(ctx.expr()!=null) {
 			checkType(ctx.type(),getType(ctx.expr()));
 		}
-		boolean isAdded = this.table.put(ctx.ID().getText(), getType(ctx.type()));
-		if(!isAdded) {
-			addError(ctx, "Variable '%s' is already decleared in this scope", ctx.ID().getText());
+		if(ctx.SHARED()!=null){
+			if(!this.isInMainScope||this.table.scopeDepth()>2) {
+				addError(ctx, "Variable '%s' can be declared shared only in cannon outer scope", ctx.ID().getText());
+			}
+			else {
+				boolean isAdded = this.table.putShared(ctx.ID().getText(), getType(ctx.type()));
+				if(!isAdded) {
+					addError(ctx, "Variable '%s' is already decleared in this scope", ctx.ID().getText());
+				}
+				else {
+					setOffset(ctx.ID(),this.table.offset(ctx.ID().getText()));
+					setEntry(ctx, ctx.type());
+				}
+			}
 		}
 		else {
-			setOffset(ctx.ID(),this.table.offset(ctx.ID().getText()));
-			setEntry(ctx, ctx.type());
+			boolean isAdded = this.table.put(ctx.ID().getText(), getType(ctx.type()));
+			if(!isAdded) {
+				addError(ctx, "Variable '%s' is already decleared in this scope %s", ctx.ID().getText(), this.table.scopeDepth());
+			}
+			else {
+				setOffset(ctx.ID(),this.table.offset(ctx.ID().getText()));
+				setEntry(ctx, ctx.type());
+			}
 		}
 	}
 	
 	@Override
 	public void exitArrayVarStat(ArrayVarStatContext ctx) {
-		if(ctx.SHARED()!=null) {
-			if(!this.isInMainScope||this.table.scopeDepth()>2) {
-				addError(ctx, "Variable '%s' can be declared shared only in cannon outer scope", ctx.ID().getText());
-			}
-		}
 		if(Integer.parseInt(ctx.NUM().getText())<=0) {
 			addError(ctx, "Array '%s' size must be greater than 0", ctx.ID().getText());
 		}
 		else {
 			Type array = new Type.Array(Integer.parseInt(ctx.NUM().getText()),getType(ctx.type()));
-			boolean isAdded = this.table.put(ctx.ID().getText(), array);
-			if(!isAdded) {
-				addError(ctx, "Variable '%s' is already decleared in this scope", ctx.ID().getText());
-			}
-			else {
-				setOffset(ctx.ID(),this.table.offset(ctx.ID().getText()));
-				setEntry(ctx,ctx.type());
-				if(ctx.expr()!=null) {
-					checkType(ctx.expr(), array);
+			if(ctx.SHARED()!=null) {
+				if(!this.isInMainScope||this.table.scopeDepth()>2) {
+					addError(ctx, "Variable '%s' can be declared shared only in cannon outer scope", ctx.ID().getText());
+				}
+				boolean isAdded = this.table.putShared(ctx.ID().getText(), array);
+				if(!isAdded) {
+					addError(ctx, "Variable '%s' is already decleared in this scope", ctx.ID().getText());
+				}
+				else {
+					setOffset(ctx.ID(),this.table.offset(ctx.ID().getText()));
+					setEntry(ctx,ctx.type());
+					if(ctx.expr()!=null) {
+						checkType(ctx.expr(), array);
+					}
 				}
 			}
+			else {
+				boolean isAdded = this.table.put(ctx.ID().getText(), array);
+				if(!isAdded) {
+					addError(ctx, "Variable '%s' is already decleared in this scope", ctx.ID().getText());
+				}
+				else {
+					setOffset(ctx.ID(),this.table.offset(ctx.ID().getText()));
+					setEntry(ctx,ctx.type());
+					if(ctx.expr()!=null) {
+						checkType(ctx.expr(), array);
+					}
+				}
+			}
+
 		}
 	}
 	
@@ -220,15 +257,9 @@ public class Checker extends PickleCannonBaseListener {
 	public void exitSyncStat(SyncStatContext ctx) {
 		setEntry(ctx, entry(ctx.block()));
 	}
-
-	@Override
-	public void enterBlockStat(BlockStatContext ctx) {
-		this.table.openScope();
-	}
 	
 	@Override
 	public void exitBlockStat(BlockStatContext ctx) {
-		this.table.closeScope();
 		setEntry(ctx, entry(ctx.block()));
 	}
 

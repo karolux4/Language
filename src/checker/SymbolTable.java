@@ -10,14 +10,14 @@ public class SymbolTable {
 
 	/** Constructs a fresh, initially empty symbol table. */
 	public SymbolTable() {
-		System.out.println("Initial scope");
+		//System.out.println("Initial scope");
 		this.scopes = new Stack<>();
 		this.sharedScope = new Scope();
 		openScope();
 	}
 	/** Adds a next deeper scope level. */
 	public void openScope() {
-		System.out.println("Open new scope");
+		//System.out.println("Open new scope");
 		this.scopes.push(new Scope());
 	}
 
@@ -25,7 +25,7 @@ public class SymbolTable {
 	 * @throws RuntimeException if the table only contains the outer scope.
 	 */
 	public void closeScope() {
-		System.out.println("Close scope");
+		//System.out.println("Close scope");
 		if (this.scopes.size() == 1) {
 			throw new IllegalStateException("Can't close outer scope");
 		}
@@ -34,7 +34,7 @@ public class SymbolTable {
 	
 	/** Adds a new nested level in a scope. */
 	public void openNestedLevel() {
-		System.out.println("Open new nested level");
+		//System.out.println("Open new nested level");
 		this.scopes.peek().openNestedLevel();
 	}
 
@@ -42,7 +42,7 @@ public class SymbolTable {
 	 * @throws RuntimeException if the scope only contains the outer level.
 	 */
 	public void closeNestedLevel() {
-		System.out.println("Close new nested level");
+		//System.out.println("Close new nested level");
 		this.scopes.peek().closeNestedLevel();
 	}
 
@@ -51,6 +51,13 @@ public class SymbolTable {
 	 * <code>false</code> if it was already declared in this scope.
 	 */
 	public boolean put(String id, Type record) {
+		// This is if-statement is triggered only for outer most scopes of procedures or main block
+		// and can return false only from main block as shared variables can be declared only there
+		if(this.scopes.peek().getScopeDepth()==2) {
+			if(this.sharedScope.contains(id)) {
+				return false;
+			}
+		}
 		return this.scopes.peek().put(id, record);
 	}
 
@@ -100,6 +107,9 @@ public class SymbolTable {
 	 * <code>false</code> if it was already declared in this scope.
 	 */
 	public boolean putShared(String id, Type record) {
+		if(this.scopes.peek().contains(id)) {
+			return false;
+		}
 		return this.sharedScope.put(id, record);
 	}
 
