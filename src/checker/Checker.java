@@ -316,14 +316,16 @@ public class Checker extends PickleCannonBaseListener {
 		}
 		else {
 			Type type = this.table.type(id);
+			int offset = this.table.offset(id);
 			if(type == null) {
 				type = this.table.typeShared(id);
+				offset = this.table.offsetShared(id);
 			}
 			if (type == null) {
 				addError(ctx, "Variable '%s' not declared in this scope", id);
 			} else {
 				setType(ctx, type);
-				setOffset(ctx, this.table.offset(id));
+				setOffset(ctx, offset);
 				setEntry(ctx, ctx);
 			}
 		}
@@ -363,8 +365,10 @@ public class Checker extends PickleCannonBaseListener {
 		}
 		else {
 			Type type = this.table.type(id);
+			int offset = this.table.offset(id);
 			if(type == null) {
 				type = this.table.typeShared(id);
+				offset = this.table.offsetShared(id);
 			}
 			if (type == null) {
 				addError(ctx, "Array '%s' not declared in this scope", id);
@@ -375,7 +379,7 @@ public class Checker extends PickleCannonBaseListener {
 			else {
 				checkType(ctx.expr(), Type.INT);
 				setType(ctx, ((Type.Array) type).getElemType());
-				setOffset(ctx, this.table.offset(id));
+				setOffset(ctx, offset);
 				setEntry(ctx, ctx.expr());
 			}
 		}
@@ -466,14 +470,16 @@ public class Checker extends PickleCannonBaseListener {
 		}
 		else {
 			Type type = this.table.type(id);
+			int offset = this.table.offset(id);
 			if(type==null) {
 				type = this.table.typeShared(id);
+				offset = this.table.offsetShared(id);
 			}
 			if (type == null) {
 				addError(ctx, "Variable '%s' not declared in this scope", id);
 			} else {
 				setType(ctx, type);
-				setOffset(ctx, this.table.offset(id));
+				setOffset(ctx, offset);
 				setEntry(ctx, ctx);
 			}
 		}
@@ -530,8 +536,10 @@ public class Checker extends PickleCannonBaseListener {
 		}
 		else {
 			Type type = this.table.type(id);
+			int offset = this.table.offset(id);
 			if(type == null) {
 				type = this.table.typeShared(id);
+				offset = this.table.offsetShared(id);
 			}
 			if (type == null) {
 				addError(ctx, "Array '%s' not declared in this scope", id);
@@ -542,7 +550,7 @@ public class Checker extends PickleCannonBaseListener {
 			else {
 				checkType(ctx.expr(), Type.INT);
 				setType(ctx, ((Type.Array) type).getElemType());
-				setOffset(ctx, this.table.offset(id));
+				setOffset(ctx, offset);
 				setEntry(ctx, ctx.expr());
 			}
 		}
