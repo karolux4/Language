@@ -21,6 +21,8 @@ public class CheckerTest {
 		checkFail("src/sample/arrayError.pickle");
 		checkFail("src/sample/procError.pickle");
 		checkFail("src/sample/sharedError.pickle");
+		checkFail("src/sample/forkError.pickle");
+		checkFail("src/sample/forkSharedError.pickle");
 		checkFail("src/sample/error1.pickle");
 		checkFail("src/sample/error2.pickle");
 		checkFail("src/sample/error3.pickle");

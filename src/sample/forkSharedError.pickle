@@ -1,0 +1,20 @@
+cannon {
+	int shared a[2];
+	fork{
+		int b;
+		b = 3;
+		a[0]=1;
+		fork{
+			a[2]=1;
+		}
+	}
+	int c;
+	int shared d=1;
+	fork{
+		c=3;
+		fork{
+			b[0]=1;
+			d[1]=2;
+		}
+	}
+}

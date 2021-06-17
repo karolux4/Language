@@ -89,4 +89,20 @@ public class Scope {
 		return null;
 	}
 	
+	/**
+	 * Returns the relative depth of variable in the nested levels
+	 * @param id
+	 * @return {@code 0} if variable resides in the top nested level,
+	 * {@code -1} if variable is not declared
+	 */
+	public int variableDepth(String id) {
+		int result = -1;
+		for (int i = this.types.size() - 1; result < 0 && i >= 0; i--) {
+			if (this.types.get(i).containsKey(id)) {
+				result = this.types.size() - 1 - i;
+			}
+		}
+		return result;
+	}
+	
 }

@@ -136,11 +136,21 @@ public class SymbolTable {
 	}
 	
 	/**
-	 * Returns current scope depth
-	 * @return Current scope depth
+	 * Returns current scope nested levels count
+	 * @return Current scope nested levels count
 	 */
 	public int scopeDepth() {
 		return this.scopes.peek().getScopeDepth();
+	}
+	
+	/**
+	 * Returns the variable depth in the top scope
+	 * @param id
+	 * @return {@code 0} if variable is in the most inner nested level,
+	 * {@code -1} if variable is not declared.
+	 */
+	public int variableDepth(String id) {
+		return this.scopes.peek().variableDepth(id);
 	}
 	
 }

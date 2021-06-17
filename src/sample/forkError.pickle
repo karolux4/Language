@@ -1,0 +1,32 @@
+pickle p1(){
+	fork{
+		int a;
+	}
+}
+
+cannon{
+	fork{
+		int a;
+		fork{
+			int b;
+		}
+	}
+	
+	while(true){
+		fork{
+			int a;
+			fork{
+				int b;
+			}
+		}
+	}
+	
+	fork{
+		while(true){
+		}
+		while(true){
+			fork{
+			}
+		}
+	}
+}
