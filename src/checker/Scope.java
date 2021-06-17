@@ -13,19 +13,25 @@ public class Scope {
 	/** Stack for each nested level to store map from declared variables to their offset within the allocation
 	 * record of this scope. */
 	private final Stack<Map<String, Integer>> offsets;
+	/** Stack for each nested level to store used variables in that scope, so that re-declaration after use would be prevented*/
+	private final Stack<Map<String, Type>> used;
+	
 
 	/** Constructs a fresh, initially empty scope. */
 	public Scope() {
 		this.types = new Stack<>();
 		this.offsets = new Stack<>();
+		this.used = new Stack<>();
 		this.types.push(new LinkedHashMap<>());
 		this.offsets.push(new LinkedHashMap<>());
+		this.used.push(new LinkedHashMap<>());
 	}
 	
 	/** Opens new nested level of the scope*/
 	public void openNestedLevel() {
 		types.push(new LinkedHashMap<>());
 		offsets.push(new LinkedHashMap<>());
+		used.push(new LinkedHashMap<>());
 	}
 	
 	/** Closes top nested level of the scope*/
@@ -35,6 +41,7 @@ public class Scope {
 		}
 		types.pop();
 		offsets.pop();
+		used.pop();
 	}
 	
 	/**
@@ -103,6 +110,25 @@ public class Scope {
 			}
 		}
 		return result;
+	}
+	
+	
+	/**
+	 * Puts variable in used nested level so that program knows that this variable has already been used
+	 * @param id
+	 * @param type
+	 */
+	public void putUsed(String id, Type type) {
+		this.used.peek().put(id, type);
+	}
+	
+	/**
+	 * Returns if the variable has been used in the inner-most nested level
+	 * @param id
+	 * @return
+	 */
+	public boolean isUsed(String id) {
+		return this.used.peek().containsKey(id);
 	}
 	
 }

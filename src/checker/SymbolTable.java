@@ -153,4 +153,23 @@ public class SymbolTable {
 		return this.scopes.peek().variableDepth(id);
 	}
 	
+	/**
+	 * Puts variable in the used structure, so that program knows that variable
+	 * has been already used in this nested level
+	 * @param id
+	 * @param type
+	 */
+	public void putUsed(String id, Type type) {
+		this.scopes.peek().putUsed(id, type);
+	}
+	
+	/**
+	 * Returns if the variable has been used in the inner-most level
+	 * @param id
+	 * @return {@code true} if variable was used, {@code false} if variable was not
+	 */
+	public boolean isUsed(String id) {
+		return this.scopes.peek().isUsed(id);
+	}
+	
 }
