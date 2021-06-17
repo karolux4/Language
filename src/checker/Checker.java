@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import checker.Type.Proc;
 import compiler.ParseException;
 import grammar.PickleCannonBaseListener;
 import grammar.PickleCannonParser.ArrayExprContext;
@@ -19,7 +20,9 @@ import grammar.PickleCannonParser.BlockContext;
 import grammar.PickleCannonParser.BlockStatContext;
 import grammar.PickleCannonParser.BoolExprContext;
 import grammar.PickleCannonParser.BoolTypeContext;
+import grammar.PickleCannonParser.CallStatContext;
 import grammar.PickleCannonParser.CompExprContext;
+import grammar.PickleCannonParser.ExprContext;
 import grammar.PickleCannonParser.FalseExprContext;
 import grammar.PickleCannonParser.ForkStatContext;
 import grammar.PickleCannonParser.IdExprContext;
@@ -64,6 +67,8 @@ public class Checker extends PickleCannonBaseListener {
 	private int insideWhile;
 	/** Integer used to indicate whether listener is inside forked thread(s) */
 	private int insideFork;
+	
+	private List<FunctionCall> calls;
 
 	/**
 	 * Runs this checker on a given parse tree, and returns the checker result.
@@ -77,7 +82,9 @@ public class Checker extends PickleCannonBaseListener {
 		this.isInMainScope = false;
 		this.insideWhile = 0;
 		this.insideFork = 0;
+		this.calls = new ArrayList<>();
 		new ParseTreeWalker().walk(this, tree);
+		checkCalls(this.calls);
 		if (hasErrors()) {
 			throw new ParseException(getErrors());
 		}
@@ -290,6 +297,19 @@ public class Checker extends PickleCannonBaseListener {
 	public void exitPrintStat(PrintStatContext ctx) {
 		setEntry(ctx, entry(ctx.expr()));
 	}
+	
+	@Override
+	public void exitCallStat(CallStatContext ctx) {
+		List<Type> args = new ArrayList<>();
+		for(ExprContext arg : ctx.args().expr()) {
+			args.add(getType(arg));
+		}
+		FunctionCall call = new FunctionCall(ctx,ctx.ID().getText());
+		calls.add(call);
+		Type type = new Type.Proc(args);
+		setType(ctx,type);
+	}
+	
 
 	@Override
 	public void exitIdTarget(IdTargetContext ctx) {
@@ -586,7 +606,17 @@ public class Checker extends PickleCannonBaseListener {
 		if (actual == null || expected == null) {
 			// throw new IllegalArgumentException("Missing inferred type of " +
 			// node.getText());
-		} else if (!actual.equals(expected)) {
+		}else if (actual instanceof Type.Array) {
+			if (!((Type.Array) actual).equalsWithSize(expected)) {
+				if(expected instanceof Type.Array) {
+					addError(node, "Expected type '%s' but found '%s'", ((Type.Array) expected).toStringWithSize(), ((Type.Array) actual).toStringWithSize());
+				}
+				else {
+					addError(node, "Expected type '%s' but found '%s'", expected, ((Type.Array) actual).toStringWithSize());
+				}
+			}
+		}
+		else if (!actual.equals(expected)) {
 			addError(node, "Expected type '%s' but found '%s'", expected, actual);
 		}
 	}
@@ -601,10 +631,6 @@ public class Checker extends PickleCannonBaseListener {
 		if (actual == null || expected == null) {
 			// throw new IllegalArgumentException("Missing inferred type of " +
 			// node.getText());
-		} else if (actual instanceof Type.Array) {
-			if (!((Type.Array) actual).equalsWithoutSize(expected)) {
-				addError(node, "Expected type '%s' but found '%s'", expected, actual);
-			}
 		} else if (!actual.equals(expected)) {
 			addError(node, "Expected type '%s' but found '%s'", expected, actual);
 		}
@@ -663,6 +689,40 @@ public class Checker extends PickleCannonBaseListener {
 	/** Returns the flow graph entry of a given expression or statement. */
 	private ParserRuleContext entry(ParseTree node) {
 		return this.result.getEntry(node);
+	}
+	
+	/**
+	 * Class to store Function call parameters for function call correctness check
+	 * @author Karolis Butkus
+	 *
+	 */
+	private class FunctionCall {
+		private ParserRuleContext node;
+		private String function;
+		private FunctionCall(ParserRuleContext node, String function) {
+			this.node=node;
+			this.function=function;
+		}
+		
+		public String getID() {
+			return this.function;
+		}
+		
+		public ParserRuleContext getNode() {
+			return this.node;
+		}
+	}
+	
+	private void checkCalls(List<FunctionCall> calls) {
+		for(FunctionCall call : calls) {
+			Type type = this.table.type(call.getID());
+			if(type==null) {
+				addError(call.getNode(), "Pickle '%s' is not declared", call.getID());
+			}
+			else {
+				checkType(call.node,type); 
+			}
+		}
 	}
 
 }
