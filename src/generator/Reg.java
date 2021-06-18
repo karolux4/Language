@@ -4,6 +4,17 @@ public class Reg extends Operand{
 
 	private final int id;
 	
+	private enum RegName {
+		reg0,
+		regSprID,
+		regA,
+		regB,
+		regC,
+		regD,
+		regE,
+		regF
+	}
+	
 	public Reg(int id) {
 		super(Type.REG);
 		assert id > 0 && id < 7 : "Register id must be between 0 and 7";
@@ -17,6 +28,6 @@ public class Reg extends Operand{
 	
 	@Override
 	public String toString() {
-		return ""+this.id;
+		return ""+RegName.values()[id];
 	}
 }

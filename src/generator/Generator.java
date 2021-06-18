@@ -45,12 +45,22 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	/** The program being built. */
 	private Program prog;
 	
+	/** The array indicating if register is taken*/
+	private boolean isRegisterTaken[];
+	
 	/** Association of expression and target nodes to registers. */
 	private ParseTreeProperty<Reg> regs;
 	
 	public Program generate(ParseTree tree, Result checkResult) {
 		this.prog = new Program();
 		this.checkResult = checkResult;
+		this.isRegisterTaken = new boolean[8];
+		// reg0 is taken
+		this.isRegisterTaken[0]=true;
+		// regSprID is taken
+		this.isRegisterTaken[1]=true;
+		// regA is allocated for ARP
+		this.isRegisterTaken[2]=true;
 		this.regs = new ParseTreeProperty<>();
 		tree.accept(this);
 		return null;
@@ -282,5 +292,50 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		return null;
 	}
 	
+	private boolean isRegisterTaken(int i) {
+		return this.isRegisterTaken[i];
+	}
+	
+	private int getFreeRegister() {
+		for(int i=3;i<this.isRegisterTaken.length;i++) {
+			if(!this.isRegisterTaken[i]) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	private void freeUpRegister(int i) {
+		this.isRegisterTaken[i]=false;
+	}
+	
+	private void lockRegister(int i) {
+		if(this.isRegisterTaken[i]) {
+			throw new RuntimeException("Register is already locked");
+		}
+		this.isRegisterTaken[i]=true;
+	}
+	
+	private Reg reg(ParseTree node) {
+		Reg result = this.regs.get(node);
+		if (result == null) {
+			int regId = getFreeRegister();
+			result = new Reg(regId);
+			lockRegister(regId);
+			this.regs.put(node, result);
+		}
+		return result;
+	}
+	
+	private void freeReg(ParseTree node) {
+		Reg result = this.regs.get(node);
+		if(result == null) {
+			throw new RuntimeException("This node does not have a register");
+		}
+		else {
+			this.regs.removeFrom(node);
+			this.freeUpRegister(result.getId());
+		}
+	}
 	
 }
