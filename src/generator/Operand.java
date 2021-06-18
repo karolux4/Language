@@ -19,7 +19,11 @@ abstract public class Operand {
 	public static enum Type {
 		/** Register-type operand; class {@link Reg}. */
 		REG,
-		/** Numeric operand; class {@link Num}. */
-		NUM;
+		/** Target operand; class {@link Target}. */
+		TARGET,
+		/** Address	operand; class {@link Addr}. */
+		ADDR,
+		/** Operator operand; class {@link Operator}. */
+		OPERATOR,
 	}
 }

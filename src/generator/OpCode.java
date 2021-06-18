@@ -1,102 +1,58 @@
 package generator;
 
+import static generator.Operand.Type.REG;
+import static generator.Operand.Type.OPERATOR;
+import static generator.Operand.Type.ADDR;
+import static generator.Operand.Type.TARGET;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static generator.Operand.Type.NUM;
-import static generator.Operand.Type.REG;
-
 public enum OpCode {
 
 	/** No operation */
-	nop(0),
+	Nop(0),
 
 	/** Add operation */
-	add(2, REG, REG, REG),
-
-	/** Subtract operation */
-	sub(2, REG, REG, REG),
-
-	/** Multiplication operation */
-	mult(2, REG, REG, REG),
-
-	/** Equal operation */
-	eq(2, REG, REG, REG),
-
-	/** Not equal operation */
-	neq(2, REG, REG, REG),
-
-	/** Greater than operation */
-	gt(2, REG, REG, REG),
-
-	/** Greater than or equal operation */
-	gte(2, REG, REG, REG),
-
-	/** Lower than operation */
-	lt(2, REG, REG, REG),
-
-	/** Lower than or equal operation */
-	lte(2, REG, REG, REG),
-
-	/** And operation */
-	and(2, REG, REG, REG),
-
-	/** Or operation */
-	or(2, REG, REG, REG),
-
-	/** Load number operation */
-	loadNum(1, NUM, REG),
-
-	/** Load value from memory address */
-	loadAddr(1, NUM, REG),
-
-	/** Load value from memory at address stored in register */
-	loadReg(1, REG, REG),
+	Compute(3, OPERATOR, REG, REG, REG),
+	
+	/** Jump operation */
+	Jump(1,TARGET),
+	
+	/** Branch operation */
+	Branch(2, REG, TARGET),
+	
+	/** Load operation */
+	Load(1, ADDR, REG),
 
 	/** Store value from register to specified memory address */
-	storeAddr(1, REG, NUM),
-
-	/** Store value from register to memory at address stored in register */
-	storeReg(1, REG, REG),
+	Store(1, REG, ADDR),
 
 	/** Push register value to stack */
-	push(1, REG),
+	Push(1, REG),
 
 	/** Pop value from stack */
-	pop(0, REG),
+	Pop(0, REG),
 
 	/** Send read request to shared memory address */
-	readInstrAddr(1, NUM),
-
-	/** Send read request to shared memory address stored at register */
-	readInstrReg(1, REG),
+	ReadInstr(1, ADDR),
 
 	/** Wait for reply and save it in the register */
-	receiveInstr(0, REG),
+	Receive(0, REG),
 
 	/** Write register value to shared memory address */
-	writeInstrAddr(2, REG, NUM),
-
-	/** Write register value to shared memory address stored at register */
-	writeInstrReg(2, REG, REG),
+	WriteInstr(2, REG, ADDR),
 
 	/**
 	 * Request a test on address for 0 and sets it to 1 if it is. Reply will contain
 	 * 1 on success, and 0 on failure. This is an atomic operation; it might
 	 * therefore be used to implement locks or synchronisation.
 	 */
-	testAndSetAddr(1, NUM),
-
-	/**
-	 * Request a test on address for 0 and sets it to 1 if it is. Reply will contain
-	 * 1 on success, and 0 on failure. This is an atomic operation; it might
-	 * therefore be used to implement locks or synchronisation.
-	 */
-	testAndSetReg(1, REG),
+	TestAndSet(1, ADDR),
 
 	/** Program end operation */
-	endProg(0)
+	EndProg(0)
 
 	;
 
@@ -119,5 +75,35 @@ public enum OpCode {
 			this.targetSig.add(sig[i]);
 		}
 		this.sig = new ArrayList<>(Arrays.asList(sig));
+	}
+	
+	/** Returns the number of operands. */
+	public int getSigSize() {
+		return getSourceCount() + getTargetCount();
+	}
+	
+	/** Returns the list of expected operand types. */
+	public List<Operand.Type> getSig() {
+		return this.sig;
+	}
+
+	/** Returns the number of source operands. */
+	public int getSourceCount() {
+		return getSourceSig().size();
+	}
+
+	/** Returns the list of expected source operand types. */
+	public List<Operand.Type> getSourceSig() {
+		return this.sourceSig;
+	}
+
+	/** Returns the number of target operands. */
+	public int getTargetCount() {
+		return getTargetSig().size();
+	}
+
+	/** Returns the list of expected target operand types. */
+	public List<Operand.Type> getTargetSig() {
+		return this.targetSig;
 	}
 }
