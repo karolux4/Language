@@ -5,7 +5,6 @@ import java.util.List;
 
 import generator.Operand.Type;
 
-
 public class Instr {
 
 	/** The operation code. */
@@ -30,10 +29,10 @@ public class Instr {
 								arg.getType()));
 			}
 		}
-		this.args =  Arrays.asList(args);
+		this.args = Arrays.asList(args);
 
 	}
-	
+
 	/** Returns the opcode of this operation. */
 	public OpCode getOpCode() {
 		return this.opCode;
@@ -43,7 +42,16 @@ public class Instr {
 	public List<Operand> getArgs() {
 		return this.args;
 	}
-	
-	
+
+	@Override
+	public String toString() {
+		StringBuilder result = new StringBuilder();
+		result.append(getOpCode());
+		for(Operand o : getArgs()) {
+			result.append(' ');
+			result.append(o.toString());
+		}
+		return result.toString();
+	}
 
 }

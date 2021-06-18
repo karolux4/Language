@@ -26,6 +26,7 @@ public class CheckerTest {
 		checkFail("src/sample/error1.pickle");
 		checkFail("src/sample/error2.pickle");
 		checkFail("src/sample/error3.pickle");
+
 	}
 	
 	public void checkSuccess(String file) {
