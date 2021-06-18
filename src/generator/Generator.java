@@ -7,7 +7,6 @@ import checker.Result;
 import grammar.PickleCannonBaseVisitor;
 import grammar.PickleCannonParser.ArgsContext;
 import grammar.PickleCannonParser.ArrayExprContext;
-import grammar.PickleCannonParser.ArrayParContext;
 import grammar.PickleCannonParser.ArrayTargetContext;
 import grammar.PickleCannonParser.ArrayVarStatContext;
 import grammar.PickleCannonParser.AssignStatContext;
@@ -16,6 +15,7 @@ import grammar.PickleCannonParser.BlockStatContext;
 import grammar.PickleCannonParser.BoolExprContext;
 import grammar.PickleCannonParser.CallStatContext;
 import grammar.PickleCannonParser.CompExprContext;
+import grammar.PickleCannonParser.ExprContext;
 import grammar.PickleCannonParser.FalseExprContext;
 import grammar.PickleCannonParser.ForkStatContext;
 import grammar.PickleCannonParser.IdExprContext;
@@ -32,9 +32,9 @@ import grammar.PickleCannonParser.PrintStatContext;
 import grammar.PickleCannonParser.ProcContext;
 import grammar.PickleCannonParser.ProgramContext;
 import grammar.PickleCannonParser.SimpleVarStatContext;
+import grammar.PickleCannonParser.StatContext;
 import grammar.PickleCannonParser.SyncStatContext;
 import grammar.PickleCannonParser.TrueExprContext;
-import grammar.PickleCannonParser.VarParContext;
 import grammar.PickleCannonParser.WhileStatContext;
 
 public class Generator extends PickleCannonBaseVisitor<Instr>{
@@ -60,66 +60,83 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	@Override
 	public Instr visitProgram(ProgramContext ctx) {
 		System.out.println("Visit program");
+		for(ProcContext proc : ctx.proc()) {
+			visit(proc);
+		}
+		visit(ctx.block());
 		return null;
 	}
 	
 	@Override
 	public Instr visitProc(ProcContext ctx) {
 		System.out.println("Visit procedure");
-		return null;
-	}
-	
-	@Override
-	public Instr visitVarPar(VarParContext ctx) {
-		System.out.println("Visit varPar");
-		return null;
-	}
-	
-	@Override
-	public Instr visitArrayPar(ArrayParContext ctx) {
-		System.out.println("Visit arrayPar");
+		visit(ctx.block());
 		return null;
 	}
 	
 	@Override
 	public Instr visitBlock(BlockContext ctx) {
 		System.out.println("Visit block");
+		for(StatContext stat : ctx.stat()) {
+			visit(stat);
+		}
 		return null;
 	}
 	
 	@Override
 	public Instr visitSimpleVarStat(SimpleVarStatContext ctx) {
 		System.out.println("Visit simpleVarStat");
+		if(ctx.expr()!=null) {
+			visit(ctx.expr());
+		}
 		return null;
 	}
 	
 	@Override
 	public Instr visitArrayVarStat(ArrayVarStatContext ctx) {
 		System.out.println("Visit arrayVarStat");
+		if(ctx.expr()!=null) {
+			visit(ctx.expr());
+		}
 		return null;
 	}
 	
 	@Override
 	public Instr visitAssignStat(AssignStatContext ctx) {
 		System.out.println("Visit assignStat");
+		visit(ctx.target());
+		visit(ctx.expr());
 		return null;
 	}
 	
 	@Override
 	public Instr visitIfStat(IfStatContext ctx) {
 		System.out.println("Visit ifStat");
+		//Condition
+		visit(ctx.expr());
+		//Then
+		visit(ctx.block(0));
+		//Else
+		if(ctx.block().size()>1) {
+			visit(ctx.block(1));
+		}
 		return null;
 	}
 	
 	@Override
 	public Instr visitWhileStat(WhileStatContext ctx) {
 		System.out.println("Visit whileStat");
+		//Condition
+		visit(ctx.expr());
+		//Body
+		visit(ctx.block());
 		return null;
 	}
 	
 	@Override
 	public Instr visitForkStat(ForkStatContext ctx) {
 		System.out.println("Visit forkStat");
+		visit(ctx.block());
 		return null;
 	}
 	
@@ -132,24 +149,28 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	@Override
 	public Instr visitSyncStat(SyncStatContext ctx) {
 		System.out.println("Visit syncStat");
+		visit(ctx.block());
 		return null;
 	}
 	
 	@Override
 	public Instr visitBlockStat(BlockStatContext ctx) {
 		System.out.println("Visit blockStat");
+		visit(ctx.block());
 		return null;
 	}
 	
 	@Override
 	public Instr visitPrintStat(PrintStatContext ctx) {
 		System.out.println("Visit printStat");
+		visit(ctx.expr());
 		return null;
 	}
 	
 	@Override
 	public Instr visitCallStat(CallStatContext ctx) {
 		System.out.println("Visit callStat");
+		visit(ctx.args());
 		return null;
 	}
 	
@@ -162,48 +183,62 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	@Override
 	public Instr visitArrayTarget(ArrayTargetContext ctx) {
 		System.out.println("Visit arrayTarget");
+		visit(ctx.expr());
 		return null;
 	}
 	
 	@Override
 	public Instr visitArgs(ArgsContext ctx) {
 		System.out.println("Visit args");
+		for(ExprContext expr : ctx.expr()) {
+			visit(expr);
+		}
 		return null;
 	}
 	
 	@Override
 	public Instr visitPrfExpr(PrfExprContext ctx) {
 		System.out.println("Visit prfExpr");
+		visit(ctx.expr());
 		return null;
 	}
 	
 	@Override
 	public Instr visitMultExpr(MultExprContext ctx) {
 		System.out.println("Visit multExpr");
+		visit(ctx.expr(0));
+		visit(ctx.expr(1));
 		return null;
 	}
 	
 	@Override
 	public Instr visitPlusExpr(PlusExprContext ctx) {
 		System.out.println("Visit plusExpr");
+		visit(ctx.expr(0));
+		visit(ctx.expr(1));
 		return null;
 	}
 	
 	@Override
 	public Instr visitCompExpr(CompExprContext ctx) {
 		System.out.println("Visit compExpr");
+		visit(ctx.expr(0));
+		visit(ctx.expr(1));
 		return null;
 	}
 	
 	@Override
 	public Instr visitBoolExpr(BoolExprContext ctx) {
 		System.out.println("Visit boolExpr");
+		visit(ctx.expr(0));
+		visit(ctx.expr(1));
 		return null;
 	}
 	
 	@Override
 	public Instr visitParExpr(ParExprContext ctx) {
 		System.out.println("Visit parExpr");
+		visit(ctx.expr());
 		return null;
 	}
 	
@@ -234,12 +269,16 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	@Override
 	public Instr visitIndexExpr(IndexExprContext ctx) {
 		System.out.println("Visit indexExpr");
+		visit(ctx.expr());
 		return null;
 	}
 	
 	@Override
 	public Instr visitArrayExpr(ArrayExprContext ctx) {
 		System.out.println("Visit arrayExpr");
+		for(ExprContext expr : ctx.expr()) {
+			visit(expr);
+		}
 		return null;
 	}
 	
