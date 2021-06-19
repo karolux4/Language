@@ -3,6 +3,8 @@ cannon
 		int shared a = 0;
 		int shared b = 0;
 		int shared c = 0;
+		int e;
+		int f;
 		fork {
 			a=2;
 		}

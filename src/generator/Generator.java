@@ -4,6 +4,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
 import checker.Result;
+import checker.Type;
+import generator.Addr.AddrImmDI;
+import generator.Operator.Oper;
 import grammar.PickleCannonBaseVisitor;
 import grammar.PickleCannonParser.ArgsContext;
 import grammar.PickleCannonParser.ArrayExprContext;
@@ -63,7 +66,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		this.isRegisterTaken[2]=true;
 		this.regs = new ParseTreeProperty<>();
 		tree.accept(this);
-		return null;
+		return prog;
 	}
 	
 	// Override the visitor methods
@@ -74,6 +77,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 			visit(proc);
 		}
 		visit(ctx.block());
+		emit(OpCode.EndProg);
 		return null;
 	}
 	
@@ -96,8 +100,14 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	@Override
 	public Instr visitSimpleVarStat(SimpleVarStatContext ctx) {
 		System.out.println("Visit simpleVarStat");
+		//!!! IMPORTANT !!! does not work for shared
 		if(ctx.expr()!=null) {
 			visit(ctx.expr());
+			Instr i = emit(OpCode.Store,regs.get(ctx.expr()), offset(ctx.ID()));
+			freeReg(ctx.expr());
+		}
+		else {
+			Instr i = emit(OpCode.Store,new Reg(0), offset(ctx.ID()));
 		}
 		return null;
 	}
@@ -114,8 +124,11 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	@Override
 	public Instr visitAssignStat(AssignStatContext ctx) {
 		System.out.println("Visit assignStat");
-		visit(ctx.target());
 		visit(ctx.expr());
+		visit(ctx.target());
+		Instr i = emit(OpCode.Store,regs.get(ctx.expr()), new Addr(AddrImmDI.IndAddr, regs.get(ctx.target()).getId()));
+		freeReg(ctx.target());
+		freeReg(ctx.expr());
 		return null;
 	}
 	
@@ -187,6 +200,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	@Override
 	public Instr visitIdTarget(IdTargetContext ctx) {
 		System.out.println("Visit idTarget");
+		Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
 		return null;
 	}
 	
@@ -218,6 +232,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit multExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
+		if(ctx.multOp().STAR()!=null) {
+			Instr i = emit(OpCode.Compute, new Operator(Oper.Mul),
+					this.regs.get(ctx.expr(0)), this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
+			freeReg(ctx.expr(1));
+			setReg(ctx, this.regs.get(ctx.expr(0)));
+		}
 		return null;
 	}
 	
@@ -226,6 +246,18 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit plusExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
+		if(ctx.plusOp().PLUS()!=null) {
+			Instr i = emit(OpCode.Compute, new Operator(Oper.Add),
+					this.regs.get(ctx.expr(0)), this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
+			freeReg(ctx.expr(1));
+			setReg(ctx, this.regs.get(ctx.expr(0)));
+		}
+		else if(ctx.plusOp().MINUS()!=null) {
+			Instr i = emit(OpCode.Compute, new Operator(Oper.Sub),
+					this.regs.get(ctx.expr(0)), this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
+			freeReg(ctx.expr(1));
+			setReg(ctx, this.regs.get(ctx.expr(0)));
+		}
 		return null;
 	}
 	
@@ -234,6 +266,48 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit compExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
+		if(ctx.compOp().EQ()!=null) {
+			if(this.checkResult.getType(ctx.expr(0))==Type.INT||
+					this.checkResult.getType(ctx.expr(0))==Type.BOOL) {
+				Instr i = emit(OpCode.Compute, new Operator(Oper.Equal),
+						this.regs.get(ctx.expr(0)), this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
+				freeReg(ctx.expr(1));
+				setReg(ctx, this.regs.get(ctx.expr(0)));
+			}
+		}
+		else if(ctx.compOp().NE()!=null) {
+			if(this.checkResult.getType(ctx.expr(0))==Type.INT||
+					this.checkResult.getType(ctx.expr(0))==Type.BOOL) {
+				Instr i = emit(OpCode.Compute, new Operator(Oper.NEq),
+						this.regs.get(ctx.expr(0)), this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
+				freeReg(ctx.expr(1));
+				setReg(ctx, this.regs.get(ctx.expr(0)));
+			}
+		}
+		else if(ctx.compOp().LE()!=null) {
+			Instr i = emit(OpCode.Compute, new Operator(Oper.LtE),
+					this.regs.get(ctx.expr(0)), this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
+			freeReg(ctx.expr(1));
+			setReg(ctx, this.regs.get(ctx.expr(0)));
+		}
+		else if(ctx.compOp().LT()!=null) {
+			Instr i = emit(OpCode.Compute, new Operator(Oper.Lt),
+					this.regs.get(ctx.expr(0)), this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
+			freeReg(ctx.expr(1));
+			setReg(ctx, this.regs.get(ctx.expr(0)));
+		}
+		else if(ctx.compOp().GE()!=null) {
+			Instr i = emit(OpCode.Compute, new Operator(Oper.GtE),
+					this.regs.get(ctx.expr(0)), this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
+			freeReg(ctx.expr(1));
+			setReg(ctx, this.regs.get(ctx.expr(0)));
+		}
+		else if(ctx.compOp().GT()!=null){
+			Instr i = emit(OpCode.Compute, new Operator(Oper.Gt),
+					this.regs.get(ctx.expr(0)), this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
+			freeReg(ctx.expr(1));
+			setReg(ctx, this.regs.get(ctx.expr(0)));
+		}
 		return null;
 	}
 	
@@ -242,6 +316,18 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit boolExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
+		if(ctx.boolOp().AND()!=null) {
+			Instr i = emit(OpCode.Compute, new Operator(Oper.And), this.regs.get(ctx.expr(0)),
+					this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
+			freeReg(ctx.expr(1));
+			setReg(ctx, this.regs.get(ctx.expr(0)));
+		}
+		else if(ctx.boolOp().OR()!=null) {
+			Instr i = emit(OpCode.Compute, new Operator(Oper.Or), this.regs.get(ctx.expr(0)),
+					this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
+			freeReg(ctx.expr(1));
+			setReg(ctx, this.regs.get(ctx.expr(0)));
+		}
 		return null;
 	}
 	
@@ -249,30 +335,35 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	public Instr visitParExpr(ParExprContext ctx) {
 		System.out.println("Visit parExpr");
 		visit(ctx.expr());
+		setReg(ctx, regs.get(ctx.expr()));
 		return null;
 	}
 	
 	@Override
 	public Instr visitIdExpr(IdExprContext ctx) {
 		System.out.println("Visit idExpr");
+		Instr i = emit(OpCode.Load, offset(ctx), reg(ctx));
 		return null;
 	}
 	
 	@Override
 	public Instr visitNumExpr(NumExprContext ctx) {
 		System.out.println("Visit numExpr");
+		Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, Integer.parseInt(ctx.NUM().getText())), reg(ctx));
 		return null;
 	}
 	
 	@Override
 	public Instr visitTrueExpr(TrueExprContext ctx) {
 		System.out.println("Visit trueExpr");
+		Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 1), reg(ctx));
 		return null;
 	}
 	
 	@Override
 	public Instr visitFalseExpr(FalseExprContext ctx) {
 		System.out.println("Visit falseExpr");
+		setReg(ctx, new Reg(0));
 		return null;
 	}
 	
@@ -280,6 +371,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	public Instr visitIndexExpr(IndexExprContext ctx) {
 		System.out.println("Visit indexExpr");
 		visit(ctx.expr());
+		freeReg(ctx.expr());
 		return null;
 	}
 	
@@ -288,8 +380,15 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit arrayExpr");
 		for(ExprContext expr : ctx.expr()) {
 			visit(expr);
+			freeReg(expr);
 		}
 		return null;
+	}
+	
+	private Instr emit(OpCode opCode, Operand... args) {
+		Instr result = new Instr(opCode, args);
+		this.prog.addInstr(result);
+		return result;
 	}
 	
 	private boolean isRegisterTaken(int i) {
@@ -320,6 +419,9 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		Reg result = this.regs.get(node);
 		if (result == null) {
 			int regId = getFreeRegister();
+			if(regId==-1) {
+				throw new RuntimeException("All registers are taken");
+			}
 			result = new Reg(regId);
 			lockRegister(regId);
 			this.regs.put(node, result);
@@ -336,6 +438,17 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 			this.regs.removeFrom(node);
 			this.freeUpRegister(result.getId());
 		}
+	}
+	
+	/** Assigns a register to a given parse tree node. */
+	private void setReg(ParseTree node, Reg reg) {
+		this.regs.put(node, reg);
+	}
+	
+	/** Retrieves the offset of a variable node from the checker result,
+	 * wrapped in a {@link Num} operand. */
+	private Addr offset(ParseTree node) {
+		return new Addr(AddrImmDI.DirAddr,this.checkResult.getOffset(node));
 	}
 	
 }

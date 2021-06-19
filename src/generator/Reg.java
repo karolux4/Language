@@ -4,7 +4,7 @@ public class Reg extends Operand{
 
 	private final int id;
 	
-	private enum RegName {
+	public enum RegName {
 		reg0,
 		regSprID,
 		regA,
@@ -17,7 +17,7 @@ public class Reg extends Operand{
 	
 	public Reg(int id) {
 		super(Type.REG);
-		assert id > 0 && id < 7 : "Register id must be between 0 and 7";
+		assert id >= 0 && id < 8 : "Register id must be between 0 and 7";
 		this.id=id;
 	}
 	

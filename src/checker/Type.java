@@ -33,7 +33,7 @@ public abstract class Type {
 
 		@Override
 		public int size() {
-			return 4;
+			return 1;
 		}
 
 		@Override
@@ -50,7 +50,7 @@ public abstract class Type {
 
 		@Override
 		public int size() {
-			return 4;
+			return 1;
 		}
 
 		@Override
@@ -158,7 +158,7 @@ public abstract class Type {
 
 		@Override
 		public int size() {
-			return 4;
+			return 1;
 		}
 
 		@Override

@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import compiler.Compiler;
 import compiler.ParseException;
+import generator.Program;
 
 public class GeneratorTest {
 
@@ -15,17 +16,21 @@ public class GeneratorTest {
 	
 	@Test
 	public void generatorTest() {
-		compile("src/sample/fork.pickle");
-		System.out.println("-----------------------");
-		compile("src/sample/arrayCorrect.pickle");
-		System.out.println("-----------------------");
-		compile("src/sample/procCorrect.pickle");
+		//compile("src/sample/fork.pickle", "fork");
+		//System.out.println("-----------------------");
+		//compile("src/sample/arrayCorrect.pickle", "arrayCorrect");
+		//System.out.println("-----------------------");
+		//compile("src/sample/procCorrect.pickle", "procCorrect");
+		compile("src/sample/simple.pickle", "simple");
 
 	}
 	
-	public void compile(String file) {
+	public void compile(String file, String out) {
 		try {
-			compiler.compile(new File(file));
+			Program p= compiler.compile(new File(file));
+			if(p!=null) {
+				p.writeToFile(out);
+			}
 		} catch (ParseException | IOException e) {
 			e.printStackTrace();
 			Assert.fail("Should not have thrown parse exception");

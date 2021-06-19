@@ -1,0 +1,11 @@
+cannon{
+	int a = 3;
+	int b = 2;
+	int c = b*a;
+	bool d = true == false;
+	bool e = true&&false;
+	bool f = true||false;
+	int g;
+	g = c*c*c;
+	
+}
