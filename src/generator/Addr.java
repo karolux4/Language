@@ -10,6 +10,8 @@ public class Addr extends Operand{
 		IndAddr
 	}
 	
+	public static Addr NUMBER_IO = new Addr(AddrImmDI.DirAddr, -1);
+	
 	private final AddrImmDI type;
 	private final int value;
 	
@@ -32,6 +34,9 @@ public class Addr extends Operand{
 	
 	@Override
 	public String toString() {
+		if(this.value==-1) {
+			return "numberIO"; // numberIO address
+		}
 		if(this.type==AddrImmDI.IndAddr) {
 			return "("+this.type.toString()+" "+RegName.values()[this.value]+")";
 		}

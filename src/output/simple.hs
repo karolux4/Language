@@ -27,6 +27,33 @@ prog = [
  , Compute Mul regB regC regB
  , Load (ImmValue 6) regC
  , Store regB (IndAddr regC)
+ , Load (DirAddr 0) regB
+ , Load (ImmValue 0) regC
+ , Compute Gt regB regC regB
+ , Compute Equal regB reg0 regC
+ , Branch regC (Abs 51)
+ , Load (ImmValue 3) regB
+ , Store regB (DirAddr 7)
+ , Load (DirAddr 0) regB
+ , Load (ImmValue 1) regC
+ , Compute Sub regB regC regB
+ , Load (ImmValue 0) regC
+ , Store regB (IndAddr regC)
+ , Load (DirAddr 7) regB
+ , WriteInstr regB numberIO
+ , Load (DirAddr 0) regB
+ , Load (ImmValue 2) regC
+ , Compute Equal regB regC regB
+ , Compute Equal regB reg0 regC
+ , Branch regC (Abs 47)
+ , Load (DirAddr 2) regB
+ , WriteInstr regB numberIO
+ , Jump (Abs 49)
+ , Load (DirAddr 3) regB
+ , WriteInstr regB numberIO
+ , Nop
+ , Jump (Abs 25)
+ , Nop
  , EndProg
  ]
 

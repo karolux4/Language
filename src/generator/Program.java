@@ -20,6 +20,14 @@ public class Program {
 		this.instrList.add(instr);
 	}
 	
+	public Instr getInstr(int i) {
+		return this.instrList.get(i);
+	}
+	
+	public void updateInstr(int i, Instr ins) {
+		this.instrList.set(i, ins);
+	}
+	
 	public void writeToFile(String fileName) throws IOException {
 		FileWriter fileWriter = new FileWriter(OUTPUT_PATH+fileName+".hs");
 		PrintWriter printWriter = new PrintWriter(fileWriter);

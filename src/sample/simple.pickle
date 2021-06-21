@@ -7,5 +7,17 @@ cannon{
 	bool f = true||false;
 	int g;
 	g = c*c*c;
+	while(a>0){
+		int g=3;
+		a = a-1;
+		print(g);
+		if(a==2){
+			print(c);
+		}
+		else{
+			print(d);
+		}
+		
+	}
 	
 }

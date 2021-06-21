@@ -7,6 +7,7 @@ import checker.Result;
 import checker.Type;
 import generator.Addr.AddrImmDI;
 import generator.Operator.Oper;
+import generator.Target.TargetType;
 import grammar.PickleCannonBaseVisitor;
 import grammar.PickleCannonParser.ArgsContext;
 import grammar.PickleCannonParser.ArrayExprContext;
@@ -51,8 +52,16 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	/** The array indicating if register is taken*/
 	private boolean isRegisterTaken[];
 	
+	/** The number of inserted instructions*/
+	private int instructionCount;
+	
 	/** Association of expression and target nodes to registers. */
 	private ParseTreeProperty<Reg> regs;
+	
+	/** Association of the first instruction number in the node with a node*/
+	private ParseTreeProperty<Integer> instrID;
+	
+	
 	
 	public Program generate(ParseTree tree, Result checkResult) {
 		this.prog = new Program();
@@ -64,7 +73,9 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		this.isRegisterTaken[1]=true;
 		// regA is allocated for ARP
 		this.isRegisterTaken[2]=true;
+		this.instructionCount=0;
 		this.regs = new ParseTreeProperty<>();
+		this.instrID = new ParseTreeProperty<>();
 		tree.accept(this);
 		return prog;
 	}
@@ -94,6 +105,9 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		for(StatContext stat : ctx.stat()) {
 			visit(stat);
 		}
+		if(ctx.stat().size()>0) {
+			this.instrID.put(ctx, this.instrID.get(ctx.stat(0)));
+		}
 		return null;
 	}
 	
@@ -103,10 +117,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		//!!! IMPORTANT !!! does not work for shared
 		if(ctx.expr()!=null) {
 			visit(ctx.expr());
+			this.instrID.put(ctx, this.instrID.get(ctx.expr()));
 			Instr i = emit(OpCode.Store,regs.get(ctx.expr()), offset(ctx.ID()));
 			freeReg(ctx.expr());
 		}
 		else {
+			this.instrID.put(ctx, instructionCount);
 			Instr i = emit(OpCode.Store,new Reg(0), offset(ctx.ID()));
 		}
 		return null;
@@ -126,6 +142,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit assignStat");
 		visit(ctx.expr());
 		visit(ctx.target());
+		this.instrID.put(ctx, this.instrID.get(ctx.expr()));
 		Instr i = emit(OpCode.Store,regs.get(ctx.expr()), new Addr(AddrImmDI.IndAddr, regs.get(ctx.target()).getId()));
 		freeReg(ctx.target());
 		freeReg(ctx.expr());
@@ -137,12 +154,25 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit ifStat");
 		//Condition
 		visit(ctx.expr());
+		Reg r = reg(ctx);
+		Instr i1 = emit(OpCode.Compute, new Operator(Oper.Equal), this.regs.get(ctx.expr()), new Reg(0), r);
+		freeReg(ctx.expr());
+		Integer branchID = this.instructionCount;
+		Instr i2 = emit(OpCode.Branch, r, new Target(TargetType.Abs, -1));
+		freeReg(ctx);
 		//Then
 		visit(ctx.block(0));
+		Integer jumpID = this.instructionCount;
+		Instr i3 = emit(OpCode.Jump, new Target(TargetType.Abs, -1));
 		//Else
+		Integer elseStart = this.instructionCount;
 		if(ctx.block().size()>1) {
 			visit(ctx.block(1));
 		}
+		Integer endStart = this.instructionCount;
+		Instr i4 = emit(OpCode.Nop);
+		this.prog.updateInstr(branchID, new Instr(OpCode.Branch, r, new Target(TargetType.Abs, elseStart)));
+		this.prog.updateInstr(jumpID, new Instr(OpCode.Jump, new Target(TargetType.Abs, endStart)));
 		return null;
 	}
 	
@@ -150,9 +180,19 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	public Instr visitWhileStat(WhileStatContext ctx) {
 		System.out.println("Visit whileStat");
 		//Condition
+		Integer start = this.instructionCount;
 		visit(ctx.expr());
+		Reg r = reg(ctx);
+		Instr i1 = emit(OpCode.Compute, new Operator(Oper.Equal), this.regs.get(ctx.expr()), new Reg(0), r);
+		freeReg(ctx.expr());
+		Integer branchID = this.instructionCount;
+		Instr i2 = emit(OpCode.Branch, r, new Target(TargetType.Abs, -1));
+		freeReg(ctx);
 		//Body
 		visit(ctx.block());
+		Instr i3 = emit(OpCode.Jump, new Target(TargetType.Abs, start));
+		Instr i4 = emit(OpCode.Nop);
+		this.prog.updateInstr(branchID, new Instr(OpCode.Branch, r, new Target(TargetType.Abs, instructionCount-1)));
 		return null;
 	}
 	
@@ -160,6 +200,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	public Instr visitForkStat(ForkStatContext ctx) {
 		System.out.println("Visit forkStat");
 		visit(ctx.block());
+		this.instrID.put(ctx, this.instrID.get(ctx.block()));
 		return null;
 	}
 	
@@ -173,6 +214,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	public Instr visitSyncStat(SyncStatContext ctx) {
 		System.out.println("Visit syncStat");
 		visit(ctx.block());
+		this.instrID.put(ctx, this.instrID.get(ctx.block()));
 		return null;
 	}
 	
@@ -180,6 +222,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	public Instr visitBlockStat(BlockStatContext ctx) {
 		System.out.println("Visit blockStat");
 		visit(ctx.block());
+		this.instrID.put(ctx, this.instrID.get(ctx.block()));
 		return null;
 	}
 	
@@ -187,6 +230,9 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	public Instr visitPrintStat(PrintStatContext ctx) {
 		System.out.println("Visit printStat");
 		visit(ctx.expr());
+		this.instrID.put(ctx, this.instrID.get(ctx.expr()));
+		Instr i = emit(OpCode.WriteInstr, this.regs.get(ctx.expr()), Addr.NUMBER_IO);
+		freeReg(ctx.expr());
 		return null;
 	}
 	
@@ -194,12 +240,14 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	public Instr visitCallStat(CallStatContext ctx) {
 		System.out.println("Visit callStat");
 		visit(ctx.args());
+		this.instrID.put(ctx, this.instrID.get(ctx.args()));
 		return null;
 	}
 	
 	@Override
 	public Instr visitIdTarget(IdTargetContext ctx) {
 		System.out.println("Visit idTarget");
+		this.instrID.put(ctx, instructionCount);
 		Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
 		return null;
 	}
@@ -208,6 +256,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	public Instr visitArrayTarget(ArrayTargetContext ctx) {
 		System.out.println("Visit arrayTarget");
 		visit(ctx.expr());
+		this.instrID.put(ctx, this.instrID.get(ctx.expr()));
 		return null;
 	}
 	
@@ -217,6 +266,9 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		for(ExprContext expr : ctx.expr()) {
 			visit(expr);
 		}
+		if(ctx.expr().size()>0) {
+			this.instrID.put(ctx, this.instrID.get(ctx.expr(0)));
+		}
 		return null;
 	}
 	
@@ -224,6 +276,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	public Instr visitPrfExpr(PrfExprContext ctx) {
 		System.out.println("Visit prfExpr");
 		visit(ctx.expr());
+		this.instrID.put(ctx, this.instrID.get(ctx.expr()));
 		return null;
 	}
 	
@@ -232,6 +285,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit multExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
+		this.instrID.put(ctx, this.instrID.get(ctx.expr(0)));
 		if(ctx.multOp().STAR()!=null) {
 			Instr i = emit(OpCode.Compute, new Operator(Oper.Mul),
 					this.regs.get(ctx.expr(0)), this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
@@ -246,6 +300,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit plusExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
+		this.instrID.put(ctx, this.instrID.get(ctx.expr(0)));
 		if(ctx.plusOp().PLUS()!=null) {
 			Instr i = emit(OpCode.Compute, new Operator(Oper.Add),
 					this.regs.get(ctx.expr(0)), this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
@@ -266,6 +321,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit compExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
+		this.instrID.put(ctx, this.instrID.get(ctx.expr(0)));
 		if(ctx.compOp().EQ()!=null) {
 			if(this.checkResult.getType(ctx.expr(0))==Type.INT||
 					this.checkResult.getType(ctx.expr(0))==Type.BOOL) {
@@ -316,6 +372,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit boolExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
+		this.instrID.put(ctx, this.instrID.get(ctx.expr(0)));
 		if(ctx.boolOp().AND()!=null) {
 			Instr i = emit(OpCode.Compute, new Operator(Oper.And), this.regs.get(ctx.expr(0)),
 					this.regs.get(ctx.expr(1)), this.regs.get(ctx.expr(0)));
@@ -335,6 +392,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	public Instr visitParExpr(ParExprContext ctx) {
 		System.out.println("Visit parExpr");
 		visit(ctx.expr());
+		this.instrID.put(ctx, this.instrID.get(ctx.expr()));
 		setReg(ctx, regs.get(ctx.expr()));
 		return null;
 	}
@@ -342,6 +400,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	@Override
 	public Instr visitIdExpr(IdExprContext ctx) {
 		System.out.println("Visit idExpr");
+		this.instrID.put(ctx, instructionCount);
 		Instr i = emit(OpCode.Load, offset(ctx), reg(ctx));
 		return null;
 	}
@@ -349,6 +408,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	@Override
 	public Instr visitNumExpr(NumExprContext ctx) {
 		System.out.println("Visit numExpr");
+		this.instrID.put(ctx, instructionCount);
 		Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, Integer.parseInt(ctx.NUM().getText())), reg(ctx));
 		return null;
 	}
@@ -356,6 +416,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	@Override
 	public Instr visitTrueExpr(TrueExprContext ctx) {
 		System.out.println("Visit trueExpr");
+		this.instrID.put(ctx, instructionCount);
 		Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 1), reg(ctx));
 		return null;
 	}
@@ -372,6 +433,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit indexExpr");
 		visit(ctx.expr());
 		freeReg(ctx.expr());
+		this.instrID.put(ctx, this.instrID.get(ctx.expr()));
 		return null;
 	}
 	
@@ -382,12 +444,16 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 			visit(expr);
 			freeReg(expr);
 		}
+		if(ctx.expr().size()>0) {
+			this.instrID.put(ctx, this.instrID.get(ctx.expr(0)));
+		}
 		return null;
 	}
 	
 	private Instr emit(OpCode opCode, Operand... args) {
 		Instr result = new Instr(opCode, args);
 		this.prog.addInstr(result);
+		this.instructionCount++;
 		return result;
 	}
 	
