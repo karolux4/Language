@@ -117,13 +117,21 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		//!!! IMPORTANT !!! does not work for shared
 		if(ctx.expr()!=null) {
 			visit(ctx.expr());
-			this.instrID.put(ctx, this.instrID.get(ctx.expr()));
-			Instr i = emit(OpCode.Store,regs.get(ctx.expr()), offset(ctx.ID()));
+			if(isShared(ctx)) {
+				Instr i = emit(OpCode.WriteInstr,regs.get(ctx.expr()), offset(ctx.ID()));
+			}
+			else {
+				Instr i = emit(OpCode.Store,regs.get(ctx.expr()), offset(ctx.ID()));
+			}
 			freeReg(ctx.expr());
 		}
 		else {
-			this.instrID.put(ctx, instructionCount);
-			Instr i = emit(OpCode.Store,new Reg(0), offset(ctx.ID()));
+			if(isShared(ctx)) {
+				Instr i = emit(OpCode.WriteInstr,regs.get(ctx.expr()), offset(ctx.ID()));
+			}
+			else {
+				Instr i = emit(OpCode.Store,new Reg(0), offset(ctx.ID()));
+			}
 		}
 		return null;
 	}
@@ -142,8 +150,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 		System.out.println("Visit assignStat");
 		visit(ctx.expr());
 		visit(ctx.target());
-		this.instrID.put(ctx, this.instrID.get(ctx.expr()));
-		Instr i = emit(OpCode.Store,regs.get(ctx.expr()), new Addr(AddrImmDI.IndAddr, regs.get(ctx.target()).getId()));
+		if(isShared(ctx.target())) {
+			Instr i = emit(OpCode.WriteInstr,regs.get(ctx.expr()), new Addr(AddrImmDI.IndAddr, regs.get(ctx.target()).getId()));
+		}
+		else {
+			Instr i = emit(OpCode.Store,regs.get(ctx.expr()), new Addr(AddrImmDI.IndAddr, regs.get(ctx.target()).getId()));
+		}
 		freeReg(ctx.target());
 		freeReg(ctx.expr());
 		return null;
@@ -400,8 +412,13 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	@Override
 	public Instr visitIdExpr(IdExprContext ctx) {
 		System.out.println("Visit idExpr");
-		this.instrID.put(ctx, instructionCount);
-		Instr i = emit(OpCode.Load, offset(ctx), reg(ctx));
+		if(isShared(ctx)) {
+			Instr i1 = emit(OpCode.ReadInstr, offset(ctx));
+			Instr i2 = emit(OpCode.Receive, reg(ctx));
+		}
+		else {
+			Instr i = emit(OpCode.Load, offset(ctx), reg(ctx));
+		}
 		return null;
 	}
 	
@@ -515,6 +532,15 @@ public class Generator extends PickleCannonBaseVisitor<Instr>{
 	 * wrapped in a {@link Num} operand. */
 	private Addr offset(ParseTree node) {
 		return new Addr(AddrImmDI.DirAddr,this.checkResult.getOffset(node));
+	}
+	
+	/** Returns a boolean is node stored in shared memory*/
+	private boolean isShared(ParseTree node) {
+		Boolean result = this.checkResult.getIsShared(node);
+		if(result == null) {
+			throw new RuntimeException("Node does not have declared is shared property");
+		}
+		return result;
 	}
 	
 }

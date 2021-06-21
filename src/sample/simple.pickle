@@ -1,5 +1,6 @@
 cannon{
-	int a = 3;
+	int shared a = 3;
+	print(a);
 	int b = 2;
 	int c = b*a;
 	bool d = true == false;

@@ -67,7 +67,7 @@ public class Checker extends PickleCannonBaseListener {
 	private int insideWhile;
 	/** Integer used to indicate whether listener is inside forked thread(s) */
 	private int insideFork;
-	
+
 	private List<FunctionCall> calls;
 
 	/**
@@ -182,8 +182,9 @@ public class Checker extends PickleCannonBaseListener {
 					if (!isAdded) {
 						addError(ctx, "Variable '%s' is already declared in this scope", ctx.ID().getText());
 					} else {
-						setOffset(ctx.ID(), this.table.offset(ctx.ID().getText()));
+						setOffset(ctx.ID(), this.table.offsetShared(ctx.ID().getText()));
 						setEntry(ctx, ctx.type());
+						setIsShared(ctx, true);
 					}
 				}
 			} else {
@@ -194,6 +195,7 @@ public class Checker extends PickleCannonBaseListener {
 				} else {
 					setOffset(ctx.ID(), this.table.offset(ctx.ID().getText()));
 					setEntry(ctx, ctx.type());
+					setIsShared(ctx, false);
 				}
 			}
 		}
@@ -217,8 +219,9 @@ public class Checker extends PickleCannonBaseListener {
 					if (!isAdded) {
 						addError(ctx, "Variable '%s' is already declared in this scope", ctx.ID().getText());
 					} else {
-						setOffset(ctx.ID(), this.table.offset(ctx.ID().getText()));
+						setOffset(ctx.ID(), this.table.offsetShared(ctx.ID().getText()));
 						setEntry(ctx, ctx.type());
+						setIsShared(ctx, true);
 						if (ctx.expr() != null) {
 							checkType(ctx.expr(), array);
 						}
@@ -230,6 +233,7 @@ public class Checker extends PickleCannonBaseListener {
 					} else {
 						setOffset(ctx.ID(), this.table.offset(ctx.ID().getText()));
 						setEntry(ctx, ctx.type());
+						setIsShared(ctx, false);
 						if (ctx.expr() != null) {
 							checkType(ctx.expr(), array);
 						}
@@ -297,19 +301,18 @@ public class Checker extends PickleCannonBaseListener {
 	public void exitPrintStat(PrintStatContext ctx) {
 		setEntry(ctx, entry(ctx.expr()));
 	}
-	
+
 	@Override
 	public void exitCallStat(CallStatContext ctx) {
 		List<Type> args = new ArrayList<>();
-		for(ExprContext arg : ctx.args().expr()) {
+		for (ExprContext arg : ctx.args().expr()) {
 			args.add(getType(arg));
 		}
-		FunctionCall call = new FunctionCall(ctx,ctx.ID().getText());
+		FunctionCall call = new FunctionCall(ctx, ctx.ID().getText());
 		calls.add(call);
 		Type type = new Type.Proc(args);
-		setType(ctx,type);
+		setType(ctx, type);
 	}
-	
 
 	@Override
 	public void exitIdTarget(IdTargetContext ctx) {
@@ -323,21 +326,26 @@ public class Checker extends PickleCannonBaseListener {
 			} else {
 				Type type = this.table.type(id);
 				int offset = this.table.offset(id);
+				boolean isShared = false;
 				if (type == null) {
 					type = this.table.typeShared(id);
 					offset = this.table.offsetShared(id);
+					isShared = true;
 				}
 				setType(ctx, type);
 				setOffset(ctx, offset);
 				setEntry(ctx, ctx);
+				setIsShared(ctx, isShared);
 				this.table.putUsed(id, type);
 			}
 		} else {
 			Type type = this.table.type(id);
 			int offset = this.table.offset(id);
+			boolean isShared = false;
 			if (type == null) {
 				type = this.table.typeShared(id);
 				offset = this.table.offsetShared(id);
+				isShared = true;
 			}
 			if (type == null) {
 				addError(ctx, "Variable '%s' not declared in this scope", id);
@@ -345,6 +353,7 @@ public class Checker extends PickleCannonBaseListener {
 				setType(ctx, type);
 				setOffset(ctx, offset);
 				setEntry(ctx, ctx);
+				setIsShared(ctx, isShared);
 				this.table.putUsed(id, type);
 			}
 		}
@@ -363,9 +372,11 @@ public class Checker extends PickleCannonBaseListener {
 			} else {
 				Type type = this.table.type(id);
 				int offset = this.table.offset(id);
+				boolean isShared = false;
 				if (type == null) {
 					type = this.table.typeShared(id);
 					offset = this.table.offsetShared(id);
+					isShared = true;
 				}
 
 				if (!(type instanceof Type.Array)) {
@@ -375,15 +386,18 @@ public class Checker extends PickleCannonBaseListener {
 					setType(ctx, ((Type.Array) type).getElemType());
 					setOffset(ctx, offset);
 					setEntry(ctx, ctx.expr());
+					setIsShared(ctx, isShared);
 					this.table.putUsed(id, type);
 				}
 			}
 		} else {
 			Type type = this.table.type(id);
 			int offset = this.table.offset(id);
+			boolean isShared = false;
 			if (type == null) {
 				type = this.table.typeShared(id);
 				offset = this.table.offsetShared(id);
+				isShared = true;
 			}
 			if (type == null) {
 				addError(ctx, "Array '%s' not declared in this scope", id);
@@ -394,6 +408,7 @@ public class Checker extends PickleCannonBaseListener {
 				setType(ctx, ((Type.Array) type).getElemType());
 				setOffset(ctx, offset);
 				setEntry(ctx, ctx.expr());
+				setIsShared(ctx, isShared);
 				this.table.putUsed(id, type);
 			}
 		}
@@ -470,21 +485,26 @@ public class Checker extends PickleCannonBaseListener {
 			} else {
 				Type type = this.table.type(id);
 				int offset = this.table.offset(id);
+				boolean isShared = false;
 				if (type == null) {
 					type = this.table.typeShared(id);
 					offset = this.table.offsetShared(id);
+					isShared = true;
 				}
 				setType(ctx, type);
 				setOffset(ctx, offset);
 				setEntry(ctx, ctx);
+				setIsShared(ctx, isShared);
 				this.table.putUsed(id, type);
 			}
 		} else {
 			Type type = this.table.type(id);
 			int offset = this.table.offset(id);
+			boolean isShared = false;
 			if (type == null) {
 				type = this.table.typeShared(id);
 				offset = this.table.offsetShared(id);
+				isShared = true;
 			}
 			if (type == null) {
 				addError(ctx, "Variable '%s' not declared in this scope", id);
@@ -492,6 +512,7 @@ public class Checker extends PickleCannonBaseListener {
 				setType(ctx, type);
 				setOffset(ctx, offset);
 				setEntry(ctx, ctx);
+				setIsShared(ctx, isShared);
 				this.table.putUsed(id, type);
 			}
 		}
@@ -527,9 +548,11 @@ public class Checker extends PickleCannonBaseListener {
 			} else {
 				Type type = this.table.type(id);
 				int offset = this.table.offset(id);
+				boolean isShared = false;
 				if (type == null) {
 					type = this.table.typeShared(id);
 					offset = this.table.offsetShared(id);
+					isShared = true;
 				}
 
 				if (!(type instanceof Type.Array)) {
@@ -539,15 +562,18 @@ public class Checker extends PickleCannonBaseListener {
 					setType(ctx, ((Type.Array) type).getElemType());
 					setOffset(ctx, offset);
 					setEntry(ctx, ctx.expr());
+					setIsShared(ctx,isShared);
 					this.table.putUsed(id, type);
 				}
 			}
 		} else {
 			Type type = this.table.type(id);
 			int offset = this.table.offset(id);
+			boolean isShared = false;
 			if (type == null) {
 				type = this.table.typeShared(id);
 				offset = this.table.offsetShared(id);
+				isShared = true;
 			}
 			if (type == null) {
 				addError(ctx, "Array '%s' not declared in this scope", id);
@@ -558,6 +584,7 @@ public class Checker extends PickleCannonBaseListener {
 				setType(ctx, ((Type.Array) type).getElemType());
 				setOffset(ctx, offset);
 				setEntry(ctx, ctx.expr());
+				setIsShared(ctx, isShared);
 				this.table.putUsed(id, type);
 			}
 		}
@@ -606,17 +633,17 @@ public class Checker extends PickleCannonBaseListener {
 		if (actual == null || expected == null) {
 			// throw new IllegalArgumentException("Missing inferred type of " +
 			// node.getText());
-		}else if (actual instanceof Type.Array) {
+		} else if (actual instanceof Type.Array) {
 			if (!((Type.Array) actual).equalsWithSize(expected)) {
-				if(expected instanceof Type.Array) {
-					addError(node, "Expected type '%s' but found '%s'", ((Type.Array) expected).toStringWithSize(), ((Type.Array) actual).toStringWithSize());
-				}
-				else {
-					addError(node, "Expected type '%s' but found '%s'", expected, ((Type.Array) actual).toStringWithSize());
+				if (expected instanceof Type.Array) {
+					addError(node, "Expected type '%s' but found '%s'", ((Type.Array) expected).toStringWithSize(),
+							((Type.Array) actual).toStringWithSize());
+				} else {
+					addError(node, "Expected type '%s' but found '%s'", expected,
+							((Type.Array) actual).toStringWithSize());
 				}
 			}
-		}
-		else if (!actual.equals(expected)) {
+		} else if (!actual.equals(expected)) {
 			addError(node, "Expected type '%s' but found '%s'", expected, actual);
 		}
 	}
@@ -690,37 +717,43 @@ public class Checker extends PickleCannonBaseListener {
 	private ParserRuleContext entry(ParseTree node) {
 		return this.result.getEntry(node);
 	}
-	
+
+	/** Convenience method to set shared property in the result */
+	private void setIsShared(ParseTree node, Boolean bool) {
+		this.result.setIsShared(node, bool);
+	}
+
 	/**
 	 * Class to store Function call parameters for function call correctness check
+	 * 
 	 * @author Karolis Butkus
 	 *
 	 */
 	private class FunctionCall {
 		private ParserRuleContext node;
 		private String function;
+
 		private FunctionCall(ParserRuleContext node, String function) {
-			this.node=node;
-			this.function=function;
+			this.node = node;
+			this.function = function;
 		}
-		
+
 		public String getID() {
 			return this.function;
 		}
-		
+
 		public ParserRuleContext getNode() {
 			return this.node;
 		}
 	}
-	
+
 	private void checkCalls(List<FunctionCall> calls) {
-		for(FunctionCall call : calls) {
+		for (FunctionCall call : calls) {
 			Type type = this.table.type(call.getID());
-			if(type==null) {
+			if (type == null) {
 				addError(call.getNode(), "Pickle '%s' is not declared", call.getID());
-			}
-			else {
-				checkType(call.node,type); 
+			} else {
+				checkType(call.node, type);
 			}
 		}
 	}
