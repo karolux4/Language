@@ -67,6 +67,10 @@ public class Checker extends PickleCannonBaseListener {
 	private int insideWhile;
 	/** Integer used to indicate whether listener is inside forked thread(s) */
 	private int insideFork;
+	
+	/** Integer used to check if one sync is already open to prevent a deadlock
+	 *  from nested sync statements*/
+	private int insideSync;
 
 	private List<FunctionCall> calls;
 
@@ -82,6 +86,7 @@ public class Checker extends PickleCannonBaseListener {
 		this.isInMainScope = false;
 		this.insideWhile = 0;
 		this.insideFork = 0;
+		this.insideSync=0;
 		this.calls = new ArrayList<>();
 		new ParseTreeWalker().walk(this, tree);
 		checkCalls(this.calls);
@@ -288,7 +293,16 @@ public class Checker extends PickleCannonBaseListener {
 	}
 
 	@Override
+	public void enterSyncStat(SyncStatContext ctx) {
+		if(this.insideSync>0) {
+			addError(ctx, "Cannot nest sync statements as it can lead to the deadlock");
+		}
+		this.insideSync++;
+	}
+	
+	@Override
 	public void exitSyncStat(SyncStatContext ctx) {
+		this.insideSync--;
 		setEntry(ctx, entry(ctx.block()));
 	}
 

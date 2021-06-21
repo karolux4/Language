@@ -14,6 +14,8 @@ public class Result {
 	private final ParseTreeProperty<Integer> offsets = new ParseTreeProperty<>();
 	/** Property stating if node is stored in a shared memory*/
 	private final ParseTreeProperty<Boolean> isShared = new ParseTreeProperty<>();
+	/** Maximum spawned additional thread count during the execution (not including main thread)*/
+	private int threadCount = 0;
 
 	/** Adds an association from parse tree node to the flow graph entry. */
 	public void setEntry(ParseTree node, ParserRuleContext entry) {
@@ -58,5 +60,15 @@ public class Result {
 	/** Returns a boolean is node stored in shared memory*/
 	public Boolean getIsShared(ParseTree node) {
 		return this.isShared.get(node);
+	}
+	
+	/** Return the address for synchronization lock*/
+	public int getLockAddress() {
+		return this.threadCount;
+	}
+	
+	/** Return base offset for shared memory (the start is dedicated for thread synchronization and lock)*/
+	public int getBaseOffset() {
+		return this.threadCount+1;
 	}
 }

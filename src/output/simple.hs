@@ -3,14 +3,14 @@ import Sprockell
 prog :: [Instruction]
 prog = [ 
    Load (ImmValue (3)) regB
- , WriteInstr regB (DirAddr (0))
- , ReadInstr (DirAddr (0))
+ , WriteInstr regB (DirAddr (1))
+ , ReadInstr (DirAddr (1))
  , Receive regB
  , WriteInstr regB numberIO
  , Load (ImmValue (2)) regB
  , Store regB (DirAddr (0))
  , Load (DirAddr (0)) regB
- , ReadInstr (DirAddr (0))
+ , ReadInstr (DirAddr (1))
  , Receive regC
  , Compute Mul regB regC regB
  , Store regB (DirAddr (1))
@@ -31,36 +31,41 @@ prog = [
  , Compute Mul regB regC regB
  , Load (ImmValue (5)) regC
  , Store regB (IndAddr regC)
- , ReadInstr (DirAddr (0))
+ , ReadInstr (DirAddr (1))
  , Receive regB
  , Load (ImmValue (0)) regC
  , Compute Gt regB regC regB
  , Compute Equal regB reg0 regC
- , Branch regC (Abs (61))
+ , Branch regC (Abs (66))
  , Load (ImmValue (3)) regB
  , Store regB (DirAddr (6))
- , ReadInstr (DirAddr (0))
+ , TestAndSet (DirAddr (0))
  , Receive regB
- , Load (ImmValue (1)) regC
- , Compute Sub regB regC regB
- , Load (ImmValue (0)) regC
- , WriteInstr regB (IndAddr regC)
- , Load (DirAddr (6)) regB
- , WriteInstr regB numberIO
- , ReadInstr (DirAddr (0))
- , Receive regB
- , Load (ImmValue (2)) regC
- , Compute Equal regB regC regB
- , Compute Equal regB reg0 regC
- , Branch regC (Abs (56))
- , Load (DirAddr (1)) regB
- , Load (ImmValue (-1)) regC
- , Compute Mul regC regB regC
+ , Branch regB (Rel (2))
+ , Jump (Rel (-3))
+ , ReadInstr (DirAddr (1))
+ , Receive regC
+ , Load (ImmValue (1)) regD
+ , Compute Sub regC regD regC
+ , Load (ImmValue (1)) regD
+ , WriteInstr regC (IndAddr regD)
+ , WriteInstr reg0 (DirAddr (0))
+ , Load (DirAddr (6)) regC
  , WriteInstr regC numberIO
- , Jump (Abs (59))
- , Load (DirAddr (2)) regB
- , Compute Equal regB reg0 regB
- , WriteInstr regB numberIO
+ , ReadInstr (DirAddr (1))
+ , Receive regC
+ , Load (ImmValue (2)) regD
+ , Compute Equal regC regD regC
+ , Compute Equal regC reg0 regD
+ , Branch regD (Abs (61))
+ , Load (DirAddr (1)) regC
+ , Load (ImmValue (-1)) regD
+ , Compute Mul regD regC regD
+ , WriteInstr regD numberIO
+ , Jump (Abs (64))
+ , Load (DirAddr (2)) regC
+ , Compute Equal regC reg0 regC
+ , WriteInstr regC numberIO
  , Nop
  , Jump (Abs (29))
  , Nop
