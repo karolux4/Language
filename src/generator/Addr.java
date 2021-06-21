@@ -34,12 +34,12 @@ public class Addr extends Operand{
 	
 	@Override
 	public String toString() {
-		if(this.value==-1) {
+		if(this.value==-1&&this.type==AddrImmDI.DirAddr) {
 			return "numberIO"; // numberIO address
 		}
 		if(this.type==AddrImmDI.IndAddr) {
 			return "("+this.type.toString()+" "+RegName.values()[this.value]+")";
 		}
-		return "("+this.type.toString()+" "+this.value+")";
+		return "("+this.type.toString()+" ("+this.value+"))";
 	}
 }

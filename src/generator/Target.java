@@ -27,7 +27,7 @@ public class Target extends Operand{
 	
 	@Override
 	public String toString() {
-		return "("+this.type.toString()+" "+this.value+")";
+		return "("+this.type.toString()+" ("+this.value+"))";
 	}
 
 }

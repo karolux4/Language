@@ -13,10 +13,10 @@ cannon{
 		a = a-1;
 		print(g);
 		if(a==2){
-			print(c);
+			print(-c);
 		}
 		else{
-			print(d);
+			print(!d);
 		}
 		
 	}
