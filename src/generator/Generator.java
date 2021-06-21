@@ -54,6 +54,9 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	/** The number of inserted instructions */
 	private int instructionCount;
+	
+	/** The id of current thread*/
+	private int currentThread;
 
 	/** Association of expression and target nodes to registers. */
 	private ParseTreeProperty<Reg> regs;
@@ -62,8 +65,8 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	private ParseTreeProperty<Integer> instrID;
 
 	public Program generate(ParseTree tree, Result checkResult) {
-		this.prog = new Program();
 		this.checkResult = checkResult;
+		this.prog = new Program(this.checkResult.getThreadCount());
 		this.isRegisterTaken = new boolean[8];
 		// reg0 is taken
 		this.isRegisterTaken[0] = true;
@@ -71,6 +74,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		this.isRegisterTaken[1] = true;
 		// regA is allocated for ARP
 		this.isRegisterTaken[2] = true;
+		this.currentThread=0;
 		this.instructionCount = 0;
 		this.regs = new ParseTreeProperty<>();
 		this.instrID = new ParseTreeProperty<>();
@@ -82,8 +86,19 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	@Override
 	public Instr visitProgram(ProgramContext ctx) {
 		System.out.println("Visit program");
+		emit(OpCode.Jump, new Target(TargetType.Abs, -1));
 		for (ProcContext proc : ctx.proc()) {
 			visit(proc);
+		}
+		this.prog.updateInstr(0, new Instr(OpCode.Jump, new Target(TargetType.Abs, this.instructionCount)));
+		if(this.checkResult.getThreadCount()>0) {
+			Instr i1 = emit(OpCode.Branch, new Reg(1), new Target(TargetType.Rel, 2));
+			Instr i2 = emit(OpCode.Jump, new Target(TargetType.Rel, 6));
+			Instr i3 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.IndAddr, 1));
+			Instr i4 = emit(OpCode.Receive, new Reg(2));
+			Instr i5 = emit(OpCode.Compute, new Operator(Oper.Equal), new Reg(2), new Reg(0), new Reg(3));
+			Instr i6 = emit(OpCode.Branch, new Reg(3), new Target(TargetType.Rel, -3));
+			Instr i7 = emit(OpCode.Jump, new Target(TargetType.Ind, 2));
 		}
 		visit(ctx.block());
 		emit(OpCode.EndProg);
@@ -204,8 +219,15 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	@Override
 	public Instr visitForkStat(ForkStatContext ctx) {
 		System.out.println("Visit forkStat");
+		Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.instructionCount+3), reg(ctx));
+		Instr i2 = emit(OpCode.WriteInstr, reg(ctx), new Addr(AddrImmDI.DirAddr, currentThread+1));
+		int jumpID = this.instructionCount;
+		Instr i3 = emit(OpCode.Jump, new Target(TargetType.Abs, -1));
+		this.currentThread++;
 		visit(ctx.block());
-		this.instrID.put(ctx, this.instrID.get(ctx.block()));
+		Instr i4 = emit(OpCode.EndProg);
+		this.currentThread--;
+		this.prog.updateInstr(jumpID, new Instr(OpCode.Jump,  new Target(TargetType.Abs, this.instructionCount)));
 		return null;
 	}
 

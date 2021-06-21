@@ -2,7 +2,8 @@ import Sprockell
 
 prog :: [Instruction]
 prog = [ 
-   Load (ImmValue (3)) regB
+   Jump (Abs (1))
+ , Load (ImmValue (3)) regB
  , WriteInstr regB (DirAddr (1))
  , ReadInstr (DirAddr (1))
  , Receive regB
@@ -36,7 +37,7 @@ prog = [
  , Load (ImmValue (0)) regC
  , Compute Gt regB regC regB
  , Compute Equal regB reg0 regC
- , Branch regC (Abs (66))
+ , Branch regC (Abs (67))
  , Load (ImmValue (3)) regB
  , Store regB (DirAddr (6))
  , TestAndSet (DirAddr (0))
@@ -57,17 +58,17 @@ prog = [
  , Load (ImmValue (2)) regD
  , Compute Equal regC regD regC
  , Compute Equal regC reg0 regD
- , Branch regD (Abs (61))
+ , Branch regD (Abs (62))
  , Load (DirAddr (1)) regC
  , Load (ImmValue (-1)) regD
  , Compute Mul regD regC regD
  , WriteInstr regD numberIO
- , Jump (Abs (64))
+ , Jump (Abs (65))
  , Load (DirAddr (2)) regC
  , Compute Equal regC reg0 regC
  , WriteInstr regC numberIO
  , Nop
- , Jump (Abs (29))
+ , Jump (Abs (30))
  , Nop
  , EndProg
  ]

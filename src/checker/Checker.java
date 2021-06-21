@@ -67,9 +67,10 @@ public class Checker extends PickleCannonBaseListener {
 	private int insideWhile;
 	/** Integer used to indicate whether listener is inside forked thread(s) */
 	private int insideFork;
-	
-	/** Integer used to check if one sync is already open to prevent a deadlock
-	 *  from nested sync statements*/
+	/**
+	 * Integer used to check if one sync is already open to prevent a deadlock from
+	 * nested sync statements
+	 */
 	private int insideSync;
 
 	private List<FunctionCall> calls;
@@ -86,7 +87,7 @@ public class Checker extends PickleCannonBaseListener {
 		this.isInMainScope = false;
 		this.insideWhile = 0;
 		this.insideFork = 0;
-		this.insideSync=0;
+		this.insideSync = 0;
 		this.calls = new ArrayList<>();
 		new ParseTreeWalker().walk(this, tree);
 		checkCalls(this.calls);
@@ -195,8 +196,7 @@ public class Checker extends PickleCannonBaseListener {
 			} else {
 				boolean isAdded = this.table.put(ctx.ID().getText(), getType(ctx.type()));
 				if (!isAdded) {
-					addError(ctx, "Variable '%s' is already declared in this scope %s", ctx.ID().getText(),
-							this.table.scopeDepth());
+					addError(ctx, "Variable '%s' is already declared in this scope", ctx.ID().getText());
 				} else {
 					setOffset(ctx.ID(), this.table.offset(ctx.ID().getText()));
 					setEntry(ctx, ctx.type());
@@ -279,12 +279,19 @@ public class Checker extends PickleCannonBaseListener {
 			addError(ctx, "Cannot fork a thread inside a function or a while loop");
 		}
 		this.insideFork++;
+		this.result.updateCurrentThreadMax(insideFork);
+		this.isInMainScope=false;
+		this.table.openScope();
 	}
 
 	@Override
 	public void exitForkStat(ForkStatContext ctx) {
 		this.insideFork--;
 		setEntry(ctx, entry(ctx.block()));
+		if(insideFork==0) {
+			this.isInMainScope=true;
+		}
+		this.table.closeScope();
 	}
 
 	@Override
@@ -294,12 +301,12 @@ public class Checker extends PickleCannonBaseListener {
 
 	@Override
 	public void enterSyncStat(SyncStatContext ctx) {
-		if(this.insideSync>0) {
+		if (this.insideSync > 0) {
 			addError(ctx, "Cannot nest sync statements as it can lead to the deadlock");
 		}
 		this.insideSync++;
 	}
-	
+
 	@Override
 	public void exitSyncStat(SyncStatContext ctx) {
 		this.insideSync--;
@@ -333,10 +340,8 @@ public class Checker extends PickleCannonBaseListener {
 		String id = ctx.ID().getText();
 		if (this.insideFork > 0) {
 			int depth = this.table.variableDepth(id);
-			if (depth != 0 && depth != -1) {
-				addError(ctx, "Variable '%s' must be declared shared in the cannon outer scope", id);
-			} else if (depth == -1 && this.table.offsetShared(id) == -1) {
-				addError(ctx, "Variable '%s' not declared in this scope", id);
+			if (depth == -1 && this.table.offsetShared(id) == -1) {
+				addError(ctx, "Variable '%s' not declared in this scope or is not shared", id);
 			} else {
 				Type type = this.table.type(id);
 				int offset = this.table.offset(id);
@@ -379,10 +384,8 @@ public class Checker extends PickleCannonBaseListener {
 
 		if (this.insideFork > 0) {
 			int depth = this.table.variableDepth(id);
-			if (depth != 0 && depth != -1) {
-				addError(ctx, "Variable '%s' must be declared shared in the cannon outer scope", id);
-			} else if (depth == -1 && this.table.offsetShared(id) == -1) {
-				addError(ctx, "Variable '%s' not declared in this scope", id);
+			if (depth == -1 && this.table.offsetShared(id) == -1) {
+				addError(ctx, "Variable '%s' not declared in this scope or is not shared", id);
 			} else {
 				Type type = this.table.type(id);
 				int offset = this.table.offset(id);
@@ -492,10 +495,8 @@ public class Checker extends PickleCannonBaseListener {
 		String id = ctx.ID().getText();
 		if (this.insideFork > 0) {
 			int depth = this.table.variableDepth(id);
-			if (depth != 0 && depth != -1) {
-				addError(ctx, "Variable '%s' must be declared shared in the cannon outer scope", id);
-			} else if (depth == -1 && this.table.offsetShared(id) == -1) {
-				addError(ctx, "Variable '%s' not declared in this scope", id);
+			if (depth == -1 && this.table.offsetShared(id) == -1) {
+				addError(ctx, "Variable '%s' not declared in this scope or is not shared", id);
 			} else {
 				Type type = this.table.type(id);
 				int offset = this.table.offset(id);
@@ -555,10 +556,8 @@ public class Checker extends PickleCannonBaseListener {
 		String id = ctx.ID().getText();
 		if (this.insideFork > 0) {
 			int depth = this.table.variableDepth(id);
-			if (depth != 0 && depth != -1) {
-				addError(ctx, "Variable '%s' must be declared shared in the cannon outer scope", id);
-			} else if (depth == -1 && this.table.offsetShared(id) == -1) {
-				addError(ctx, "Variable '%s' not declared in this scope", id);
+			if (depth == -1 && this.table.offsetShared(id) == -1) {
+				addError(ctx, "Variable '%s' not declared in this scope or is not shared", id);
 			} else {
 				Type type = this.table.type(id);
 				int offset = this.table.offset(id);
@@ -576,7 +575,7 @@ public class Checker extends PickleCannonBaseListener {
 					setType(ctx, ((Type.Array) type).getElemType());
 					setOffset(ctx, offset);
 					setEntry(ctx, ctx.expr());
-					setIsShared(ctx,isShared);
+					setIsShared(ctx, isShared);
 					this.table.putUsed(id, type);
 				}
 			}

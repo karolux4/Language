@@ -22,6 +22,7 @@ public class GeneratorTest {
 		//System.out.println("-----------------------");
 		//compile("src/sample/procCorrect.pickle", "procCorrect");
 		compile("src/sample/simple.pickle", "simple");
+		compile("src/sample/simpleFork.pickle", "simpleFork");
 
 	}
 	

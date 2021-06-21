@@ -53,7 +53,7 @@ public class SymbolTable {
 	public boolean put(String id, Type record) {
 		// This is if-statement is triggered only for outer most scopes of procedures or main block
 		// and can return false only from main block as shared variables can be declared only there
-		if(this.scopes.peek().getScopeDepth()==2) {
+		if(this.scopes.size()==1&& this.scopes.peek().getScopeDepth()==2) {
 			if(this.sharedScope.contains(id)) {
 				return false;
 			}
@@ -95,9 +95,7 @@ public class SymbolTable {
 	 */
 	public int offset(String id) {
 		Integer result = null;
-		for (int i = this.scopes.size() - 1; result == null && i >= 0; i--) {
-			result = this.scopes.get(i).offset(id);
-		}
+		result = this.scopes.peek().offset(id);
 		return result == null ? -1 : result;
 	}
 	

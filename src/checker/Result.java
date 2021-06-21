@@ -62,13 +62,24 @@ public class Result {
 		return this.isShared.get(node);
 	}
 	
+	/** Return thread count */
+	public int getThreadCount() {
+		return this.threadCount;
+	}
+	
 	/** Return the address for synchronization lock*/
 	public int getLockAddress() {
-		return this.threadCount;
+		return 0;
 	}
 	
 	/** Return base offset for shared memory (the start is dedicated for thread synchronization and lock)*/
 	public int getBaseOffset() {
 		return this.threadCount+1;
+	}
+	
+	public void updateCurrentThreadMax(int max) {
+		if(max>this.threadCount) {
+			threadCount=max;
+		}
 	}
 }

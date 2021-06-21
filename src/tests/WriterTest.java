@@ -18,7 +18,7 @@ public class WriterTest {
 	
 	@Test
 	public void writeTest() {
-		Program p = new Program();
+		Program p = new Program(0);
 		p.addInstr(new Instr(OpCode.Compute, new Operator(Oper.Add), new Reg(1), new Reg(2), new Reg(3)));
 		p.addInstr(new Instr(OpCode.Load, new Addr(AddrImmDI.DirAddr, 3), new Reg(3)));
 		p.addInstr(new Instr(OpCode.EndProg));

@@ -1,5 +1,8 @@
 package generator;
 
+import generator.Addr.AddrImmDI;
+import generator.Reg.RegName;
+
 public class Target extends Operand{
 	
 	public enum TargetType{
@@ -27,6 +30,9 @@ public class Target extends Operand{
 	
 	@Override
 	public String toString() {
+		if(this.type==TargetType.Ind) {
+			return "("+this.type.toString()+" "+RegName.values()[this.value]+")";
+		}
 		return "("+this.type.toString()+" ("+this.value+"))";
 	}
 

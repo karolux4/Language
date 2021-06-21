@@ -10,10 +10,11 @@ public class Program {
 
 	private final List<Instr> instrList;
 	
-	//private int threadCount
+	private int threadCount = 0;
 	
-	public Program() {
+	public Program(int threadCount) {
 		this.instrList = new ArrayList<>();
+		this.threadCount=threadCount;
 	}
 	
 	public void addInstr(Instr instr) {
@@ -47,7 +48,11 @@ public class Program {
 		}
 		printWriter.println(" ]");
 		printWriter.println();
-		printWriter.println("main = run [prog]");
+		printWriter.print("main = run [prog");
+		for(int i=0;i<threadCount;i++) {
+			printWriter.print(",prog");
+		}
+		printWriter.print("]");
 		printWriter.close();
 	}
 	

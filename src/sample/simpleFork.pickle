@@ -1,0 +1,13 @@
+cannon{
+	int shared a=2;
+	int b=3;
+	fork{
+		int c = 4;
+		sync {
+			a=a-c;
+		}
+	}
+	sync{
+		a=a-b;
+	}
+}
