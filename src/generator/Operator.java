@@ -13,7 +13,10 @@ public class Operator extends Operand{
 		GtE,
 		LtE,
 		And,
-		Or
+		Or,
+		Xor,
+		Incr,
+		Decr
 	}
 	
 	private final Oper operator;

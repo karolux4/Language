@@ -341,6 +341,38 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			freeReg(ctx.expr(1));
 			setReg(ctx, reg(ctx.expr(0)));
 		}
+		else if(ctx.multOp().SLASH()!=null) {
+			reg(ctx); // take up register for ctx node;
+			int extraRegIndex = getFreeRegister();
+			lockRegister(extraRegIndex);
+			Reg extraReg = new Reg(extraRegIndex);
+			//if numbers are negative, multiply them by -1 so that positive division would be possible
+			Instr i1 = emit(OpCode.Compute, new Operator(Oper.GtE), reg(ctx.expr(0)), new Reg(0), reg(ctx));
+			Instr i2 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 3));
+			Instr i3 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, -1), reg(ctx));
+			Instr i4 = emit(OpCode.Compute, new Operator(Oper.Mul), reg(ctx.expr(0)), reg(ctx), reg(ctx.expr(0)));
+			Instr i5 = emit(OpCode.Compute, new Operator(Oper.GtE), reg(ctx.expr(1)), new Reg(0), extraReg);
+			Instr i6 = emit(OpCode.Branch, extraReg, new Target(TargetType.Rel, 3));
+			Instr i7 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, -1), extraReg);
+			Instr i8 = emit(OpCode.Compute, new Operator(Oper.Mul), reg(ctx.expr(1)), extraReg, reg(ctx.expr(1)));
+			//determine if the ending result positive or negative
+			Instr i9 = emit(OpCode.Compute, new Operator(Oper.Mul), reg(ctx), extraReg, reg(ctx));
+			//push result sign to stack
+			Instr i10 = emit(OpCode.Push, reg(ctx)); 
+			//positive number division instructions
+			Instr i11 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, -1), reg(ctx));
+			Instr i12 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx), new Reg(0), reg(ctx));
+			Instr i13 = emit(OpCode.Compute, new Operator(Oper.GtE), reg(ctx.expr(0)), reg(ctx.expr(1)), extraReg);
+			Instr i14 = emit(OpCode.Compute, new Operator(Oper.Sub), reg(ctx.expr(0)), reg(ctx.expr(1)), reg(ctx.expr(0)));
+			Instr i15 = emit(OpCode.Branch, extraReg, new Target(TargetType.Rel, -3));
+			//retrieve the expression sign from the stack
+			Instr i16 = emit(OpCode.Pop, extraReg);
+			//multiply the positive division result by the sign
+			Instr i17 = emit(OpCode.Compute, new Operator(Oper.Mul), reg(ctx), extraReg, reg(ctx));
+			freeUpRegister(extraRegIndex);
+			freeReg(ctx.expr(0));
+			freeReg(ctx.expr(1));
+		}
 		return null;
 	}
 

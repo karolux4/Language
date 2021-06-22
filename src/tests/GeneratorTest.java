@@ -25,6 +25,7 @@ public class GeneratorTest {
 		compile("src/sample/simpleFork.pickle", "simpleFork");
 		compile("src/sample/bankExample.pickle", "bankExample");
 		compile("src/sample/petersonsExample.pickle", "petersonsExample");
+		compile("src/sample/division.pickle", "divisionExample");
 
 	}
 	
