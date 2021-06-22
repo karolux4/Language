@@ -1,5 +1,8 @@
 package checker;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
@@ -14,8 +17,8 @@ public class Result {
 	private final ParseTreeProperty<Integer> offsets = new ParseTreeProperty<>();
 	/** Property stating if node is stored in a shared memory*/
 	private final ParseTreeProperty<Boolean> isShared = new ParseTreeProperty<>();
-	/** Maximum spawned additional thread count during the execution (not including main thread)*/
-	private int threadCount = 0;
+	/** List to store how many times the certain thread has been called*/
+	private List<Integer> threadCalls = new ArrayList<>();
 
 	/** Adds an association from parse tree node to the flow graph entry. */
 	public void setEntry(ParseTree node, ParserRuleContext entry) {
@@ -64,7 +67,7 @@ public class Result {
 	
 	/** Return thread count */
 	public int getThreadCount() {
-		return this.threadCount;
+		return this.threadCalls.size();
 	}
 	
 	/** Return the address for synchronization lock*/
@@ -74,12 +77,28 @@ public class Result {
 	
 	/** Return base offset for shared memory (the start is dedicated for thread synchronization and lock)*/
 	public int getBaseOffset() {
-		return this.threadCount+1;
+		return this.threadCalls.size()+1;
 	}
 	
-	public void updateCurrentThreadMax(int max) {
-		if(max>this.threadCount) {
-			threadCount=max;
+	/** Add a thread call to the list*/
+	public void addThread(int i) {
+		if(i>=threadCalls.size()) {
+			threadCalls.add(1);
+		}
+		else {
+			threadCalls.set(i, threadCalls.get(i)+1);
 		}
 	}
+	
+	/** Get a thread call count from the list*/
+	public int getThreadCallCount(int i) {
+		return this.threadCalls.get(i);
+	}
+	
+	
+	/** Decreases a thread call count in the list*/
+	public int decreaseThreadCallCount(int i) {
+		return this.threadCalls.set(i, threadCalls.get(i)-1);
+	}
+	
 }

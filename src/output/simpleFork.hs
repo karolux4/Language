@@ -16,31 +16,63 @@ prog = [
  , Store regB (DirAddr (0))
  , Load (ImmValue (15)) regB
  , WriteInstr regB (DirAddr (1))
- , Jump (Abs (29))
- , Load (ImmValue (4)) regC
- , Store regC (DirAddr (0))
+ , Jump (Abs (32))
+ , Load (ImmValue (4)) regB
+ , Store regB (DirAddr (0))
+ , ReadInstr (DirAddr (2))
+ , Receive regB
+ , Load (DirAddr (0)) regC
+ , Compute Sub regB regC regB
+ , Load (ImmValue (2)) regC
+ , WriteInstr regB (IndAddr regC)
+ , ReadInstr (DirAddr (2))
+ , Receive regB
+ , WriteInstr regB numberIO
+ , WriteInstr reg0 (IndAddr regSprID)
+ , ReadInstr (IndAddr regSprID)
+ , Receive regA
+ , Compute Equal regA reg0 regB
+ , Branch regB (Rel (-3))
+ , Jump (Ind regA)
+ , ReadInstr (DirAddr (1))
+ , Receive regA
+ , Branch regA (Rel (-2))
+ , Load (ImmValue (38)) regB
+ , WriteInstr regB (DirAddr (1))
+ , Jump (Abs (54))
  , TestAndSet (DirAddr (0))
- , Receive regC
- , Branch regC (Rel (2))
+ , Receive regB
+ , Branch regB (Rel (2))
  , Jump (Rel (-3))
  , ReadInstr (DirAddr (2))
- , Receive regD
- , Load (DirAddr (0)) regE
- , Compute Sub regD regE regD
- , Load (ImmValue (2)) regE
- , WriteInstr regD (IndAddr regE)
+ , Receive regB
+ , Load (ImmValue (1)) regC
+ , Compute Sub regB regC regB
+ , Load (ImmValue (2)) regC
+ , WriteInstr regB (IndAddr regC)
+ , ReadInstr (DirAddr (2))
+ , Receive regB
+ , WriteInstr regB numberIO
  , WriteInstr reg0 (DirAddr (0))
+ , WriteInstr reg0 (IndAddr regSprID)
  , EndProg
+ , Load (ImmValue (3)) regB
+ , Store regB (DirAddr (1))
+ , Load (ImmValue (5)) regB
+ , Store regB (DirAddr (2))
  , TestAndSet (DirAddr (0))
- , Receive regD
- , Branch regD (Rel (2))
+ , Receive regB
+ , Branch regB (Rel (2))
  , Jump (Rel (-3))
  , ReadInstr (DirAddr (2))
- , Receive regE
- , Load (DirAddr (0)) regF
- , Compute Sub regE regF regE
- , Load (ImmValue (2)) regF
- , WriteInstr regE (IndAddr regF)
+ , Receive regB
+ , Load (DirAddr (0)) regC
+ , Compute Sub regB regC regB
+ , Load (ImmValue (2)) regC
+ , WriteInstr regB (IndAddr regC)
+ , ReadInstr (DirAddr (2))
+ , Receive regB
+ , WriteInstr regB numberIO
  , WriteInstr reg0 (DirAddr (0))
  , EndProg
  ]

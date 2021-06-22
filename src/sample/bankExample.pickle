@@ -1,0 +1,23 @@
+cannon{
+	int shared balance = 20000;
+	fork{
+		sync{
+			balance = balance-2000;
+		}
+	}
+	
+	fork{
+		sync{
+			balance = balance+3000;
+		}
+	}
+	
+	fork{
+		sync{
+			balance = balance-10000;
+		}
+	}
+	
+	join;
+	print(balance);
+}

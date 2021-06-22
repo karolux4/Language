@@ -72,6 +72,8 @@ public class Checker extends PickleCannonBaseListener {
 	 * nested sync statements
 	 */
 	private int insideSync;
+	/** Integer to keep the count of concurrently working threads (excluding the main thread)*/
+	private int concurrentThreads = 0;
 
 	private List<FunctionCall> calls;
 
@@ -180,7 +182,7 @@ public class Checker extends PickleCannonBaseListener {
 				checkType(ctx.type(), getType(ctx.expr()));
 			}
 			if (ctx.SHARED() != null) {
-				if (!this.isInMainScope || this.table.scopeDepth() > 2) {
+				if (!this.isInMainScope || this.table.scopeCount()!=1 || this.table.scopeDepth() > 2) {
 					addError(ctx, "Variable '%s' can be declared shared only in cannon outer scope",
 							ctx.ID().getText());
 				} else {
@@ -216,7 +218,7 @@ public class Checker extends PickleCannonBaseListener {
 			} else {
 				Type array = new Type.Array(Integer.parseInt(ctx.NUM().getText()), getType(ctx.type()));
 				if (ctx.SHARED() != null) {
-					if (!this.isInMainScope || this.table.scopeDepth() > 2) {
+					if (!this.isInMainScope ||this.table.scopeCount()!=1 || this.table.scopeDepth() > 2) {
 						addError(ctx, "Variable '%s' can be declared shared only in cannon outer scope",
 								ctx.ID().getText());
 					}
@@ -279,8 +281,8 @@ public class Checker extends PickleCannonBaseListener {
 			addError(ctx, "Cannot fork a thread inside a function or a while loop");
 		}
 		this.insideFork++;
-		this.result.updateCurrentThreadMax(insideFork);
-		this.isInMainScope=false;
+		this.result.addThread(concurrentThreads);
+		this.concurrentThreads++;
 		this.table.openScope();
 	}
 
@@ -288,14 +290,12 @@ public class Checker extends PickleCannonBaseListener {
 	public void exitForkStat(ForkStatContext ctx) {
 		this.insideFork--;
 		setEntry(ctx, entry(ctx.block()));
-		if(insideFork==0) {
-			this.isInMainScope=true;
-		}
 		this.table.closeScope();
 	}
 
 	@Override
 	public void exitJoinStat(JoinStatContext ctx) {
+		this.concurrentThreads=this.insideFork;
 		setEntry(ctx, ctx);
 	}
 

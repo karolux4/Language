@@ -23,6 +23,7 @@ public class GeneratorTest {
 		//compile("src/sample/procCorrect.pickle", "procCorrect");
 		compile("src/sample/simple.pickle", "simple");
 		compile("src/sample/simpleFork.pickle", "simpleFork");
+		compile("src/sample/bankExample.pickle", "bankExample");
 
 	}
 	

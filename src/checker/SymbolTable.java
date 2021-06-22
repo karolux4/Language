@@ -170,4 +170,12 @@ public class SymbolTable {
 		return this.scopes.peek().isUsed(id);
 	}
 	
+	/**
+	 * Returns scopes count
+	 * @return scope count
+	 */
+	public int scopeCount() {
+		return this.scopes.size();
+	}
+	
 }

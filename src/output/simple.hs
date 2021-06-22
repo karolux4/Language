@@ -45,28 +45,28 @@ prog = [
  , Branch regB (Rel (2))
  , Jump (Rel (-3))
  , ReadInstr (DirAddr (1))
- , Receive regC
- , Load (ImmValue (1)) regD
- , Compute Sub regC regD regC
- , Load (ImmValue (1)) regD
- , WriteInstr regC (IndAddr regD)
+ , Receive regB
+ , Load (ImmValue (1)) regC
+ , Compute Sub regB regC regB
+ , Load (ImmValue (1)) regC
+ , WriteInstr regB (IndAddr regC)
  , WriteInstr reg0 (DirAddr (0))
- , Load (DirAddr (6)) regC
- , WriteInstr regC numberIO
+ , Load (DirAddr (6)) regB
+ , WriteInstr regB numberIO
  , ReadInstr (DirAddr (1))
- , Receive regC
- , Load (ImmValue (2)) regD
- , Compute Equal regC regD regC
- , Compute Equal regC reg0 regD
- , Branch regD (Abs (62))
- , Load (DirAddr (1)) regC
- , Load (ImmValue (-1)) regD
- , Compute Mul regD regC regD
- , WriteInstr regD numberIO
- , Jump (Abs (65))
- , Load (DirAddr (2)) regC
- , Compute Equal regC reg0 regC
+ , Receive regB
+ , Load (ImmValue (2)) regC
+ , Compute Equal regB regC regB
+ , Compute Equal regB reg0 regC
+ , Branch regC (Abs (62))
+ , Load (DirAddr (1)) regB
+ , Load (ImmValue (-1)) regC
+ , Compute Mul regC regB regC
  , WriteInstr regC numberIO
+ , Jump (Abs (65))
+ , Load (DirAddr (2)) regB
+ , Compute Equal regB reg0 regB
+ , WriteInstr regB numberIO
  , Nop
  , Jump (Abs (30))
  , Nop

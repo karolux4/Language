@@ -1,5 +1,9 @@
 package generator;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
@@ -49,14 +53,23 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	/** The program being built. */
 	private Program prog;
 
+	/** Total register number */
+	private final static int REGISTER_COUNT = 8;
+
 	/** The array indicating if register is taken */
-	private boolean isRegisterTaken[];
+	private List<Boolean[]> isRegisterTaken;
 
 	/** The number of inserted instructions */
 	private int instructionCount;
-	
-	/** The id of current thread*/
-	private int currentThread;
+
+	/** The ids of currently open threads */
+	private Stack<Integer> currentThreads;
+
+	/**
+	 * The integer indicating how many concurrent threads are now executing
+	 * (excluding main thread)
+	 */
+	private int concurrentThreads;
 
 	/** Association of expression and target nodes to registers. */
 	private ParseTreeProperty<Reg> regs;
@@ -67,14 +80,11 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	public Program generate(ParseTree tree, Result checkResult) {
 		this.checkResult = checkResult;
 		this.prog = new Program(this.checkResult.getThreadCount());
-		this.isRegisterTaken = new boolean[8];
-		// reg0 is taken
-		this.isRegisterTaken[0] = true;
-		// regSprID is taken
-		this.isRegisterTaken[1] = true;
-		// regA is allocated for ARP
-		this.isRegisterTaken[2] = true;
-		this.currentThread=0;
+		this.isRegisterTaken = new ArrayList<>();
+		initializeRegisters(this.checkResult.getThreadCount() + 1);
+		this.currentThreads = new Stack<>();
+		this.currentThreads.push(0);
+		this.concurrentThreads = 0;
 		this.instructionCount = 0;
 		this.regs = new ParseTreeProperty<>();
 		this.instrID = new ParseTreeProperty<>();
@@ -91,14 +101,9 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			visit(proc);
 		}
 		this.prog.updateInstr(0, new Instr(OpCode.Jump, new Target(TargetType.Abs, this.instructionCount)));
-		if(this.checkResult.getThreadCount()>0) {
-			Instr i1 = emit(OpCode.Branch, new Reg(1), new Target(TargetType.Rel, 2));
-			Instr i2 = emit(OpCode.Jump, new Target(TargetType.Rel, 6));
-			Instr i3 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.IndAddr, 1));
-			Instr i4 = emit(OpCode.Receive, new Reg(2));
-			Instr i5 = emit(OpCode.Compute, new Operator(Oper.Equal), new Reg(2), new Reg(0), new Reg(3));
-			Instr i6 = emit(OpCode.Branch, new Reg(3), new Target(TargetType.Rel, -3));
-			Instr i7 = emit(OpCode.Jump, new Target(TargetType.Ind, 2));
+		if (this.checkResult.getThreadCount() > 0) {
+			// Instructions dedicated for thread jumping with main thread skipping them
+			generateThreadJumping(true);
 		}
 		visit(ctx.block());
 		emit(OpCode.EndProg);
@@ -124,18 +129,17 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	@Override
 	public Instr visitSimpleVarStat(SimpleVarStatContext ctx) {
 		System.out.println("Visit simpleVarStat");
-		// !!! IMPORTANT !!! does not work for shared
 		if (ctx.expr() != null) {
 			visit(ctx.expr());
 			if (isShared(ctx)) {
-				Instr i = emit(OpCode.WriteInstr, regs.get(ctx.expr()), offset(ctx.ID(), true));
+				Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), offset(ctx.ID(), true));
 			} else {
-				Instr i = emit(OpCode.Store, regs.get(ctx.expr()), offset(ctx.ID()));
+				Instr i = emit(OpCode.Store, reg(ctx.expr()), offset(ctx.ID()));
 			}
 			freeReg(ctx.expr());
 		} else {
 			if (isShared(ctx)) {
-				Instr i = emit(OpCode.WriteInstr, regs.get(ctx.expr()), offset(ctx.ID(), true));
+				Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), offset(ctx.ID(), true));
 			} else {
 				Instr i = emit(OpCode.Store, new Reg(0), offset(ctx.ID()));
 			}
@@ -158,11 +162,9 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		visit(ctx.expr());
 		visit(ctx.target());
 		if (isShared(ctx.target())) {
-			Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()),
-					new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
+			Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
 		} else {
-			Instr i = emit(OpCode.Store, reg(ctx.expr()),
-					new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
+			Instr i = emit(OpCode.Store, reg(ctx.expr()), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
 		}
 		freeReg(ctx.target());
 		freeReg(ctx.expr());
@@ -219,21 +221,32 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	@Override
 	public Instr visitForkStat(ForkStatContext ctx) {
 		System.out.println("Visit forkStat");
-		Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.instructionCount+3), reg(ctx));
-		Instr i2 = emit(OpCode.WriteInstr, reg(ctx), new Addr(AddrImmDI.DirAddr, currentThread+1));
+		Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.instructionCount + 3), reg(ctx));
+		Instr i2 = emit(OpCode.WriteInstr, reg(ctx), new Addr(AddrImmDI.DirAddr, concurrentThreads + 1));
+		freeReg(ctx);
 		int jumpID = this.instructionCount;
 		Instr i3 = emit(OpCode.Jump, new Target(TargetType.Abs, -1));
-		this.currentThread++;
+		int callCount = this.checkResult.decreaseThreadCallCount(concurrentThreads);
+		this.currentThreads.push(concurrentThreads + 1);
+		this.concurrentThreads++;
 		visit(ctx.block());
-		Instr i4 = emit(OpCode.EndProg);
-		this.currentThread--;
-		this.prog.updateInstr(jumpID, new Instr(OpCode.Jump,  new Target(TargetType.Abs, this.instructionCount)));
+		this.currentThreads.pop();
+		if (callCount == 1) {
+			Instr i4 = emit(OpCode.WriteInstr, new Reg(0), new Addr(AddrImmDI.IndAddr, 1));
+			Instr i5 = emit(OpCode.EndProg);
+		} else {
+			Instr i4 = emit(OpCode.WriteInstr, new Reg(0), new Addr(AddrImmDI.IndAddr, 1));
+			generateThreadJumping(false);
+		}
+		this.prog.updateInstr(jumpID, new Instr(OpCode.Jump, new Target(TargetType.Abs, this.instructionCount)));
 		return null;
 	}
 
 	@Override
 	public Instr visitJoinStat(JoinStatContext ctx) {
 		System.out.println("Visit joinStat");
+		generateThreadJoin(this.currentThreads.peek(), this.concurrentThreads);
+		this.concurrentThreads = this.currentThreads.peek();
 		return null;
 	}
 
@@ -244,6 +257,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		Instr i2 = emit(OpCode.Receive, reg(ctx));
 		Instr i3 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 2));
 		Instr i4 = emit(OpCode.Jump, new Target(TargetType.Rel, -3));
+		freeReg(ctx);
 		visit(ctx.block());
 		Instr i5 = emit(OpCode.WriteInstr, new Reg(0), new Addr(AddrImmDI.DirAddr, this.checkResult.getLockAddress()));
 		return null;
@@ -253,7 +267,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	public Instr visitBlockStat(BlockStatContext ctx) {
 		System.out.println("Visit blockStat");
 		visit(ctx.block());
-		this.instrID.put(ctx, this.instrID.get(ctx.block()));
 		return null;
 	}
 
@@ -261,7 +274,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	public Instr visitPrintStat(PrintStatContext ctx) {
 		System.out.println("Visit printStat");
 		visit(ctx.expr());
-		this.instrID.put(ctx, this.instrID.get(ctx.expr()));
 		Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), Addr.NUMBER_IO);
 		freeReg(ctx.expr());
 		return null;
@@ -271,19 +283,17 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	public Instr visitCallStat(CallStatContext ctx) {
 		System.out.println("Visit callStat");
 		visit(ctx.args());
-		this.instrID.put(ctx, this.instrID.get(ctx.args()));
 		return null;
 	}
 
 	@Override
 	public Instr visitIdTarget(IdTargetContext ctx) {
 		System.out.println("Visit idTarget");
-		this.instrID.put(ctx, instructionCount);
-		if(isShared(ctx)) {
-			Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 
-					this.checkResult.getBaseOffset() + this.checkResult.getOffset(ctx)), reg(ctx));
-		}
-		else {
+		if (isShared(ctx)) {
+			Instr i = emit(OpCode.Load,
+					new Addr(AddrImmDI.ImmValue, this.checkResult.getBaseOffset() + this.checkResult.getOffset(ctx)),
+					reg(ctx));
+		} else {
 			Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
 		}
 		return null;
@@ -293,7 +303,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	public Instr visitArrayTarget(ArrayTargetContext ctx) {
 		System.out.println("Visit arrayTarget");
 		visit(ctx.expr());
-		this.instrID.put(ctx, this.instrID.get(ctx.expr()));
 		return null;
 	}
 
@@ -302,9 +311,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		System.out.println("Visit args");
 		for (ExprContext expr : ctx.expr()) {
 			visit(expr);
-		}
-		if (ctx.expr().size() > 0) {
-			this.instrID.put(ctx, this.instrID.get(ctx.expr(0)));
 		}
 		return null;
 	}
@@ -329,7 +335,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		System.out.println("Visit multExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
-		this.instrID.put(ctx, this.instrID.get(ctx.expr(0)));
 		if (ctx.multOp().STAR() != null) {
 			Instr i = emit(OpCode.Compute, new Operator(Oper.Mul), reg(ctx.expr(0)), reg(ctx.expr(1)),
 					reg(ctx.expr(0)));
@@ -344,7 +349,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		System.out.println("Visit plusExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
-		this.instrID.put(ctx, this.instrID.get(ctx.expr(0)));
 		if (ctx.plusOp().PLUS() != null) {
 			Instr i = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx.expr(0)), reg(ctx.expr(1)),
 					reg(ctx.expr(0)));
@@ -364,7 +368,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		System.out.println("Visit compExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
-		this.instrID.put(ctx, this.instrID.get(ctx.expr(0)));
 		if (ctx.compOp().EQ() != null) {
 			if (this.checkResult.getType(ctx.expr(0)) == Type.INT
 					|| this.checkResult.getType(ctx.expr(0)) == Type.BOOL) {
@@ -408,7 +411,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		System.out.println("Visit boolExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
-		this.instrID.put(ctx, this.instrID.get(ctx.expr(0)));
 		if (ctx.boolOp().AND() != null) {
 			Instr i = emit(OpCode.Compute, new Operator(Oper.And), reg(ctx.expr(0)), reg(ctx.expr(1)),
 					reg(ctx.expr(0)));
@@ -426,7 +428,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	public Instr visitParExpr(ParExprContext ctx) {
 		System.out.println("Visit parExpr");
 		visit(ctx.expr());
-		this.instrID.put(ctx, this.instrID.get(ctx.expr()));
 		setReg(ctx, regs.get(ctx.expr()));
 		return null;
 	}
@@ -446,7 +447,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	@Override
 	public Instr visitNumExpr(NumExprContext ctx) {
 		System.out.println("Visit numExpr");
-		this.instrID.put(ctx, instructionCount);
 		Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, Integer.parseInt(ctx.NUM().getText())), reg(ctx));
 		return null;
 	}
@@ -454,7 +454,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	@Override
 	public Instr visitTrueExpr(TrueExprContext ctx) {
 		System.out.println("Visit trueExpr");
-		this.instrID.put(ctx, instructionCount);
 		Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 1), reg(ctx));
 		return null;
 	}
@@ -471,7 +470,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		System.out.println("Visit indexExpr");
 		visit(ctx.expr());
 		freeReg(ctx.expr());
-		this.instrID.put(ctx, this.instrID.get(ctx.expr()));
 		return null;
 	}
 
@@ -481,9 +479,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		for (ExprContext expr : ctx.expr()) {
 			visit(expr);
 			freeReg(expr);
-		}
-		if (ctx.expr().size() > 0) {
-			this.instrID.put(ctx, this.instrID.get(ctx.expr(0)));
 		}
 		return null;
 	}
@@ -496,12 +491,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	}
 
 	private boolean isRegisterTaken(int i) {
-		return this.isRegisterTaken[i];
+		return this.isRegisterTaken.get(currentThreads.peek())[i];
 	}
 
 	private int getFreeRegister() {
-		for (int i = 3; i < this.isRegisterTaken.length; i++) {
-			if (!this.isRegisterTaken[i]) {
+		for (int i = 3; i < this.isRegisterTaken.get(currentThreads.peek()).length; i++) {
+			if (!this.isRegisterTaken.get(currentThreads.peek())[i]) {
 				return i;
 			}
 		}
@@ -509,14 +504,14 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	}
 
 	private void freeUpRegister(int i) {
-		this.isRegisterTaken[i] = false;
+		this.isRegisterTaken.get(currentThreads.peek())[i] = false;
 	}
 
 	private void lockRegister(int i) {
-		if (this.isRegisterTaken[i]) {
+		if (this.isRegisterTaken.get(currentThreads.peek())[i]) {
 			throw new RuntimeException("Register is already locked");
 		}
-		this.isRegisterTaken[i] = true;
+		this.isRegisterTaken.get(currentThreads.peek())[i] = true;
 	}
 
 	private Reg reg(ParseTree node) {
@@ -555,14 +550,14 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	private Addr offset(ParseTree node) {
 		return new Addr(AddrImmDI.DirAddr, this.checkResult.getOffset(node));
 	}
-	
+
 	/**
 	 * Retrieves the offset of a variable node from the checker result, wrapped in a
 	 * {@link Addr} operand.
 	 */
 	private Addr offset(ParseTree node, boolean isShared) {
-		if(isShared) {
-			return new Addr(AddrImmDI.DirAddr, this.checkResult.getBaseOffset() +this.checkResult.getOffset(node));
+		if (isShared) {
+			return new Addr(AddrImmDI.DirAddr, this.checkResult.getBaseOffset() + this.checkResult.getOffset(node));
 		}
 		return new Addr(AddrImmDI.DirAddr, this.checkResult.getOffset(node));
 	}
@@ -579,6 +574,55 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	/** Return the type of the expression */
 	private Type getType(ParseTree node) {
 		return this.checkResult.getType(node);
+	}
+
+	/** Convenience method to create instructions for thread jumping */
+	private void generateThreadJumping(boolean withMainThread) {
+		if (withMainThread) {
+			Instr i1 = emit(OpCode.Branch, new Reg(1), new Target(TargetType.Rel, 2));
+			Instr i2 = emit(OpCode.Jump, new Target(TargetType.Rel, 6));
+		}
+		Instr i3 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.IndAddr, 1));
+		Instr i4 = emit(OpCode.Receive, new Reg(2));
+		Instr i5 = emit(OpCode.Compute, new Operator(Oper.Equal), new Reg(2), new Reg(0), new Reg(3));
+		Instr i6 = emit(OpCode.Branch, new Reg(3), new Target(TargetType.Rel, -3));
+		Instr i7 = emit(OpCode.Jump, new Target(TargetType.Ind, 2));
+	}
+
+	/** Method to initialize register arrays for each thread*/
+	private void initializeRegisters(int count) {
+		for (int i = 0; i < count; i++) {
+			Boolean isTaken[] = new Boolean[REGISTER_COUNT];
+			// reg0 is taken
+			isTaken[0] = true;
+			// regSprID is taken
+			isTaken[1] = true;
+			// regA is allocated for ARP
+			isTaken[2] = true;
+			for (int j = 3; j < REGISTER_COUNT; j++) {
+				isTaken[j] = false;
+			}
+
+			this.isRegisterTaken.add(isTaken);
+		}
+
+	}
+	
+	private void generateThreadJoin(int from, int to) {
+		if(from < 0 || to < 0 || from > this.checkResult.getThreadCount() || to > this.checkResult.getThreadCount())
+		{
+			throw new RuntimeException("Thread ids are out of bounds");
+		}
+		if(from<to) {
+			Instr i1 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.DirAddr, from+1));
+			Instr i2 = emit(OpCode.Receive, new Reg(2)); // store in regB
+			for(int i=from+2;i<=to;i++) {
+				Instr i3 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.DirAddr, i));
+				Instr i4 = emit(OpCode.Receive, new Reg(3)); //store in regC
+				Instr i5 = emit(OpCode.Compute, new Operator(Oper.Or), new Reg(2), new Reg(3), new Reg(2)); //store in regB
+			}
+			Instr i6 = emit(OpCode.Branch, new Reg(2), new Target(TargetType.Rel, -2-(3*(to-from-1))));
+		}
 	}
 
 }
