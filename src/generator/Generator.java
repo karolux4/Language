@@ -359,7 +359,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			Instr i9 = emit(OpCode.Compute, new Operator(Oper.Mul), reg(ctx), extraReg, reg(ctx));
 			//push result sign to stack
 			Instr i10 = emit(OpCode.Push, reg(ctx)); 
-			//positive number division instructions
+			//positive number division instructions (subtract one register value from another and increase the counter)
 			Instr i11 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, -1), reg(ctx));
 			Instr i12 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx), new Reg(0), reg(ctx));
 			Instr i13 = emit(OpCode.Compute, new Operator(Oper.GtE), reg(ctx.expr(0)), reg(ctx.expr(1)), extraReg);

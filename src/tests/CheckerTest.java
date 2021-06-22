@@ -15,17 +15,17 @@ public class CheckerTest {
 	
 	@Test
 	public void checkerTest() {
-		checkSuccess("src/sample/fork.pickle");
-		checkSuccess("src/sample/arrayCorrect.pickle");
-		checkSuccess("src/sample/procCorrect.pickle");
-		checkFail("src/sample/arrayError.pickle");
-		checkFail("src/sample/procError.pickle");
-		checkFail("src/sample/sharedError.pickle");
-		checkFail("src/sample/forkError.pickle");
-		checkFail("src/sample/forkSharedError.pickle");
-		checkFail("src/sample/error1.pickle");
-		checkFail("src/sample/error2.pickle");
-		checkFail("src/sample/error3.pickle");
+		checkSuccess("src/sample/concurrency/fork.pickle");
+		checkSuccess("src/sample/arrays/arrayCorrect.pickle");
+		checkSuccess("src/sample/procedures/procCorrect.pickle");
+		checkFail("src/sample/arrays/arrayError.pickle");
+		checkFail("src/sample/procedures/procError.pickle");
+		checkFail("src/sample/concurrency/sharedError.pickle");
+		checkFail("src/sample/concurrency/forkError.pickle");
+		checkFail("src/sample/concurrency/forkSharedError.pickle");
+		checkFail("src/sample/general/error1.pickle");
+		checkFail("src/sample/general/error2.pickle");
+		checkFail("src/sample/general/error3.pickle");
 
 	}
 	

@@ -21,11 +21,14 @@ public class GeneratorTest {
 		//compile("src/sample/arrayCorrect.pickle", "arrayCorrect");
 		//System.out.println("-----------------------");
 		//compile("src/sample/procCorrect.pickle", "procCorrect");
-		compile("src/sample/simple.pickle", "simple");
-		compile("src/sample/simpleFork.pickle", "simpleFork");
-		compile("src/sample/bankExample.pickle", "bankExample");
-		compile("src/sample/petersonsExample.pickle", "petersonsExample");
-		compile("src/sample/division.pickle", "divisionExample");
+		compile("src/sample/simple/simple.pickle", "simple");
+		compile("src/sample/concurrency/simpleFork.pickle", "simpleFork");
+		compile("src/sample/concurrency/bankExample.pickle", "bankExample");
+		compile("src/sample/concurrency/petersonsExample.pickle", "petersonsExample");
+		compile("src/sample/division/division.pickle", "divisionExample");
+		compile("src/sample/simple/expressions.pickle", "expressionsExample");
+		compile("src/sample/concurrency/fork.pickle", "fork");
+		compile("src/sample/concurrency/manyForks.pickle", "manyForks");
 
 	}
 	

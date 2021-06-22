@@ -18,8 +18,8 @@ public class LexerParserTest {
 	@Test
 	public void testLexerParser() {
 		try {
-			parse("src/sample/fork.pickle");
-			parse("src/sample/proc.pickle");
+			parse("src/sample/concurrency/fork.pickle");
+			parse("src/sample/procedures/proc.pickle");
 		} catch (IOException e) {
 			Assert.fail("Throws IOException");
 		}
