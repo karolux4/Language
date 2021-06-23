@@ -330,11 +330,18 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			freeReg(ctx.expr());
 		} else {
 			int arraySize = ((Type.Array) getType(ctx.expr())).getSize();
-			for (int i = 0; i < arraySize; i++) {
-				Instr i1 = emit(OpCode.Pop, reg(ctx));
-				Instr i2 = emit(OpCode.WriteInstr, reg(ctx), Addr.NUMBER_IO);
-			}
+			int extraRegIndex = getFreeRegister();
+			lockRegister(extraRegIndex);
+			Reg extraReg = new Reg(extraRegIndex);
+			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize), extraReg);
+			Instr i2 = emit(OpCode.Compute, new Operator(Oper.LtE), extraReg, new Reg(0), reg(ctx));
+			Instr i3 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 5));
+			Instr i4 = emit(OpCode.Pop, reg(ctx));
+			Instr i5 = emit(OpCode.WriteInstr, reg(ctx), Addr.NUMBER_IO);
+			Instr i6 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
+			Instr i7 = emit(OpCode.Jump, new Target(TargetType.Rel, -5));
 			freeReg(ctx);
+			freeUpRegister(extraRegIndex);
 		}
 		return null;
 	}

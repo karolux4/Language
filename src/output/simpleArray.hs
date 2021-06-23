@@ -389,6 +389,22 @@ prog = [
  , Load (ImmValue (5)) regC
  , Compute Add regSP regC regSP
  , WriteInstr regB numberIO
+ , Load (ImmValue (4)) regB
+ , Compute Lt regB reg0 regC
+ , Branch regC (Rel (7))
+ , Load (ImmValue (10)) regC
+ , Compute Add regC regB regC
+ , Load (IndAddr regC) regC
+ , Push regC
+ , Compute Decr regB reg0 regB
+ , Jump (Rel (-7))
+ , Load (ImmValue (5)) regB
+ , Compute LtE regB reg0 regC
+ , Branch regC (Rel (5))
+ , Pop regC
+ , WriteInstr regC numberIO
+ , Compute Decr regB reg0 regB
+ , Jump (Rel (-5))
  , EndProg
  ]
 
