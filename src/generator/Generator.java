@@ -197,24 +197,26 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			freeReg(ctx.expr());
 		} else {
 			int arraySize = ((Type.Array) getType(ctx.target())).getSize();
-			if (isShared(ctx.target())) {
-				for (int i = 0; i < arraySize; i++) {
-					Instr i1 = emit(OpCode.Pop, reg(ctx));
-					Instr i2 = emit(OpCode.WriteInstr, reg(ctx),
-							new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
-					Instr i3 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx.target()), new Reg(0),
-							reg(ctx.target()));
-				}
-				freeReg(ctx);
-			} else {
-				for (int i = 0; i < arraySize; i++) {
-					Instr i1 = emit(OpCode.Pop, reg(ctx));
-					Instr i2 = emit(OpCode.Store, reg(ctx), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
-					Instr i3 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx.target()), new Reg(0),
-							reg(ctx.target()));
-				}
-				freeReg(ctx);
+			int extraRegIndex = getFreeRegister();
+			lockRegister(extraRegIndex);
+			Reg extraReg = new Reg(extraRegIndex);
+			OpCode code;
+			if(isShared(ctx.target())) {
+				code = OpCode.WriteInstr;
 			}
+			else {
+				code = OpCode.Store;
+			}
+			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
+			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
+			Instr i3 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 6));
+			Instr i4 = emit(OpCode.Pop, reg(ctx));
+			Instr i5 = emit(code, reg(ctx), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
+			Instr i6 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx.target()), new Reg(0), reg(ctx.target()));
+			Instr i7 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
+			Instr i8 = emit(OpCode.Jump, new Target(TargetType.Rel, -6));
+			freeReg(ctx);
+			freeUpRegister(extraRegIndex);
 		}
 		freeReg(ctx.target());
 		return null;

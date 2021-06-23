@@ -197,21 +197,14 @@ prog = [
  , Load (ImmValue (5)) regB
  , Push regB
  , Load (ImmValue (15)) regB
- , Pop regC
- , Store regC (IndAddr regB)
+ , Load (ImmValue (4)) regC
+ , Compute Lt regC reg0 regD
+ , Branch regD (Rel (6))
+ , Pop regD
+ , Store regD (IndAddr regB)
  , Compute Incr regB reg0 regB
- , Pop regC
- , Store regC (IndAddr regB)
- , Compute Incr regB reg0 regB
- , Pop regC
- , Store regC (IndAddr regB)
- , Compute Incr regB reg0 regB
- , Pop regC
- , Store regC (IndAddr regB)
- , Compute Incr regB reg0 regB
- , Pop regC
- , Store regC (IndAddr regB)
- , Compute Incr regB reg0 regB
+ , Compute Decr regC reg0 regC
+ , Jump (Rel (-6))
  , Load (ImmValue (4)) regB
  , Compute Lt regB reg0 regC
  , Branch regC (Rel (7))
@@ -256,21 +249,14 @@ prog = [
  , Load (ImmValue (1)) regB
  , Push regB
  , Load (ImmValue (15)) regB
- , Pop regC
- , Store regC (IndAddr regB)
+ , Load (ImmValue (4)) regC
+ , Compute Lt regC reg0 regD
+ , Branch regD (Rel (6))
+ , Pop regD
+ , Store regD (IndAddr regB)
  , Compute Incr regB reg0 regB
- , Pop regC
- , Store regC (IndAddr regB)
- , Compute Incr regB reg0 regB
- , Pop regC
- , Store regC (IndAddr regB)
- , Compute Incr regB reg0 regB
- , Pop regC
- , Store regC (IndAddr regB)
- , Compute Incr regB reg0 regB
- , Pop regC
- , Store regC (IndAddr regB)
- , Compute Incr regB reg0 regB
+ , Compute Decr regC reg0 regC
+ , Jump (Rel (-6))
  , Load (ImmValue (4)) regB
  , Compute Lt regB reg0 regC
  , Branch regC (Rel (7))
