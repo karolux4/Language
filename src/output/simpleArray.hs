@@ -398,6 +398,10 @@ prog = [
  , Push regC
  , Compute Decr regB reg0 regB
  , Jump (Rel (-7))
+ , Load (ImmValue (123)) regC
+ , WriteInstr regC charIO
+ , Load (ImmValue (10)) regC
+ , WriteInstr regC charIO
  , Load (ImmValue (5)) regB
  , Compute LtE regB reg0 regC
  , Branch regC (Rel (5))
@@ -405,6 +409,34 @@ prog = [
  , WriteInstr regC numberIO
  , Compute Decr regB reg0 regB
  , Jump (Rel (-5))
+ , Load (ImmValue (125)) regC
+ , WriteInstr regC charIO
+ , Load (ImmValue (10)) regC
+ , WriteInstr regC charIO
+ , Load (ImmValue (4)) regB
+ , Compute Lt regB reg0 regC
+ , Branch regC (Rel (7))
+ , Load (ImmValue (0)) regC
+ , Compute Add regC regB regC
+ , Load (IndAddr regC) regC
+ , Push regC
+ , Compute Decr regB reg0 regB
+ , Jump (Rel (-7))
+ , Load (ImmValue (123)) regC
+ , WriteInstr regC charIO
+ , Load (ImmValue (10)) regC
+ , WriteInstr regC charIO
+ , Load (ImmValue (5)) regB
+ , Compute LtE regB reg0 regC
+ , Branch regC (Rel (5))
+ , Pop regC
+ , WriteInstr regC numberIO
+ , Compute Decr regB reg0 regB
+ , Jump (Rel (-5))
+ , Load (ImmValue (125)) regC
+ , WriteInstr regC charIO
+ , Load (ImmValue (10)) regC
+ , WriteInstr regC charIO
  , EndProg
  ]
 

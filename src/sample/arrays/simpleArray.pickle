@@ -15,4 +15,5 @@ cannon{
 	print(a==a);
 	print(a!=a);
 	print(e);
+	print(a);
 }

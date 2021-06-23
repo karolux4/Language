@@ -333,13 +333,21 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			int extraRegIndex = getFreeRegister();
 			lockRegister(extraRegIndex);
 			Reg extraReg = new Reg(extraRegIndex);
-			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize), extraReg);
-			Instr i2 = emit(OpCode.Compute, new Operator(Oper.LtE), extraReg, new Reg(0), reg(ctx));
-			Instr i3 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 5));
-			Instr i4 = emit(OpCode.Pop, reg(ctx));
-			Instr i5 = emit(OpCode.WriteInstr, reg(ctx), Addr.NUMBER_IO);
-			Instr i6 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
-			Instr i7 = emit(OpCode.Jump, new Target(TargetType.Rel, -5));
+			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 123), reg(ctx)); //load '{' symbol
+			Instr i2 = emit (OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); //write '{' symbol
+			Instr i3 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 10), reg(ctx)); //load '\n' symbol
+			Instr i4 = emit (OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); //write '\n' symbol
+			Instr i5 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize), extraReg);
+			Instr i6 = emit(OpCode.Compute, new Operator(Oper.LtE), extraReg, new Reg(0), reg(ctx));
+			Instr i7 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 5));
+			Instr i8 = emit(OpCode.Pop, reg(ctx));
+			Instr i9 = emit(OpCode.WriteInstr, reg(ctx), Addr.NUMBER_IO);
+			Instr i10 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
+			Instr i11 = emit(OpCode.Jump, new Target(TargetType.Rel, -5));
+			Instr i12 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 125), reg(ctx)); //load '}' symbol
+			Instr i13 = emit (OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); //write '}' symbol
+			Instr i14 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 10), reg(ctx)); //load '\n' symbol
+			Instr i15 = emit (OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); //write '\n' symbol
 			freeReg(ctx);
 			freeUpRegister(extraRegIndex);
 		}

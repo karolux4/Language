@@ -11,6 +11,7 @@ public class Addr extends Operand{
 	}
 	
 	public static Addr NUMBER_IO = new Addr(AddrImmDI.DirAddr, -1);
+	public static Addr CHAR_IO = new Addr(AddrImmDI.DirAddr, -2);
 	
 	private final AddrImmDI type;
 	private final int value;
@@ -36,6 +37,9 @@ public class Addr extends Operand{
 	public String toString() {
 		if(this.value==-1&&this.type==AddrImmDI.DirAddr) {
 			return "numberIO"; // numberIO address
+		}
+		if(this.value==-2&&this.type==AddrImmDI.DirAddr) {
+			return "charIO"; // charIO address
 		}
 		if(this.type==AddrImmDI.IndAddr) {
 			return "("+this.type.toString()+" "+RegName.values()[this.value]+")";
