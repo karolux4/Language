@@ -152,6 +152,34 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		System.out.println("Visit arrayVarStat");
 		if (ctx.expr() != null) {
 			visit(ctx.expr());
+			int arraySize = ((Type.Array) getType(ctx.ID())).getSize();
+			if(isShared(ctx)) {
+				for(int i=0;i<arraySize;i++) {
+					Instr i1 = emit(OpCode.Pop, reg(ctx));
+					Instr i2 = emit(OpCode.WriteInstr, reg(ctx), offset(ctx.ID(), true, i));
+				}
+				freeReg(ctx);
+			}
+			else {
+				for(int i=0;i<arraySize;i++) {
+					Instr i1 = emit(OpCode.Pop, reg(ctx));
+					Instr i2 = emit(OpCode.Store, reg(ctx), offset(ctx.ID(), i));
+				}
+				freeReg(ctx);
+			}
+		} else {
+			if(isShared(ctx)) {
+				int arraySize = ((Type.Array)(getType(ctx.ID()))).getSize();
+				for(int i=0;i<arraySize;i++) {
+					Instr i1 = emit(OpCode.WriteInstr, new Reg(0), offset(ctx.ID(), true, i));
+				}
+			}
+			else {
+				int arraySize = ((Type.Array)(getType(ctx.ID()))).getSize();
+				for(int i=0;i<arraySize;i++) {
+					Instr i1 = emit(OpCode.Store, new Reg(0), offset(ctx.ID(), i));
+				}				
+			}
 		}
 		return null;
 	}
@@ -161,13 +189,34 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		System.out.println("Visit assignStat");
 		visit(ctx.expr());
 		visit(ctx.target());
-		if (isShared(ctx.target())) {
-			Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
-		} else {
-			Instr i = emit(OpCode.Store, reg(ctx.expr()), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
+		if(getType(ctx.target())==Type.INT || getType(ctx.target())==Type.BOOL) {
+			if (isShared(ctx.target())) {
+				Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
+			} else {
+				Instr i = emit(OpCode.Store, reg(ctx.expr()), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
+			}
+			freeReg(ctx.expr());
+		}
+		else {
+			int arraySize = ((Type.Array) getType(ctx.target())).getSize();
+			if(isShared(ctx.target())) {
+				for(int i=0;i<arraySize;i++) {
+					Instr i1 = emit(OpCode.Pop, reg(ctx));
+					Instr i2 = emit(OpCode.WriteInstr, reg(ctx), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
+					Instr i3 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx.target()), new Reg(0), reg(ctx.target()));
+				}
+				freeReg(ctx);
+			}
+			else {
+				for(int i=0;i<arraySize;i++) {
+					Instr i1 = emit(OpCode.Pop, reg(ctx));
+					Instr i2 = emit(OpCode.Store, reg(ctx), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
+					Instr i3 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx.target()), new Reg(0), reg(ctx.target()));
+				}
+				freeReg(ctx);
+			}
 		}
 		freeReg(ctx.target());
-		freeReg(ctx.expr());
 		return null;
 	}
 
@@ -274,8 +323,18 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	public Instr visitPrintStat(PrintStatContext ctx) {
 		System.out.println("Visit printStat");
 		visit(ctx.expr());
-		Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), Addr.NUMBER_IO);
-		freeReg(ctx.expr());
+		if(getType(ctx.expr())==Type.INT || getType(ctx.expr())==Type.BOOL){
+			Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), Addr.NUMBER_IO);
+			freeReg(ctx.expr());
+		}
+		else {
+			int arraySize = ((Type.Array) getType(ctx.expr())).getSize();
+			for(int i=0;i<arraySize;i++) {
+				Instr i1 = emit(OpCode.Pop, reg(ctx));
+				Instr i2 = emit(OpCode.WriteInstr, reg(ctx), Addr.NUMBER_IO);
+			}
+			freeReg(ctx);
+		}
 		return null;
 	}
 
@@ -303,6 +362,17 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	public Instr visitArrayTarget(ArrayTargetContext ctx) {
 		System.out.println("Visit arrayTarget");
 		visit(ctx.expr());
+		if(isShared(ctx)) {
+			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue,this.checkResult.getBaseOffset()+this.checkResult.getOffset(ctx)),
+					reg(ctx));
+			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), reg(ctx.expr()), reg(ctx));
+			freeReg(ctx.expr());
+		}
+		else {
+			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)),reg(ctx));
+			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), reg(ctx.expr()), reg(ctx));
+			freeReg(ctx.expr());
+		}
 		return null;
 	}
 
@@ -467,11 +537,31 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	@Override
 	public Instr visitIdExpr(IdExprContext ctx) {
 		System.out.println("Visit idExpr");
-		if (isShared(ctx)) {
-			Instr i1 = emit(OpCode.ReadInstr, offset(ctx, true));
-			Instr i2 = emit(OpCode.Receive, reg(ctx));
-		} else {
-			Instr i = emit(OpCode.Load, offset(ctx), reg(ctx));
+		if(getType(ctx)==Type.INT || getType(ctx)==Type.BOOL) {
+			if (isShared(ctx)) {
+				Instr i1 = emit(OpCode.ReadInstr, offset(ctx, true));
+				Instr i2 = emit(OpCode.Receive, reg(ctx));
+			} else {
+				Instr i = emit(OpCode.Load, offset(ctx), reg(ctx));
+			}
+		}
+		else {
+			if (isShared(ctx)) {
+				int arraySize = ((Type.Array) getType(ctx)).getSize();
+				for(int i=arraySize-1;i>=0;i--) {
+					Instr i1 = emit(OpCode.ReadInstr, offset(ctx, true, i));
+					Instr i2 = emit(OpCode.Receive, reg(ctx));
+					Instr i3 = emit(OpCode.Push, reg(ctx));
+				}
+				freeReg(ctx);
+			} else {
+				int arraySize = ((Type.Array) getType(ctx)).getSize();
+				for(int i=arraySize-1;i>=0;i--) {
+					Instr i1 = emit(OpCode.Load, offset(ctx, i), reg(ctx));
+					Instr i2 = emit(OpCode.Push, reg(ctx));
+				}
+				freeReg(ctx);
+			}
 		}
 		return null;
 	}
@@ -501,16 +591,30 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	public Instr visitIndexExpr(IndexExprContext ctx) {
 		System.out.println("Visit indexExpr");
 		visit(ctx.expr());
-		freeReg(ctx.expr());
+		if(isShared(ctx)) {
+			Instr i1 = emit(OpCode.Load, new Addr(Addr.AddrImmDI.ImmValue, 
+					this.checkResult.getBaseOffset()+this.checkResult.getOffset(ctx)), reg(ctx));
+			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), reg(ctx.expr()), reg(ctx));
+			freeReg(ctx.expr());
+			Instr i3 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()));
+			Instr i4 = emit(OpCode.Receive, reg(ctx));
+		}
+		else {
+			Instr i1 = emit(OpCode.Load, new Addr(Addr.AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
+			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), reg(ctx.expr()), reg(ctx));
+			freeReg(ctx.expr());
+			Instr i3 = emit(OpCode.Load, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()), reg(ctx));
+		}
 		return null;
 	}
 
 	@Override
 	public Instr visitArrayExpr(ArrayExprContext ctx) {
 		System.out.println("Visit arrayExpr");
-		for (ExprContext expr : ctx.expr()) {
-			visit(expr);
-			freeReg(expr);
+		for (int i= ctx.expr().size()-1;i>=0;i--) {
+			visit(ctx.expr(i));
+			Instr i1 = emit(OpCode.Push, reg(ctx.expr(i)));
+			freeReg(ctx.expr(i));
 		}
 		return null;
 	}
@@ -582,6 +686,14 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	private Addr offset(ParseTree node) {
 		return new Addr(AddrImmDI.DirAddr, this.checkResult.getOffset(node));
 	}
+	
+	/**
+	 * Retrieves the offset of a variable node from the checker result, wrapped in a
+	 * {@link Addr} operand.
+	 */
+	private Addr offset(ParseTree node, int modifier) {
+		return new Addr(AddrImmDI.DirAddr, modifier+this.checkResult.getOffset(node));
+	}
 
 	/**
 	 * Retrieves the offset of a variable node from the checker result, wrapped in a
@@ -593,6 +705,18 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		}
 		return new Addr(AddrImmDI.DirAddr, this.checkResult.getOffset(node));
 	}
+	
+	/**
+	 * Retrieves the offset of a variable node from the checker result, wrapped in a
+	 * {@link Addr} operand.
+	 */
+	private Addr offset(ParseTree node, boolean isShared, int modifier) {
+		if (isShared) {
+			return new Addr(AddrImmDI.DirAddr, this.checkResult.getBaseOffset() + this.checkResult.getOffset(node) + modifier);
+		}
+		return new Addr(AddrImmDI.DirAddr, this.checkResult.getOffset(node)+modifier);
+	}
+	
 
 	/** Returns a boolean is node stored in shared memory */
 	private boolean isShared(ParseTree node) {
@@ -656,5 +780,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			Instr i6 = emit(OpCode.Branch, new Reg(2), new Target(TargetType.Rel, -2-(3*(to-from-1))));
 		}
 	}
+	
 
 }

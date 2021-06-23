@@ -11,8 +11,8 @@ proc: PICKLE ID LPAR (pars (COMMA pars)* )? RPAR block
 	;
 
 /** Procedure parameters */
-pars : type ID			#varPar
-     | type ID LSQ RSQ	#arrayPar
+pars : type ID				#varPar
+     | type ID LSQ NUM RSQ	#arrayPar
      ;
 
 /** Block */

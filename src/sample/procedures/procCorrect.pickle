@@ -1,4 +1,4 @@
-pickle p1 (int a, bool c[]){
+pickle p1 (int a, bool c[3]){
 	a=3;
 	c[2]=false;
 	int b = 2;

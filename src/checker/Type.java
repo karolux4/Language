@@ -88,11 +88,11 @@ public abstract class Type {
 
 		@Override
 		public String toString() {
-			return this.elemType + "[]";
+			return this.elemType + "[" + this.size + "]";
 		}
 		
-		public String toStringWithSize() {
-			return this.elemType + "[" + this.size + "]";
+		public String toStringWithoutSize() {
+			return this.elemType + "[]";
 		}
 
 		@Override
@@ -105,7 +105,7 @@ public abstract class Type {
 		}
 
 		@Override
-		/** Returns if types are equal by type and class (not by value or size)*/
+		/** Returns if types are equal by type, class and size*/
 		public boolean equals(Object obj) {
 			if (this == obj) {
 				return true;
@@ -117,11 +117,14 @@ public abstract class Type {
 			if (!this.elemType.equals(other.elemType)) {
 				return false;
 			}
+			if(this.size!=other.size) {
+				return false;
+			}
 			return true;
 		}
 		
-		/** Returns if types are equal by type and class and size*/
-		public boolean equalsWithSize(Object obj) {
+		/** Returns if types are equal by type and class (without size)*/
+		public boolean equalsWithoutSize(Object obj) {
 			if (this == obj) {
 				return true;
 			}
@@ -130,9 +133,6 @@ public abstract class Type {
 			}
 			Array other = (Array) obj;
 			if (!this.elemType.equals(other.elemType)) {
-				return false;
-			}
-			if(this.size!=other.size) {
 				return false;
 			}
 			return true;

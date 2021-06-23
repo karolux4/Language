@@ -141,13 +141,18 @@ public class Checker extends PickleCannonBaseListener {
 
 	@Override
 	public void exitArrayPar(ArrayParContext ctx) {
-		Type type = new Type.Array(1, getType(ctx.type()));
-		boolean isAdded = this.table.put(ctx.ID().getText(), type);
-		if (!isAdded) {
-			addError(ctx, "Variable '%s' is already declared in this scope", ctx.ID().getText());
-		} else {
-			setType(ctx, type);
-			setOffset(ctx, this.table.offset(ctx.ID().getText()));
+		if (Integer.parseInt(ctx.NUM().getText()) <= 0) {
+			addError(ctx, "Array '%s' size must be greater than 0", ctx.ID().getText());
+		} 
+		else {
+			Type type = new Type.Array(Integer.parseInt(ctx.NUM().getText()), getType(ctx.type()));
+			boolean isAdded = this.table.put(ctx.ID().getText(), type);
+			if (!isAdded) {
+				addError(ctx, "Variable '%s' is already declared in this scope", ctx.ID().getText());
+			} else {
+				setType(ctx, type);
+				setOffset(ctx, this.table.offset(ctx.ID().getText()));
+			}
 		}
 	}
 
@@ -227,6 +232,7 @@ public class Checker extends PickleCannonBaseListener {
 						addError(ctx, "Variable '%s' is already declared in this scope", ctx.ID().getText());
 					} else {
 						setOffset(ctx.ID(), this.table.offsetShared(ctx.ID().getText()));
+						setType(ctx.ID(), array);
 						setEntry(ctx, ctx.type());
 						setIsShared(ctx, true);
 						if (ctx.expr() != null) {
@@ -239,6 +245,7 @@ public class Checker extends PickleCannonBaseListener {
 						addError(ctx, "Variable '%s' is already declared in this scope", ctx.ID().getText());
 					} else {
 						setOffset(ctx.ID(), this.table.offset(ctx.ID().getText()));
+						setType(ctx.ID(), array);
 						setEntry(ctx, ctx.type());
 						setIsShared(ctx, false);
 						if (ctx.expr() != null) {
@@ -646,16 +653,6 @@ public class Checker extends PickleCannonBaseListener {
 		if (actual == null || expected == null) {
 			// throw new IllegalArgumentException("Missing inferred type of " +
 			// node.getText());
-		} else if (actual instanceof Type.Array) {
-			if (!((Type.Array) actual).equalsWithSize(expected)) {
-				if (expected instanceof Type.Array) {
-					addError(node, "Expected type '%s' but found '%s'", ((Type.Array) expected).toStringWithSize(),
-							((Type.Array) actual).toStringWithSize());
-				} else {
-					addError(node, "Expected type '%s' but found '%s'", expected,
-							((Type.Array) actual).toStringWithSize());
-				}
-			}
 		} else if (!actual.equals(expected)) {
 			addError(node, "Expected type '%s' but found '%s'", expected, actual);
 		}
@@ -671,7 +668,19 @@ public class Checker extends PickleCannonBaseListener {
 		if (actual == null || expected == null) {
 			// throw new IllegalArgumentException("Missing inferred type of " +
 			// node.getText());
-		} else if (!actual.equals(expected)) {
+		}
+		else if(actual instanceof Type.Array){
+			if(!((Type.Array)actual).equalsWithoutSize(expected)) {
+				if(expected instanceof Type.Array) {
+					addError(node, "Expected type '%s' but found '%s'", ((Type.Array)expected).toStringWithoutSize(),
+							((Type.Array)actual).toStringWithoutSize());
+				}
+				else {
+					addError(node, "Expected type '%s' but found '%s'", expected, ((Type.Array)actual).toStringWithoutSize());
+				}
+			}
+		}
+		else if (!actual.equals(expected)) {
 			addError(node, "Expected type '%s' but found '%s'", expected, actual);
 		}
 	}

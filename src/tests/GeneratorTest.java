@@ -29,6 +29,7 @@ public class GeneratorTest {
 		compile("src/sample/simple/expressions.pickle", "expressionsExample");
 		compile("src/sample/concurrency/fork.pickle", "fork");
 		compile("src/sample/concurrency/manyForks.pickle", "manyForks");
+		compile("src/sample/arrays/simpleArray.pickle", "simpleArray");
 
 	}
 	

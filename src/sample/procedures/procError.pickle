@@ -1,4 +1,4 @@
-pickle p2(int a, bool b[], int c[]){
+pickle p2(int a, bool b[3], int c[3]){
 	print(b);
 }
 pickle p1(int a){
@@ -6,7 +6,7 @@ pickle p1(int a){
 cannon {
 	p1();
 	p3(3);
-	p2(2,2,[2,3]);
-	p2(0,[true,false],[2]);
+	p2(2,2,[2,3,4]);
+	p2(0,[true,false,true],[2,1,3]);
 	p1(3);
 }
