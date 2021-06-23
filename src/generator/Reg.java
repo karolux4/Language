@@ -12,12 +12,13 @@ public class Reg extends Operand{
 		regC,
 		regD,
 		regE,
-		regF
+		regF,
+		regSP
 	}
 	
 	public Reg(int id) {
 		super(Type.REG);
-		assert id >= 0 && id < 8 : "Register id must be between 0 and 7";
+		assert id >= 0 && id < 9 : "Register id must be between 0 and 8";
 		this.id=id;
 	}
 	

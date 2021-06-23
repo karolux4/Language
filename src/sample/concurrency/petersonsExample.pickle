@@ -4,26 +4,34 @@ cannon{
 	int shared turn;
 	int shared counter=0;
 	fork{
-		flag0=true;
-		turn = 1;
-		while(flag1 == true && turn == 1){
-			/*busy wait*/
+		int c = 10;
+		while(c>0){	
+			flag0=true;
+			turn = 1;
+			while(flag1 == true && turn == 1){
+				/*busy wait*/
+			}
+			/*critical section*/
+			counter=counter+1;
+			/*end of critical section*/
+			flag0=false;
+			c=c-1;
 		}
-		/*critical section*/
-		counter=counter+1;
-		/*end of critical section*/
-		flag0=false;
 	}
 	fork{
-		flag1=true;
-		turn = 0;
-		while(flag0 == true && turn == 0){
-			/*busy wait*/
+		int c = 10;
+		while(c>0){
+			flag1=true;
+			turn = 0;
+			while(flag0 == true && turn == 0){
+				/*busy wait*/
+			}
+			/*critical section*/
+			counter=counter+2;
+			/*end of critical section*/
+			flag1=false;
+			c=c-1;
 		}
-		/*critical section*/
-		counter=counter+2;
-		/*end of critical section*/
-		flag1=false;
 	}
 	join;
 	print(counter);
