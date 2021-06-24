@@ -31,6 +31,7 @@ public class GeneratorTest {
 		compile("src/sample/concurrency/manyForks.pickle", "manyForks");
 		compile("src/sample/arrays/simpleArray.pickle", "simpleArray");
 		compile("src/sample/procedures/simpleProc.pickle", "simpleProc");
+		compile("src/sample/procedures/fibonacci.pickle", "fibonacci");
 
 	}
 	
