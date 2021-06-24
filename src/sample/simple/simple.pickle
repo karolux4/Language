@@ -8,6 +8,7 @@ cannon{
 	bool f = true||false;
 	int g;
 	g = c*c*c;
+	print(g);
 	while(a>0){
 		int g=3;
 		sync {
@@ -22,5 +23,6 @@ cannon{
 		}
 		
 	}
+	print(g);
 	
 }

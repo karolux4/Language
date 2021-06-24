@@ -9,10 +9,10 @@ prog = [
  , Branch regSprID (Rel (2))
  , Jump (Rel (6))
  , ReadInstr (IndAddr regSprID)
- , Receive regA
- , Compute Equal regA reg0 regB
- , Branch regB (Rel (-3))
- , Jump (Ind regA)
+ , Receive regB
+ , Compute Equal regB reg0 regC
+ , Branch regC (Rel (-3))
+ , Jump (Ind regB)
  , Load (ImmValue (20000)) regB
  , WriteInstr regB (DirAddr (4))
  , Load (ImmValue (16)) regB
@@ -64,14 +64,14 @@ prog = [
  , WriteInstr reg0 (IndAddr regSprID)
  , EndProg
  , ReadInstr (DirAddr (1))
- , Receive regA
+ , Receive regB
  , ReadInstr (DirAddr (2))
- , Receive regB
- , Compute Or regA regB regA
+ , Receive regC
+ , Compute Or regB regC regB
  , ReadInstr (DirAddr (3))
- , Receive regB
- , Compute Or regA regB regA
- , Branch regA (Rel (-8))
+ , Receive regC
+ , Compute Or regB regC regB
+ , Branch regB (Rel (-8))
  , ReadInstr (DirAddr (4))
  , Receive regB
  , WriteInstr regB numberIO

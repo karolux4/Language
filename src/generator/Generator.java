@@ -143,7 +143,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			freeReg(ctx.expr());
 		} else {
 			if (isShared(ctx)) {
-				Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), offset(ctx.ID(), true));
+				Instr i = emit(OpCode.WriteInstr, new Reg(0), offset(ctx.ID(), true));
 			} else {
 				Instr i = emit(OpCode.Push, new Reg(0));
 			}
@@ -292,7 +292,10 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			Instr i4 = emit(OpCode.WriteInstr, new Reg(0), new Addr(AddrImmDI.IndAddr, 1));
 			Instr i5 = emit(OpCode.EndProg);
 		} else {
-			Instr i4 = emit(OpCode.WriteInstr, new Reg(0), new Addr(AddrImmDI.IndAddr, 1));
+			Instr i4 = emit(OpCode.Push, new Reg(2));
+			Instr i5 = emit(OpCode.Pop, new Reg(8));
+			Instr i6 = emit(OpCode.Compute, new Operator(Oper.Incr), new Reg(8), new Reg(0), new Reg(8)); //restore SP to the start
+			Instr i7 = emit(OpCode.WriteInstr, new Reg(0), new Addr(AddrImmDI.IndAddr, 1));
 			generateThreadJumping(false);
 		}
 		this.prog.updateInstr(jumpID, new Instr(OpCode.Jump, new Target(TargetType.Abs, this.instructionCount)));
@@ -834,10 +837,10 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			Instr i2 = emit(OpCode.Jump, new Target(TargetType.Rel, 6));
 		}
 		Instr i3 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.IndAddr, 1));
-		Instr i4 = emit(OpCode.Receive, new Reg(2));
-		Instr i5 = emit(OpCode.Compute, new Operator(Oper.Equal), new Reg(2), new Reg(0), new Reg(3));
-		Instr i6 = emit(OpCode.Branch, new Reg(3), new Target(TargetType.Rel, -3));
-		Instr i7 = emit(OpCode.Jump, new Target(TargetType.Ind, 2));
+		Instr i4 = emit(OpCode.Receive, new Reg(3));
+		Instr i5 = emit(OpCode.Compute, new Operator(Oper.Equal), new Reg(3), new Reg(0), new Reg(4));
+		Instr i6 = emit(OpCode.Branch, new Reg(4), new Target(TargetType.Rel, -3));
+		Instr i7 = emit(OpCode.Jump, new Target(TargetType.Ind, 3));
 	}
 
 	/** Method to initialize register arrays for each thread */
@@ -865,14 +868,14 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		}
 		if (from < to) {
 			Instr i1 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.DirAddr, from + 1));
-			Instr i2 = emit(OpCode.Receive, new Reg(2)); // store in regB
+			Instr i2 = emit(OpCode.Receive, new Reg(3)); // store in regB
 			for (int i = from + 2; i <= to; i++) {
 				Instr i3 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.DirAddr, i));
-				Instr i4 = emit(OpCode.Receive, new Reg(3)); // store in regC
-				Instr i5 = emit(OpCode.Compute, new Operator(Oper.Or), new Reg(2), new Reg(3), new Reg(2)); // store in
+				Instr i4 = emit(OpCode.Receive, new Reg(4)); // store in regC
+				Instr i5 = emit(OpCode.Compute, new Operator(Oper.Or), new Reg(3), new Reg(4), new Reg(3)); // store in
 																											// regB
 			}
-			Instr i6 = emit(OpCode.Branch, new Reg(2), new Target(TargetType.Rel, -2 - (3 * (to - from - 1))));
+			Instr i6 = emit(OpCode.Branch, new Reg(3), new Target(TargetType.Rel, -2 - (3 * (to - from - 1))));
 		}
 	}
 

@@ -44,12 +44,16 @@ prog = [
  , Load (ImmValue (5)) regC
  , Compute Sub regA regC regC
  , Store regB (IndAddr regC)
+ , Load (ImmValue (5)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
+ , WriteInstr regB numberIO
  , ReadInstr (DirAddr (1))
  , Receive regB
  , Load (ImmValue (0)) regC
  , Compute Gt regB regC regB
  , Compute Equal regB reg0 regC
- , Branch regC (Abs (85))
+ , Branch regC (Abs (89))
  , Load (ImmValue (3)) regB
  , Push regB
  , TestAndSet (DirAddr (0))
@@ -72,22 +76,26 @@ prog = [
  , Load (ImmValue (2)) regC
  , Compute Equal regB regC regB
  , Compute Equal regB reg0 regC
- , Branch regC (Abs (78))
+ , Branch regC (Abs (82))
  , Load (ImmValue (1)) regB
  , Compute Sub regA regB regB
  , Load (IndAddr regB) regB
  , Load (ImmValue (-1)) regC
  , Compute Mul regC regB regC
  , WriteInstr regC numberIO
- , Jump (Abs (83))
+ , Jump (Abs (87))
  , Load (ImmValue (2)) regB
  , Compute Sub regA regB regB
  , Load (IndAddr regB) regB
  , Compute Equal regB reg0 regB
  , WriteInstr regB numberIO
  , Nop
- , Jump (Abs (42))
+ , Jump (Abs (46))
  , Nop
+ , Load (ImmValue (5)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
+ , WriteInstr regB numberIO
  , EndProg
  ]
 
