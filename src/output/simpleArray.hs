@@ -3,108 +3,75 @@ import Sprockell
 prog :: [Instruction]
 prog = [ 
    Jump (Abs (1))
- , Load (ImmValue (5)) regB
- , Push regB
- , Load (ImmValue (4)) regB
- , Push regB
- , Load (ImmValue (3)) regB
+ , Push regSP
+ , Pop regA
+ , Compute Decr regA reg0 regA
+ , Load (ImmValue (1)) regB
  , Push regB
  , Load (ImmValue (2)) regB
  , Push regB
- , Load (ImmValue (1)) regB
+ , Load (ImmValue (3)) regB
  , Push regB
- , Pop regB
- , Store regB (DirAddr (0))
- , Pop regB
- , Store regB (DirAddr (1))
- , Pop regB
- , Store regB (DirAddr (2))
- , Pop regB
- , Store regB (DirAddr (3))
- , Pop regB
- , Store regB (DirAddr (4))
+ , Load (ImmValue (4)) regB
+ , Push regB
+ , Load (ImmValue (5)) regB
+ , Push regB
  , WriteInstr reg0 (DirAddr (1))
  , WriteInstr reg0 (DirAddr (2))
  , WriteInstr reg0 (DirAddr (3))
  , WriteInstr reg0 (DirAddr (4))
- , Load (ImmValue (8)) regB
+ , Load (ImmValue (1)) regB
+ , Push regB
+ , Load (ImmValue (3)) regB
+ , Push regB
+ , Load (ImmValue (2)) regB
  , Push regB
  , Load (ImmValue (7)) regB
  , Push regB
+ , Load (ImmValue (8)) regB
+ , Push regB
+ , Load (ImmValue (1)) regB
+ , Push regB
  , Load (ImmValue (2)) regB
  , Push regB
  , Load (ImmValue (3)) regB
  , Push regB
- , Load (ImmValue (1)) regB
+ , Load (ImmValue (4)) regB
  , Push regB
- , Pop regB
- , Store regB (DirAddr (5))
- , Pop regB
- , Store regB (DirAddr (6))
- , Pop regB
- , Store regB (DirAddr (7))
- , Pop regB
- , Store regB (DirAddr (8))
- , Pop regB
- , Store regB (DirAddr (9))
  , Load (ImmValue (6)) regB
  , Push regB
- , Load (ImmValue (4)) regB
- , Push regB
- , Load (ImmValue (3)) regB
+ , Load (ImmValue (1)) regB
  , Push regB
  , Load (ImmValue (2)) regB
  , Push regB
- , Load (ImmValue (1)) regB
+ , Load (ImmValue (3)) regB
  , Push regB
- , Pop regB
- , Store regB (DirAddr (10))
- , Pop regB
- , Store regB (DirAddr (11))
- , Pop regB
- , Store regB (DirAddr (12))
- , Pop regB
- , Store regB (DirAddr (13))
- , Pop regB
- , Store regB (DirAddr (14))
+ , Load (ImmValue (4)) regB
+ , Push regB
  , Load (ImmValue (5)) regB
  , Push regB
- , Load (ImmValue (4)) regB
- , Push regB
- , Load (ImmValue (3)) regB
- , Push regB
- , Load (ImmValue (2)) regB
- , Push regB
- , Load (ImmValue (1)) regB
- , Push regB
- , Pop regB
- , Store regB (DirAddr (15))
- , Pop regB
- , Store regB (DirAddr (16))
- , Pop regB
- , Store regB (DirAddr (17))
- , Pop regB
- , Store regB (DirAddr (18))
- , Pop regB
- , Store regB (DirAddr (19))
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (0)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (10)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
  , Load (ImmValue (1)) regB
  , Load (ImmValue (5)) regC
  , Compute LtE regC reg0 regD
@@ -120,24 +87,28 @@ prog = [
  , Load (ImmValue (5)) regC
  , Compute Add regSP regC regSP
  , WriteInstr regB numberIO
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (0)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (5)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
  , Load (ImmValue (1)) regB
  , Load (ImmValue (5)) regC
  , Compute LtE regC reg0 regD
@@ -153,24 +124,28 @@ prog = [
  , Load (ImmValue (5)) regC
  , Compute Add regSP regC regSP
  , WriteInstr regB numberIO
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (0)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (15)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
  , Load (ImmValue (1)) regB
  , Load (ImmValue (5)) regC
  , Compute LtE regC reg0 regD
@@ -186,70 +161,20 @@ prog = [
  , Load (ImmValue (5)) regC
  , Compute Add regSP regC regSP
  , WriteInstr regB numberIO
- , Load (ImmValue (1)) regB
+ , Load (ImmValue (5)) regB
  , Push regB
- , Load (ImmValue (2)) regB
+ , Load (ImmValue (4)) regB
  , Push regB
  , Load (ImmValue (3)) regB
  , Push regB
- , Load (ImmValue (4)) regB
- , Push regB
- , Load (ImmValue (5)) regB
- , Push regB
- , Load (ImmValue (15)) regB
- , Load (ImmValue (4)) regC
- , Compute Lt regC reg0 regD
- , Branch regD (Rel (6))
- , Pop regD
- , Store regD (IndAddr regB)
- , Compute Incr regB reg0 regB
- , Compute Decr regC reg0 regC
- , Jump (Rel (-6))
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
- , Load (ImmValue (0)) regC
- , Compute Add regC regB regC
- , Load (IndAddr regC) regC
- , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
- , Load (ImmValue (15)) regC
- , Compute Add regC regB regC
- , Load (IndAddr regC) regC
- , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
- , Load (ImmValue (1)) regB
- , Load (ImmValue (5)) regC
- , Compute LtE regC reg0 regD
- , Branch regD (Rel (9))
- , Pop regD
- , Load (ImmValue (4)) regE
- , Compute Add regSP regE regE
- , Load (IndAddr regE) regE
- , Compute Equal regD regE regD
- , Compute And regB regD regB
- , Compute Decr regC reg0 regC
- , Jump (Rel (-9))
- , Load (ImmValue (5)) regC
- , Compute Add regSP regC regSP
- , WriteInstr regB numberIO
- , Load (ImmValue (5)) regB
- , Push regB
- , Load (ImmValue (4)) regB
- , Push regB
- , Load (ImmValue (4)) regB
- , Push regB
  , Load (ImmValue (2)) regB
  , Push regB
  , Load (ImmValue (1)) regB
  , Push regB
  , Load (ImmValue (15)) regB
+ , Compute Sub regA regB regB
  , Load (ImmValue (4)) regC
+ , Compute Sub regB regC regB
  , Compute Lt regC reg0 regD
  , Branch regD (Rel (6))
  , Pop regD
@@ -257,24 +182,28 @@ prog = [
  , Compute Incr regB reg0 regB
  , Compute Decr regC reg0 regC
  , Jump (Rel (-6))
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (0)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (15)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
  , Load (ImmValue (1)) regB
  , Load (ImmValue (5)) regC
  , Compute LtE regC reg0 regD
@@ -290,24 +219,86 @@ prog = [
  , Load (ImmValue (5)) regC
  , Compute Add regSP regC regSP
  , WriteInstr regB numberIO
+ , Load (ImmValue (1)) regB
+ , Push regB
+ , Load (ImmValue (2)) regB
+ , Push regB
  , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Push regB
+ , Load (ImmValue (4)) regB
+ , Push regB
+ , Load (ImmValue (5)) regB
+ , Push regB
+ , Load (ImmValue (15)) regB
+ , Compute Sub regA regB regB
+ , Load (ImmValue (4)) regC
+ , Compute Sub regB regC regB
+ , Compute Lt regC reg0 regD
+ , Branch regD (Rel (6))
+ , Pop regD
+ , Store regD (IndAddr regB)
+ , Compute Incr regB reg0 regB
+ , Compute Decr regC reg0 regC
+ , Jump (Rel (-6))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (0)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (15)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
+ , Load (ImmValue (1)) regB
+ , Load (ImmValue (5)) regC
+ , Compute LtE regC reg0 regD
+ , Branch regD (Rel (9))
+ , Pop regD
+ , Load (ImmValue (4)) regE
+ , Compute Add regSP regE regE
+ , Load (IndAddr regE) regE
+ , Compute Equal regD regE regD
+ , Compute And regB regD regB
+ , Compute Decr regC reg0 regC
+ , Jump (Rel (-9))
+ , Load (ImmValue (5)) regC
+ , Compute Add regSP regC regSP
+ , WriteInstr regB numberIO
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
+ , Load (ImmValue (0)) regC
+ , Compute Add regC regB regC
+ , Compute Sub regA regC regC
+ , Load (IndAddr regC) regC
+ , Push regC
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
+ , Load (ImmValue (15)) regC
+ , Compute Add regC regB regC
+ , Compute Sub regA regC regC
+ , Load (IndAddr regC) regC
+ , Push regC
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
  , Load (ImmValue (0)) regB
  , Load (ImmValue (5)) regC
  , Compute LtE regC reg0 regD
@@ -323,24 +314,28 @@ prog = [
  , Load (ImmValue (5)) regC
  , Compute Add regSP regC regSP
  , WriteInstr regB numberIO
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (0)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (0)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
  , Load (ImmValue (1)) regB
  , Load (ImmValue (5)) regC
  , Compute LtE regC reg0 regD
@@ -356,24 +351,28 @@ prog = [
  , Load (ImmValue (5)) regC
  , Compute Add regSP regC regSP
  , WriteInstr regB numberIO
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (0)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (0)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
  , Load (ImmValue (0)) regB
  , Load (ImmValue (5)) regC
  , Compute LtE regC reg0 regD
@@ -389,54 +388,64 @@ prog = [
  , Load (ImmValue (5)) regC
  , Compute Add regSP regC regSP
  , WriteInstr regB numberIO
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (10)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
  , Load (ImmValue (123)) regC
  , WriteInstr regC charIO
  , Load (ImmValue (10)) regC
  , WriteInstr regC charIO
- , Load (ImmValue (5)) regB
- , Compute LtE regB reg0 regC
- , Branch regC (Rel (5))
- , Pop regC
+ , Load (ImmValue (4)) regB
+ , Compute Lt regB reg0 regC
+ , Branch regC (Rel (6))
+ , Compute Add regSP regB regC
+ , Load (IndAddr regC) regC
  , WriteInstr regC numberIO
  , Compute Decr regB reg0 regB
- , Jump (Rel (-5))
+ , Jump (Rel (-6))
  , Load (ImmValue (125)) regC
  , WriteInstr regC charIO
  , Load (ImmValue (10)) regC
  , WriteInstr regC charIO
- , Load (ImmValue (4)) regB
- , Compute Lt regB reg0 regC
- , Branch regC (Rel (7))
+ , Load (ImmValue (5)) regB
+ , Compute Add regSP regB regSP
+ , Load (ImmValue (0)) regB
+ , Load (ImmValue (5)) regC
+ , Compute GtE regB regC regC
+ , Branch regC (Rel (8))
  , Load (ImmValue (0)) regC
  , Compute Add regC regB regC
+ , Compute Sub regA regC regC
  , Load (IndAddr regC) regC
  , Push regC
- , Compute Decr regB reg0 regB
- , Jump (Rel (-7))
+ , Compute Incr regB reg0 regB
+ , Jump (Rel (-9))
  , Load (ImmValue (123)) regC
  , WriteInstr regC charIO
  , Load (ImmValue (10)) regC
  , WriteInstr regC charIO
- , Load (ImmValue (5)) regB
- , Compute LtE regB reg0 regC
- , Branch regC (Rel (5))
- , Pop regC
+ , Load (ImmValue (4)) regB
+ , Compute Lt regB reg0 regC
+ , Branch regC (Rel (6))
+ , Compute Add regSP regB regC
+ , Load (IndAddr regC) regC
  , WriteInstr regC numberIO
  , Compute Decr regB reg0 regB
- , Jump (Rel (-5))
+ , Jump (Rel (-6))
  , Load (ImmValue (125)) regC
  , WriteInstr regC charIO
  , Load (ImmValue (10)) regC
  , WriteInstr regC charIO
+ , Load (ImmValue (5)) regB
+ , Compute Add regSP regB regSP
  , EndProg
  ]
 

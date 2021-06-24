@@ -101,6 +101,10 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			visit(proc);
 		}
 		this.prog.updateInstr(0, new Instr(OpCode.Jump, new Target(TargetType.Abs, this.instructionCount)));
+		emit(OpCode.Push, new Reg(8)); // load SP
+		emit(OpCode.Pop, new Reg(2)); // save SP to ARP
+		// decrement value by 1 to point to first data element and not out of bounds
+		emit(OpCode.Compute, new Operator(Oper.Decr), new Reg(2), new Reg(0), new Reg(2)); 
 		if (this.checkResult.getThreadCount() > 0) {
 			// Instructions dedicated for thread jumping with main thread skipping them
 			generateThreadJumping(true);
@@ -134,14 +138,14 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			if (isShared(ctx)) {
 				Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), offset(ctx.ID(), true));
 			} else {
-				Instr i = emit(OpCode.Store, reg(ctx.expr()), offset(ctx.ID()));
+				Instr i = emit(OpCode.Push, reg(ctx.expr()));
 			}
 			freeReg(ctx.expr());
 		} else {
 			if (isShared(ctx)) {
 				Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), offset(ctx.ID(), true));
 			} else {
-				Instr i = emit(OpCode.Store, new Reg(0), offset(ctx.ID()));
+				Instr i = emit(OpCode.Push, new Reg(0));
 			}
 		}
 		return null;
@@ -160,11 +164,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 				}
 				freeReg(ctx);
 			} else {
-				for (int i = 0; i < arraySize; i++) {
-					Instr i1 = emit(OpCode.Pop, reg(ctx));
-					Instr i2 = emit(OpCode.Store, reg(ctx), offset(ctx.ID(), i));
-				}
-				freeReg(ctx);
+				// all values are already pushed on the stack
 			}
 		} else {
 			if (isShared(ctx)) {
@@ -175,7 +175,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			} else {
 				int arraySize = ((Type.Array) (getType(ctx.ID()))).getSize();
 				for (int i = 0; i < arraySize; i++) {
-					Instr i1 = emit(OpCode.Store, new Reg(0), offset(ctx.ID(), i));
+					Instr i1 = emit(OpCode.Push, new Reg(0));
 				}
 			}
 		}
@@ -200,21 +200,27 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			int extraRegIndex = getFreeRegister();
 			lockRegister(extraRegIndex);
 			Reg extraReg = new Reg(extraRegIndex);
-			OpCode code;
-			if(isShared(ctx.target())) {
-				code = OpCode.WriteInstr;
+			if (isShared(ctx.target())) {
+				Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
+				Instr i2 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx.target()), extraReg, reg(ctx.target()));
+				Instr i3 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
+				Instr i4 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 6));
+				Instr i5 = emit(OpCode.Pop, reg(ctx));
+				Instr i6 = emit(OpCode.WriteInstr, reg(ctx), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
+				Instr i7 = emit(OpCode.Compute, new Operator(Oper.Decr), reg(ctx.target()), new Reg(0), reg(ctx.target()));
+				Instr i8 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
+				Instr i9 = emit(OpCode.Jump, new Target(TargetType.Rel, -6));
+			} else {
+				Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
+				Instr i2 = emit(OpCode.Compute, new Operator(Oper.Sub), reg(ctx.target()), extraReg, reg(ctx.target()));
+				Instr i3 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
+				Instr i4 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 6));
+				Instr i5 = emit(OpCode.Pop, reg(ctx));
+				Instr i6 = emit(OpCode.Store, reg(ctx), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
+				Instr i7 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx.target()), new Reg(0), reg(ctx.target()));
+				Instr i8 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
+				Instr i9 = emit(OpCode.Jump, new Target(TargetType.Rel, -6));
 			}
-			else {
-				code = OpCode.Store;
-			}
-			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
-			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
-			Instr i3 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 6));
-			Instr i4 = emit(OpCode.Pop, reg(ctx));
-			Instr i5 = emit(code, reg(ctx), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
-			Instr i6 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx.target()), new Reg(0), reg(ctx.target()));
-			Instr i7 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
-			Instr i8 = emit(OpCode.Jump, new Target(TargetType.Rel, -6));
 			freeReg(ctx);
 			freeUpRegister(extraRegIndex);
 		}
@@ -333,21 +339,24 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			int extraRegIndex = getFreeRegister();
 			lockRegister(extraRegIndex);
 			Reg extraReg = new Reg(extraRegIndex);
-			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 123), reg(ctx)); //load '{' symbol
-			Instr i2 = emit (OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); //write '{' symbol
-			Instr i3 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 10), reg(ctx)); //load '\n' symbol
-			Instr i4 = emit (OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); //write '\n' symbol
-			Instr i5 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize), extraReg);
-			Instr i6 = emit(OpCode.Compute, new Operator(Oper.LtE), extraReg, new Reg(0), reg(ctx));
-			Instr i7 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 5));
-			Instr i8 = emit(OpCode.Pop, reg(ctx));
-			Instr i9 = emit(OpCode.WriteInstr, reg(ctx), Addr.NUMBER_IO);
-			Instr i10 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
-			Instr i11 = emit(OpCode.Jump, new Target(TargetType.Rel, -5));
-			Instr i12 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 125), reg(ctx)); //load '}' symbol
-			Instr i13 = emit (OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); //write '}' symbol
-			Instr i14 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 10), reg(ctx)); //load '\n' symbol
-			Instr i15 = emit (OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); //write '\n' symbol
+			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 123), reg(ctx)); // load '{' symbol
+			Instr i2 = emit(OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); // write '{' symbol
+			Instr i3 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 10), reg(ctx)); // load '\n' symbol
+			Instr i4 = emit(OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); // write '\n' symbol
+			Instr i5 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
+			Instr i6 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
+			Instr i7 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 6));
+			Instr i8 = emit(OpCode.Compute, new Operator(Oper.Add), new Reg(8), extraReg, reg(ctx));
+			Instr i9 = emit(OpCode.Load, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()), reg(ctx));
+			Instr i10 = emit(OpCode.WriteInstr, reg(ctx), Addr.NUMBER_IO);
+			Instr i11 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
+			Instr i12 = emit(OpCode.Jump, new Target(TargetType.Rel, -6));
+			Instr i13 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 125), reg(ctx)); // load '}' symbol
+			Instr i14 = emit(OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); // write '}' symbol
+			Instr i15 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 10), reg(ctx)); // load '\n' symbol
+			Instr i16 = emit(OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); // write '\n' symbol
+			Instr i17 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize), extraReg); 
+			Instr i18 = emit(OpCode.Compute, new Operator(Oper.Add), new Reg(8), extraReg, new Reg(8)); //restore SP pointer
 			freeReg(ctx);
 			freeUpRegister(extraRegIndex);
 		}
@@ -369,7 +378,8 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 					new Addr(AddrImmDI.ImmValue, this.checkResult.getBaseOffset() + this.checkResult.getOffset(ctx)),
 					reg(ctx));
 		} else {
-			Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
+			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
+			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx), reg(ctx));
 		}
 		return null;
 	}
@@ -387,6 +397,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		} else {
 			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
 			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), reg(ctx.expr()), reg(ctx));
+			Instr i3 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx), reg(ctx));
 			freeReg(ctx.expr());
 		}
 		return null;
@@ -615,34 +626,34 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 				Instr i1 = emit(OpCode.ReadInstr, offset(ctx, true));
 				Instr i2 = emit(OpCode.Receive, reg(ctx));
 			} else {
-				Instr i = emit(OpCode.Load, offset(ctx), reg(ctx));
+				Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
+				Instr i2 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx), reg(ctx));
+				Instr i3 = emit(OpCode.Load, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()), reg(ctx));
 			}
 		} else {
 			int arraySize = ((Type.Array) getType(ctx)).getSize();
 			int extraRegIndex = getFreeRegister();
 			lockRegister(extraRegIndex);
 			Reg extraReg = new Reg(extraRegIndex);
-			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
-			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
+			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 0), extraReg);
+			Instr i2 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize), reg(ctx));
+			Instr i3 = emit(OpCode.Compute, new Operator(Oper.GtE), extraReg, reg(ctx), reg(ctx));
+			Instr i4 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 8));
 			if (isShared(ctx)) {
-				Instr i3 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 8));
-				Instr i4 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue,
+				Instr i5 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue,
 						this.checkResult.getBaseOffset() + this.checkResult.getOffset(ctx)), reg(ctx));
-				Instr i5 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), extraReg, reg(ctx));
-				Instr i6 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()));
-				Instr i7 = emit(OpCode.Receive, reg(ctx));
-				Instr i8 = emit(OpCode.Push, reg(ctx));
-				Instr i9 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
-				Instr i10 = emit(OpCode.Jump, new Target(TargetType.Rel, -8));
+				Instr i6 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), extraReg, reg(ctx));
+				Instr i7 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()));
+				Instr i8 = emit(OpCode.Receive, reg(ctx));
 			} else {
-				Instr i3 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 7));
-				Instr i4 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
-				Instr i5 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), extraReg, reg(ctx));
-				Instr i6 = emit(OpCode.Load, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()), reg(ctx));
-				Instr i7 = emit(OpCode.Push, reg(ctx));
-				Instr i8 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
-				Instr i9 = emit(OpCode.Jump, new Target(TargetType.Rel, -7));
+				Instr i5 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
+				Instr i6 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), extraReg, reg(ctx));
+				Instr i7 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx), reg(ctx));
+				Instr i8 = emit(OpCode.Load, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()), reg(ctx));
 			}
+			Instr i9 = emit(OpCode.Push, reg(ctx));
+			Instr i10 = emit(OpCode.Compute, new Operator(Oper.Incr), extraReg, new Reg(0), extraReg);
+			Instr i11 = emit(OpCode.Jump, new Target(TargetType.Rel, -9));
 			freeUpRegister(extraRegIndex);
 			freeReg(ctx);
 
@@ -685,8 +696,9 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		} else {
 			Instr i1 = emit(OpCode.Load, new Addr(Addr.AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
 			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), reg(ctx.expr()), reg(ctx));
+			Instr i3 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx), reg(ctx));
 			freeReg(ctx.expr());
-			Instr i3 = emit(OpCode.Load, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()), reg(ctx));
+			Instr i4 = emit(OpCode.Load, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()), reg(ctx));
 		}
 		return null;
 	}
@@ -694,7 +706,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	@Override
 	public Instr visitArrayExpr(ArrayExprContext ctx) {
 		System.out.println("Visit arrayExpr");
-		for (int i = ctx.expr().size() - 1; i >= 0; i--) {
+		for (int i = 0; i < ctx.expr().size(); i++) {
 			visit(ctx.expr(i));
 			Instr i1 = emit(OpCode.Push, reg(ctx.expr(i)));
 			freeReg(ctx.expr(i));

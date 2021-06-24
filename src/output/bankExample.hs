@@ -3,6 +3,9 @@ import Sprockell
 prog :: [Instruction]
 prog = [ 
    Jump (Abs (1))
+ , Push regSP
+ , Pop regA
+ , Compute Decr regA reg0 regA
  , Branch regSprID (Rel (2))
  , Jump (Rel (6))
  , ReadInstr (IndAddr regSprID)
@@ -12,9 +15,9 @@ prog = [
  , Jump (Ind regA)
  , Load (ImmValue (20000)) regB
  , WriteInstr regB (DirAddr (4))
- , Load (ImmValue (13)) regB
+ , Load (ImmValue (16)) regB
  , WriteInstr regB (DirAddr (1))
- , Jump (Abs (26))
+ , Jump (Abs (29))
  , TestAndSet (DirAddr (0))
  , Receive regB
  , Branch regB (Rel (2))
@@ -28,9 +31,9 @@ prog = [
  , WriteInstr reg0 (DirAddr (0))
  , WriteInstr reg0 (IndAddr regSprID)
  , EndProg
- , Load (ImmValue (29)) regB
+ , Load (ImmValue (32)) regB
  , WriteInstr regB (DirAddr (2))
- , Jump (Abs (42))
+ , Jump (Abs (45))
  , TestAndSet (DirAddr (0))
  , Receive regB
  , Branch regB (Rel (2))
@@ -44,9 +47,9 @@ prog = [
  , WriteInstr reg0 (DirAddr (0))
  , WriteInstr reg0 (IndAddr regSprID)
  , EndProg
- , Load (ImmValue (45)) regB
+ , Load (ImmValue (48)) regB
  , WriteInstr regB (DirAddr (3))
- , Jump (Abs (58))
+ , Jump (Abs (61))
  , TestAndSet (DirAddr (0))
  , Receive regB
  , Branch regB (Rel (2))

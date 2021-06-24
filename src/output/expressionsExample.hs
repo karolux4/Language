@@ -3,28 +3,46 @@ import Sprockell
 prog :: [Instruction]
 prog = [ 
    Jump (Abs (1))
+ , Push regSP
+ , Pop regA
+ , Compute Decr regA reg0 regA
  , Load (ImmValue (3)) regB
- , Store regB (DirAddr (0))
- , Load (DirAddr (0)) regB
+ , Push regB
+ , Load (ImmValue (0)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , WriteInstr regB numberIO
  , Load (ImmValue (2)) regB
  , Load (ImmValue (0)) regC
+ , Compute Sub regA regC regC
  , Store regB (IndAddr regC)
- , Load (DirAddr (0)) regB
+ , Load (ImmValue (0)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , WriteInstr regB numberIO
  , Load (ImmValue (4)) regB
- , Store regB (DirAddr (1))
- , Load (DirAddr (1)) regB
+ , Push regB
+ , Load (ImmValue (1)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , Load (ImmValue (0)) regC
+ , Compute Sub regA regC regC
  , Store regB (IndAddr regC)
- , Load (DirAddr (0)) regB
+ , Load (ImmValue (0)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , WriteInstr regB numberIO
  , Load (ImmValue (2)) regB
- , Load (DirAddr (0)) regC
+ , Load (ImmValue (0)) regC
+ , Compute Sub regA regC regC
+ , Load (IndAddr regC) regC
  , Compute Mul regB regC regB
  , Load (ImmValue (0)) regC
+ , Compute Sub regA regC regC
  , Store regB (IndAddr regC)
- , Load (DirAddr (0)) regB
+ , Load (ImmValue (0)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , WriteInstr regB numberIO
  , Load (ImmValue (2)) regB
  , Load (ImmValue (6)) regC
@@ -46,25 +64,38 @@ prog = [
  , Compute Mul regD regC regD
  , Compute Sub regB regD regB
  , Load (ImmValue (0)) regC
+ , Compute Sub regA regC regC
  , Store regB (IndAddr regC)
- , Load (DirAddr (0)) regB
+ , Load (ImmValue (0)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , WriteInstr regB numberIO
- , Store reg0 (DirAddr (2))
- , Load (DirAddr (2)) regB
+ , Push reg0
+ , Load (ImmValue (2)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , WriteInstr regB numberIO
- , Load (DirAddr (0)) regB
+ , Load (ImmValue (0)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , Load (ImmValue (3)) regC
  , Compute Gt regB regC regB
  , Load (ImmValue (2)) regC
+ , Compute Sub regA regC regC
  , Store regB (IndAddr regC)
- , Load (DirAddr (2)) regB
+ , Load (ImmValue (2)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , WriteInstr regB numberIO
  , Load (ImmValue (1)) regB
  , Compute And regB reg0 regB
  , Compute Or reg0 regB reg0
  , Load (ImmValue (2)) regB
+ , Compute Sub regA regB regB
  , Store reg0 (IndAddr regB)
- , Load (DirAddr (2)) regB
+ , Load (ImmValue (2)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , WriteInstr regB numberIO
  , EndProg
  ]

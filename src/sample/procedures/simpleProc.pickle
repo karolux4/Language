@@ -1,0 +1,10 @@
+cannon{
+	int a=3;
+	int shared b=4;
+	int c[2] = [2,1];
+	int d[2]=c;
+	c=[3,4];
+	print(c[1]);
+	print(c);
+	print(d);
+}

@@ -20,7 +20,7 @@ public class Addr extends Operand{
 		super(Type.ADDR);
 		this.type=type;
 		if(type==AddrImmDI.IndAddr) {
-			assert value >=0 && value < 8 : "Register id must be between 0 and 7";
+			assert value >=0 && value <= 8 : "Register id must be between 0 and 8";
 		}
 		this.value=value;
 	}

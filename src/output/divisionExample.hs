@@ -3,6 +3,9 @@ import Sprockell
 prog :: [Instruction]
 prog = [ 
    Jump (Abs (1))
+ , Push regSP
+ , Pop regA
+ , Compute Decr regA reg0 regA
  , Load (ImmValue (10)) regB
  , Load (ImmValue (3)) regC
  , Compute GtE regB reg0 regD
@@ -22,7 +25,7 @@ prog = [
  , Branch regE (Rel (-3))
  , Pop regE
  , Compute Mul regD regE regD
- , Store regD (DirAddr (0))
+ , Push regD
  , Load (ImmValue (16)) regB
  , Load (ImmValue (-1)) regC
  , Compute Mul regC regB regC
@@ -46,7 +49,7 @@ prog = [
  , Branch regE (Rel (-3))
  , Pop regE
  , Compute Mul regB regE regB
- , Store regB (DirAddr (1))
+ , Push regB
  , Load (ImmValue (200)) regB
  , Load (ImmValue (-1)) regC
  , Compute Mul regC regB regC
@@ -68,7 +71,7 @@ prog = [
  , Branch regE (Rel (-3))
  , Pop regE
  , Compute Mul regD regE regD
- , Store regD (DirAddr (2))
+ , Push regD
  , Load (ImmValue (500)) regB
  , Load (ImmValue (3)) regC
  , Load (ImmValue (-1)) regD
@@ -90,14 +93,22 @@ prog = [
  , Branch regE (Rel (-3))
  , Pop regE
  , Compute Mul regC regE regC
- , Store regC (DirAddr (3))
- , Load (DirAddr (0)) regB
+ , Push regC
+ , Load (ImmValue (0)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , WriteInstr regB numberIO
- , Load (DirAddr (1)) regB
+ , Load (ImmValue (1)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , WriteInstr regB numberIO
- , Load (DirAddr (2)) regB
+ , Load (ImmValue (2)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , WriteInstr regB numberIO
- , Load (DirAddr (3)) regB
+ , Load (ImmValue (3)) regB
+ , Compute Sub regA regB regB
+ , Load (IndAddr regB) regB
  , WriteInstr regB numberIO
  , EndProg
  ]
