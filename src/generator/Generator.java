@@ -1,7 +1,9 @@
 package generator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -76,6 +78,10 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	/** Association of the first instruction number in the node with a node */
 	private ParseTreeProperty<Integer> instrID;
+	
+	private List<FunctionCall> calls;
+	
+	private Map<String,Integer> functionAddress;
 
 	public Program generate(ParseTree tree, Result checkResult) {
 		this.checkResult = checkResult;
@@ -88,7 +94,10 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		this.instructionCount = 0;
 		this.regs = new ParseTreeProperty<>();
 		this.instrID = new ParseTreeProperty<>();
+		this.calls = new ArrayList<>();
+		this.functionAddress = new HashMap<>();
 		tree.accept(this);
+		resolveFunctionCalls();
 		return prog;
 	}
 
@@ -117,7 +126,23 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	@Override
 	public Instr visitProc(ProcContext ctx) {
 		System.out.println("Visit procedure");
+		this.functionAddress.put(ctx.ID().getText(), this.instructionCount);
 		visit(ctx.block());
+		//Epilogue
+		// Increase ARP by 1 to get callers ARP address store location
+		emit(OpCode.Compute, new Operator(Oper.Incr), new Reg(2), new Reg(0), new Reg(3));
+		// Increase ARP by another 1 to get return address store location
+		emit(OpCode.Compute, new Operator(Oper.Incr), new Reg(3), new Reg(0), new Reg(4));
+		// Move SP to point to return address
+		emit(OpCode.Compute, new Operator(Oper.Add), new Reg(4), new Reg(0), new Reg(8));
+		// Increment SP by 1
+		emit(OpCode.Compute, new Operator(Oper.Incr), new Reg(8), new Reg(0), new Reg(8));
+		// Load caller's ARP to ARP
+		emit(OpCode.Load, new Addr(AddrImmDI.IndAddr, 3), new Reg(2));
+		// Load return address to regC
+		emit(OpCode.Load, new Addr(AddrImmDI.IndAddr, 4), new Reg(4));
+		// Jump to return address
+		emit(OpCode.Jump, new Target(TargetType.Ind, 4));
 		return null;
 	}
 
@@ -369,7 +394,20 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	@Override
 	public Instr visitCallStat(CallStatContext ctx) {
 		System.out.println("Visit callStat");
+		int returnID= this.instructionCount;
+		Reg register = reg(ctx);
+		//Precall
+		emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 0), register); //temporary value for return address
+		emit(OpCode.Push, register); // push return address
+		emit(OpCode.Push, new Reg(2)); // push caller's ARP
+		emit(OpCode.Compute, new Operator(Oper.Decr), new Reg(8), new Reg(0), register); //save ARP position for function
 		visit(ctx.args());
+		emit(OpCode.Compute, new Operator(Oper.Add), register, new Reg(0), new Reg(2)); // move ARP
+		freeReg(ctx);
+		//jump to procedure (temporary uses -1 because it can only be set after all functions are generated)
+		emit(OpCode.Jump, new Target(TargetType.Abs, -1)); 
+		calls.add(new FunctionCall(this.instructionCount-1, ctx.ID().getText()));
+		this.prog.updateInstr(returnID, new Instr(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.instructionCount), register));
 		return null;
 	}
 
@@ -411,6 +449,13 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		System.out.println("Visit args");
 		for (ExprContext expr : ctx.expr()) {
 			visit(expr);
+			if(getType(expr)==Type.INT||getType(expr)==Type.BOOL) {
+				Instr i1 = emit(OpCode.Push, reg(expr));
+				freeReg(expr);
+			}
+			else {
+				//array elements are already pushed on stack
+			}
 		}
 		return null;
 	}
@@ -876,6 +921,29 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 																											// regB
 			}
 			Instr i6 = emit(OpCode.Branch, new Reg(3), new Target(TargetType.Rel, -2 - (3 * (to - from - 1))));
+		}
+	}
+	
+	/**
+	 * Private class to store function call instructions
+	 * so that they can be resolved after all functions have been
+	 * generated
+	 * @author Karolis Butkus
+	 *
+	 */
+	private class FunctionCall{
+		private int instructionNumber;
+		private String functionID;
+		public FunctionCall(int instructionNumber, String functionID){
+			this.instructionNumber=instructionNumber;
+			this.functionID = functionID;
+		}
+	}
+	
+	private void resolveFunctionCalls() {
+		for(FunctionCall call : calls) {
+			int start = this.functionAddress.get(call.functionID);
+			this.prog.updateInstr(call.instructionNumber, new Instr(OpCode.Jump, new Target(TargetType.Abs, start)));
 		}
 	}
 

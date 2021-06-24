@@ -1,3 +1,17 @@
+pickle p1(){
+	int a=100;
+	print(a);
+}
+pickle p2(int a, int b[3]){
+	print(a);
+	p1();
+	int c=2;
+	while(c>=0){
+		print(c);
+		print(b[c]);
+		c=c-1;
+	}
+}
 cannon{
 	int a=3;
 	int shared b=4;
@@ -7,4 +21,6 @@ cannon{
 	print(c[1]);
 	print(c);
 	print(d);
+	p1();
+	p2(a, [10,4,3]);
 }
