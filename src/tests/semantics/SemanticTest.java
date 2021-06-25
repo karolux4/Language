@@ -10,7 +10,7 @@ import compiler.Compiler;
 import compiler.ParseException;
 import generator.Program;
 
-public class GeneratorTest {
+public class SemanticTest {
 
 	private Compiler compiler = Compiler.instance();
 	
