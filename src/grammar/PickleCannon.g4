@@ -53,7 +53,7 @@ expr: prfOp expr					#prfExpr
     | TRUE							#trueExpr
     | FALSE							#falseExpr
     | ID LSQ expr RSQ  				#indexExpr
-    | LSQ (expr (COMMA expr)*)? RSQ #arrayExpr
+    | LSQ expr (COMMA expr)* RSQ 	#arrayExpr
     ;
 
 /** Prefix operator */

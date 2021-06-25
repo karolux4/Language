@@ -1,4 +1,4 @@
-package tests;
+package tests.semantics;
 
 import java.io.IOException;
 
