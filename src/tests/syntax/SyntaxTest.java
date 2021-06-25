@@ -1,18 +1,17 @@
 package tests.syntax;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.Lexer;
+import java.io.File;
+
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.Assert;
 import org.junit.Test;
 
-import compiler.ErrorListener;
-import grammar.PickleCannonLexer;
-import grammar.PickleCannonParser;
+import compiler.Compiler;
 
 public class SyntaxTest {
 
+	private Compiler compiler = Compiler.instance();
+	
 	@Test
 	public void testBaseTypes() {
 		// Accept-reject tests
@@ -188,9 +187,12 @@ public class SyntaxTest {
 
 	public ParseTree accepts(String input, boolean isFilePath) {
 		try {
-			ParseTree tree = parse(input, isFilePath);
-			// Pass the test
-			return tree;
+			if(isFilePath) {
+				return compiler.parse(new File(input));
+			}
+			else {
+				return compiler.parse(input);
+			}
 		} catch (Exception e) {
 			Assert.fail("Should have passed, but failed (Input: " + input + ")");
 			return null;
@@ -203,32 +205,16 @@ public class SyntaxTest {
 
 	public void rejects(String input, boolean isFilePath) {
 		try {
-			parse(input, isFilePath);
+			if(isFilePath) {
+				compiler.parse(new File(input));
+			}
+			else {
+				compiler.parse(input);
+			}
 			Assert.fail("Should have failed, but passed (Input: " + input + ")");
 		} catch (Exception e) {
 			// Pass the test
 		}
 	}
 
-	public ParseTree parse(String input, boolean isFilePath) throws Exception {
-		Lexer lexer;
-		if (isFilePath) {
-			lexer = new PickleCannonLexer(CharStreams.fromFileName(input));
-		} else {
-			lexer = new PickleCannonLexer(CharStreams.fromString(input));
-		}
-		lexer.removeErrorListeners();
-		lexer.addErrorListener(new ErrorListener());
-		PickleCannonParser parser = new PickleCannonParser(new CommonTokenStream(lexer));
-		parser.removeErrorListeners();
-		parser.addErrorListener(new ErrorListener());
-		ParseTree tree = parser.program();
-		if (((ErrorListener) (lexer.getErrorListeners().get(0))).getErrors().size() == 0
-				&& ((ErrorListener) (parser.getErrorListeners().get(0))).getErrors().size() == 0) {
-		} else {
-			((ErrorListener) (lexer.getErrorListeners().get(0))).throwException();
-			((ErrorListener) (parser.getErrorListeners().get(0))).throwException();
-		}
-		return tree;
-	}
 }

@@ -101,7 +101,6 @@ public class Checker extends PickleCannonBaseListener {
 
 	@Override
 	public void exitProgram(ProgramContext ctx) {
-		setEntry(ctx, entry(ctx.block()));
 	}
 
 	@Override
@@ -171,11 +170,6 @@ public class Checker extends PickleCannonBaseListener {
 	@Override
 	public void exitBlock(BlockContext ctx) {
 		this.table.closeNestedLevel();
-		if (ctx.stat().size() > 0) {
-			setEntry(ctx, entry(ctx.stat(0)));
-		} else {
-			setEntry(ctx, ctx);
-		}
 	}
 
 	@Override
@@ -196,7 +190,6 @@ public class Checker extends PickleCannonBaseListener {
 						addError(ctx, "Variable '%s' is already declared in this scope", ctx.ID().getText());
 					} else {
 						setOffset(ctx.ID(), this.table.offsetShared(ctx.ID().getText()));
-						setEntry(ctx, ctx.type());
 						setIsShared(ctx, true);
 					}
 				}
@@ -206,7 +199,6 @@ public class Checker extends PickleCannonBaseListener {
 					addError(ctx, "Variable '%s' is already declared in this scope", ctx.ID().getText());
 				} else {
 					setOffset(ctx.ID(), this.table.offset(ctx.ID().getText()));
-					setEntry(ctx, ctx.type());
 					setIsShared(ctx, false);
 				}
 			}
@@ -233,7 +225,6 @@ public class Checker extends PickleCannonBaseListener {
 					} else {
 						setOffset(ctx.ID(), this.table.offsetShared(ctx.ID().getText()));
 						setType(ctx.ID(), array);
-						setEntry(ctx, ctx.type());
 						setIsShared(ctx, true);
 						if (ctx.expr() != null) {
 							checkType(ctx.expr(), array);
@@ -246,7 +237,6 @@ public class Checker extends PickleCannonBaseListener {
 					} else {
 						setOffset(ctx.ID(), this.table.offset(ctx.ID().getText()));
 						setType(ctx.ID(), array);
-						setEntry(ctx, ctx.type());
 						setIsShared(ctx, false);
 						if (ctx.expr() != null) {
 							checkType(ctx.expr(), array);
@@ -261,13 +251,11 @@ public class Checker extends PickleCannonBaseListener {
 	@Override
 	public void exitAssignStat(AssignStatContext ctx) {
 		checkType(ctx.target(), getType(ctx.expr()));
-		setEntry(ctx, entry(ctx.expr()));
 	}
 
 	@Override
 	public void exitIfStat(IfStatContext ctx) {
 		checkType(ctx.expr(), Type.BOOL);
-		setEntry(ctx, entry(ctx.expr()));
 	}
 
 	@Override
@@ -279,7 +267,6 @@ public class Checker extends PickleCannonBaseListener {
 	public void exitWhileStat(WhileStatContext ctx) {
 		this.insideWhile--;
 		checkType(ctx.expr(), Type.BOOL);
-		setEntry(ctx, entry(ctx.expr()));
 	}
 
 	@Override
@@ -296,14 +283,12 @@ public class Checker extends PickleCannonBaseListener {
 	@Override
 	public void exitForkStat(ForkStatContext ctx) {
 		this.insideFork--;
-		setEntry(ctx, entry(ctx.block()));
 		this.table.closeScope();
 	}
 
 	@Override
 	public void exitJoinStat(JoinStatContext ctx) {
 		this.concurrentThreads=this.insideFork;
-		setEntry(ctx, ctx);
 	}
 
 	@Override
@@ -317,17 +302,14 @@ public class Checker extends PickleCannonBaseListener {
 	@Override
 	public void exitSyncStat(SyncStatContext ctx) {
 		this.insideSync--;
-		setEntry(ctx, entry(ctx.block()));
 	}
 
 	@Override
 	public void exitBlockStat(BlockStatContext ctx) {
-		setEntry(ctx, entry(ctx.block()));
 	}
 
 	@Override
 	public void exitPrintStat(PrintStatContext ctx) {
-		setEntry(ctx, entry(ctx.expr()));
 	}
 
 	@Override
@@ -360,7 +342,6 @@ public class Checker extends PickleCannonBaseListener {
 				}
 				setType(ctx, type);
 				setOffset(ctx, offset);
-				setEntry(ctx, ctx);
 				setIsShared(ctx, isShared);
 				this.table.putUsed(id, type);
 			}
@@ -378,7 +359,6 @@ public class Checker extends PickleCannonBaseListener {
 			} else {
 				setType(ctx, type);
 				setOffset(ctx, offset);
-				setEntry(ctx, ctx);
 				setIsShared(ctx, isShared);
 				this.table.putUsed(id, type);
 			}
@@ -409,7 +389,6 @@ public class Checker extends PickleCannonBaseListener {
 					checkType(ctx.expr(), Type.INT);
 					setType(ctx, ((Type.Array) type).getElemType());
 					setOffset(ctx, offset);
-					setEntry(ctx, ctx.expr());
 					setIsShared(ctx, isShared);
 					this.table.putUsed(id, type);
 				}
@@ -431,7 +410,6 @@ public class Checker extends PickleCannonBaseListener {
 				checkType(ctx.expr(), Type.INT);
 				setType(ctx, ((Type.Array) type).getElemType());
 				setOffset(ctx, offset);
-				setEntry(ctx, ctx.expr());
 				setIsShared(ctx, isShared);
 				this.table.putUsed(id, type);
 			}
@@ -449,7 +427,6 @@ public class Checker extends PickleCannonBaseListener {
 		}
 		checkType(ctx.expr(), type);
 		setType(ctx, type);
-		setEntry(ctx, entry(ctx.expr()));
 	}
 
 	@Override
@@ -457,7 +434,6 @@ public class Checker extends PickleCannonBaseListener {
 		checkType(ctx.expr(0), Type.INT);
 		checkType(ctx.expr(1), Type.INT);
 		setType(ctx, Type.INT);
-		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
 	@Override
@@ -465,7 +441,6 @@ public class Checker extends PickleCannonBaseListener {
 		checkType(ctx.expr(0), Type.INT);
 		checkType(ctx.expr(1), Type.INT);
 		setType(ctx, Type.INT);
-		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
 	@Override
@@ -480,7 +455,6 @@ public class Checker extends PickleCannonBaseListener {
 			checkType(ctx.expr(1), Type.INT);
 		}
 		setType(ctx, Type.BOOL);
-		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
 	@Override
@@ -488,13 +462,11 @@ public class Checker extends PickleCannonBaseListener {
 		checkType(ctx.expr(0), Type.BOOL);
 		checkType(ctx.expr(1), Type.BOOL);
 		setType(ctx, Type.BOOL);
-		setEntry(ctx, entry(ctx.expr(0)));
 	}
 
 	@Override
 	public void exitParExpr(ParExprContext ctx) {
 		setType(ctx, getType(ctx.expr()));
-		setEntry(ctx, entry(ctx.expr()));
 	}
 
 	@Override
@@ -515,7 +487,6 @@ public class Checker extends PickleCannonBaseListener {
 				}
 				setType(ctx, type);
 				setOffset(ctx, offset);
-				setEntry(ctx, ctx);
 				setIsShared(ctx, isShared);
 				this.table.putUsed(id, type);
 			}
@@ -533,7 +504,6 @@ public class Checker extends PickleCannonBaseListener {
 			} else {
 				setType(ctx, type);
 				setOffset(ctx, offset);
-				setEntry(ctx, ctx);
 				setIsShared(ctx, isShared);
 				this.table.putUsed(id, type);
 			}
@@ -543,19 +513,16 @@ public class Checker extends PickleCannonBaseListener {
 	@Override
 	public void exitNumExpr(NumExprContext ctx) {
 		setType(ctx, Type.INT);
-		setEntry(ctx, ctx);
 	}
 
 	@Override
 	public void exitTrueExpr(TrueExprContext ctx) {
 		setType(ctx, Type.BOOL);
-		setEntry(ctx, ctx);
 	}
 
 	@Override
 	public void exitFalseExpr(FalseExprContext ctx) {
 		setType(ctx, Type.BOOL);
-		setEntry(ctx, ctx);
 	}
 
 	@Override
@@ -581,7 +548,6 @@ public class Checker extends PickleCannonBaseListener {
 					checkType(ctx.expr(), Type.INT);
 					setType(ctx, ((Type.Array) type).getElemType());
 					setOffset(ctx, offset);
-					setEntry(ctx, ctx.expr());
 					setIsShared(ctx, isShared);
 					this.table.putUsed(id, type);
 				}
@@ -603,7 +569,6 @@ public class Checker extends PickleCannonBaseListener {
 				checkType(ctx.expr(), Type.INT);
 				setType(ctx, ((Type.Array) type).getElemType());
 				setOffset(ctx, offset);
-				setEntry(ctx, ctx.expr());
 				setIsShared(ctx, isShared);
 				this.table.putUsed(id, type);
 			}
@@ -618,20 +583,17 @@ public class Checker extends PickleCannonBaseListener {
 		}
 		Type array = new Type.Array(ctx.expr().size(), type);
 		setType(ctx, array);
-		setEntry(ctx, ctx.expr(0));
 
 	}
 
 	@Override
 	public void exitIntType(IntTypeContext ctx) {
 		setType(ctx, Type.INT);
-		setEntry(ctx, ctx);
 	}
 
 	@Override
 	public void exitBoolType(BoolTypeContext ctx) {
 		setType(ctx, Type.BOOL);
-		setEntry(ctx, ctx);
 	}
 
 	/** Indicates if any errors were encountered in this tree listener. */
@@ -724,20 +686,6 @@ public class Checker extends PickleCannonBaseListener {
 	/** Returns the type of a given expression or type node. */
 	private Type getType(ParseTree node) {
 		return this.result.getType(node);
-	}
-
-	/** Convenience method to add a flow graph entry to the result. */
-	private void setEntry(ParseTree node, ParserRuleContext entry) {
-		if (entry == null) {
-			// throw new IllegalArgumentException("Null flow graph entry");
-		} else {
-			this.result.setEntry(node, entry);
-		}
-	}
-
-	/** Returns the flow graph entry of a given expression or statement. */
-	private ParserRuleContext entry(ParseTree node) {
-		return this.result.getEntry(node);
 	}
 
 	/** Convenience method to set shared property in the result */
