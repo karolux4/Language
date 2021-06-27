@@ -14,6 +14,8 @@ public class Result {
 	private final ParseTreeProperty<Integer> offsets = new ParseTreeProperty<>();
 	/** Property stating if node is stored in a shared memory*/
 	private final ParseTreeProperty<Boolean> isShared = new ParseTreeProperty<>();
+	/** Property that holds the local data (including parameters) size of the procedure*/
+	private final ParseTreeProperty<Integer> procedureDataSize = new ParseTreeProperty<>();
 	/** List to store how many times the certain thread has been called*/
 	private List<Integer> threadCalls = new ArrayList<>();
 
@@ -85,6 +87,14 @@ public class Result {
 	/** Decreases a thread call count in the list*/
 	public int decreaseThreadCallCount(int i) {
 		return this.threadCalls.set(i, threadCalls.get(i)-1);
+	}
+	
+	public void setProcedureSize(ParseTree node, int size) {
+		this.procedureDataSize.put(node, size);
+	}
+	
+	public int getProcedureSize(ParseTree node) {
+		return this.procedureDataSize.get(node);
 	}
 	
 }

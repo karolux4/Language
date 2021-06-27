@@ -36,7 +36,8 @@ public class Compiler {
 		}
 		try {
 			System.out.println("--- Running " + args[0]);
-			instance.parse(new File(args[0]));
+			Program p = instance.compile(new File(args[0]));
+			p.writeToFile("sizeTest");
 			System.out.println("--- Done with " + args[0]);
 		} catch (ParseException exc) {
 			exc.print();

@@ -101,6 +101,8 @@ public class Checker extends PickleCannonBaseListener {
 
 	@Override
 	public void exitProgram(ProgramContext ctx) {
+		int size = this.table.scopeSize();
+		this.result.setProcedureSize(ctx, size);
 	}
 
 	@Override
@@ -112,6 +114,7 @@ public class Checker extends PickleCannonBaseListener {
 
 	@Override
 	public void exitProc(ProcContext ctx) {
+		int size = this.table.scopeSize();
 		this.table.closeScope();
 		List<Type> parameters = new ArrayList<>();
 		for (ParsContext p : ctx.pars()) {
@@ -124,6 +127,7 @@ public class Checker extends PickleCannonBaseListener {
 		} else {
 			setType(ctx, type);
 			setOffset(ctx, this.table.offset(ctx.ID().getText()));
+			this.result.setProcedureSize(ctx, size);
 		}
 	}
 
@@ -283,6 +287,7 @@ public class Checker extends PickleCannonBaseListener {
 	@Override
 	public void exitForkStat(ForkStatContext ctx) {
 		this.insideFork--;
+		this.result.setProcedureSize(ctx, this.table.scopeSize());
 		this.table.closeScope();
 	}
 

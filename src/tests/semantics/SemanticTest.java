@@ -17,31 +17,46 @@ public class SemanticTest {
 	private Compiler compiler = Compiler.instance();
 	
 	@Test
-	public void generatorTest() {
-		//compile("src/sample/fork.pickle", "fork");
-		//System.out.println("-----------------------");
-		//compile("src/sample/arrayCorrect.pickle", "arrayCorrect");
-		//System.out.println("-----------------------");
-		//compile("src/sample/procCorrect.pickle", "procCorrect");
-		/*
-		 * compile("src/sample/simple/simple.pickle", "simple");
-		 * compile("src/sample/concurrency/simpleFork.pickle", "simpleFork");
-		 * compile("src/sample/concurrency/bankExample.pickle", "bankExample");
-		 * compile("src/sample/concurrency/petersonsExample.pickle",
-		 * "petersonsExample"); compile("src/sample/division/division.pickle",
-		 * "divisionExample"); compile("src/sample/simple/expressions.pickle",
-		 * "expressionsExample"); compile("src/sample/concurrency/fork.pickle", "fork");
-		 * compile("src/sample/concurrency/manyForks.pickle", "manyForks");
-		 * compile("src/sample/arrays/simpleArray.pickle", "simpleArray");
-		 * compile("src/sample/procedures/simpleProc.pickle", "simpleProc");
-		 * compile("src/sample/procedures/fibonacci.pickle", "fibonacci");
-		 */
-		check("src/sample/concurrency/bankExample.pickle", true, "Sprockell 0 says 11000");
-		check("cannon { print(10); }", "Sprockell 0 says 10");
-		check("cannon { print(false); }", "Sprockell 0 says 0");
-
+	public void testTypesAndAssignments() {
+		check("cannon { int a = 203; print(a); }", "Sprockell 0 says 203");
+		check("cannon { bool a = true; print(a); }", "Sprockell 0 says 1");
+		check("cannon { int a = 1; { bool a = true; print(a); } }", "Sprockell 0 says 1");
+		check("cannon { int a[3] = [10,5,100]; print(a); }", 
+				"{\nSprockell 0 says 10\nSprockell 0 says 5\nSprockell 0 says 100\n}");
+		check("cannon { int a[3] = [10,5,100]; int b[3]=a; b[1]=3; print(a[1]); }", "Sprockell 0 says 5");
 	}
 	
+	@Test
+	public void testExpressions() {
+		check("cannon { int a = 2+3*4; print(a); }", "Sprockell 0 says 14");
+		check("cannon { int a = (7+8)*2-9+3*2; print(a); }", "Sprockell 0 says 27");
+		check("cannon { int a = (3-8)/2; print(a); }", "Sprockell 0 says -2");
+		check("cannon { int a[3] = [10,4,9]; int b[3] = [10,3,9]; print(a==b); }", "Sprockell 0 says 0");
+		check("cannon { print(!true==false&&[3,2,1]==[3,2,1]); }", "Sprockell 0 says 1");
+	}
+	
+	@Test
+	public void testWhileIf() {
+		check("cannon { int a = 10; int sum = 0; while (a>0) { if(a>5) { sum = sum + a;} a=a-1; } print(sum);}", "Sprockell 0 says 40");
+		check("cannon { if(false!=false) { print (10); } else { print(100); } }", "Sprockell 0 says 100");
+		check("cannon {  while (false) { print(2); } print(1);}", "Sprockell 0 says 1");
+	}
+	
+	@Test
+	public void testConcurrency() {
+		check("src/tests/semantics/testSources/bankExample.pickle", true, "Sprockell 0 says 11000");
+		check("src/tests/semantics/testSources/petersonsExample.pickle", true, "Sprockell 0 says 30");
+		check("src/tests/semantics/testSources/nestedThreadsExample.pickle", true, "Sprockell 2 says 3\nSprockell 1 says 2\nSprockell 0 says 1");
+	}
+	
+	@Test
+	public void testGeneralAlgorithms() {
+		check("src/tests/semantics/testSources/februaryDaysExample.pickle", true, 
+				"Sprockell 0 says 29\nSprockell 0 says 28\nSprockell 0 says 29\nSprockell 0 says 28\nSprockell 0 says 29");
+		check("src/tests/semantics/testSources/isPrimeExample.pickle", true, 
+				"Sprockell 0 says 1\nSprockell 0 says 1\nSprockell 0 says 0\nSprockell 0 says 0");
+	}
+
 	public void check(String input, String expected) {
 		check(input, false, expected);
 	}

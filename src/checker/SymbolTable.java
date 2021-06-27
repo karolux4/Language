@@ -178,4 +178,12 @@ public class SymbolTable {
 		return this.scopes.size();
 	}
 	
+	/**
+	 * Return the local data area size of the scope
+	 * @return the size of the scope
+	 */
+	public int scopeSize() {
+		return this.scopes.peek().size();
+	}
+	
 }

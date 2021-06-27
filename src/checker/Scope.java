@@ -131,4 +131,12 @@ public class Scope {
 		return this.used.peek().containsKey(id);
 	}
 	
+	/**
+	 * Return size of the scope which can be used to determine local data area size
+	 * @return the size of the scope
+	 */
+	public int size() {
+		return this.size;
+	}
+	
 }

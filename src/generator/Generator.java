@@ -78,10 +78,10 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	/** Association of the first instruction number in the node with a node */
 	private ParseTreeProperty<Integer> instrID;
-	
+
 	private List<FunctionCall> calls;
-	
-	private Map<String,Integer> functionAddress;
+
+	private Map<String, Integer> functionAddress;
 
 	public Program generate(ParseTree tree, Result checkResult) {
 		this.checkResult = checkResult;
@@ -104,7 +104,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	// Override the visitor methods
 	@Override
 	public Instr visitProgram(ProgramContext ctx) {
-		System.out.println("Visit program");
 		emit(OpCode.Jump, new Target(TargetType.Abs, -1));
 		for (ProcContext proc : ctx.proc()) {
 			visit(proc);
@@ -113,11 +112,15 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		emit(OpCode.Push, new Reg(8)); // load SP
 		emit(OpCode.Pop, new Reg(2)); // save SP to ARP
 		// decrement value by 1 to point to first data element and not out of bounds
-		emit(OpCode.Compute, new Operator(Oper.Decr), new Reg(2), new Reg(0), new Reg(2)); 
+		emit(OpCode.Compute, new Operator(Oper.Decr), new Reg(2), new Reg(0), new Reg(2));
 		if (this.checkResult.getThreadCount() > 0) {
 			// Instructions dedicated for thread jumping with main thread skipping them
 			generateThreadJumping(true);
 		}
+		// Load local data size
+		emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getProcedureSize(ctx)), new Reg(3));
+		// Move SP to allocate local data area
+		emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(8), new Reg(3), new Reg(8));
 		visit(ctx.block());
 		emit(OpCode.EndProg);
 		return null;
@@ -125,17 +128,21 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitProc(ProcContext ctx) {
-		System.out.println("Visit procedure");
 		this.functionAddress.put(ctx.ID().getText(), this.instructionCount);
+		// Prologue
+		// Load local data size
+		emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getProcedureSize(ctx) - 1), new Reg(3));
+		// Move SP to allocate local data area
+		emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), new Reg(3), new Reg(8));
 		visit(ctx.block());
-		//Epilogue
+		// Epilogue
 		// Increase ARP by 1 to get callers ARP address store location
 		emit(OpCode.Compute, new Operator(Oper.Incr), new Reg(2), new Reg(0), new Reg(3));
 		// Increase ARP by another 1 to get return address store location
 		emit(OpCode.Compute, new Operator(Oper.Incr), new Reg(3), new Reg(0), new Reg(4));
 		// Move SP to point to return address
 		emit(OpCode.Compute, new Operator(Oper.Add), new Reg(4), new Reg(0), new Reg(8));
-		// Increment SP by 1
+		// Increment SP by 1 to point to the top of the last local data area
 		emit(OpCode.Compute, new Operator(Oper.Incr), new Reg(8), new Reg(0), new Reg(8));
 		// Load caller's ARP to ARP
 		emit(OpCode.Load, new Addr(AddrImmDI.IndAddr, 3), new Reg(2));
@@ -148,7 +155,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitBlock(BlockContext ctx) {
-		System.out.println("Visit block");
 		for (StatContext stat : ctx.stat()) {
 			visit(stat);
 		}
@@ -157,20 +163,27 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitSimpleVarStat(SimpleVarStatContext ctx) {
-		System.out.println("Visit simpleVarStat");
 		if (ctx.expr() != null) {
 			visit(ctx.expr());
 			if (isShared(ctx)) {
 				Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), offset(ctx.ID(), true));
 			} else {
-				Instr i = emit(OpCode.Push, reg(ctx.expr()));
+				Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx.ID())),
+						reg(ctx));
+				Instr i2 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx), reg(ctx));
+				Instr i3 = emit(OpCode.Store, reg(ctx.expr()), new Addr(AddrImmDI.IndAddr, reg(ctx).getId()));
+				freeReg(ctx);
 			}
 			freeReg(ctx.expr());
 		} else {
 			if (isShared(ctx)) {
 				Instr i = emit(OpCode.WriteInstr, new Reg(0), offset(ctx.ID(), true));
 			} else {
-				Instr i = emit(OpCode.Push, new Reg(0));
+				Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx.ID())),
+						reg(ctx));
+				Instr i2 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx), reg(ctx));
+				Instr i3 = emit(OpCode.Store, new Reg(0), new Addr(AddrImmDI.IndAddr, reg(ctx).getId()));
+				freeReg(ctx);
 			}
 		}
 		return null;
@@ -178,38 +191,62 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitArrayVarStat(ArrayVarStatContext ctx) {
-		System.out.println("Visit arrayVarStat");
 		if (ctx.expr() != null) {
 			visit(ctx.expr());
-			int arraySize = ((Type.Array) getType(ctx.ID())).getSize();
-			if (isShared(ctx)) {
-				for (int i = 0; i < arraySize; i++) {
-					Instr i1 = emit(OpCode.Pop, reg(ctx));
-					Instr i2 = emit(OpCode.WriteInstr, reg(ctx), offset(ctx.ID(), true, i));
-				}
-				freeReg(ctx);
-			} else {
-				// all values are already pushed on the stack
-			}
-		} else {
-			if (isShared(ctx)) {
-				int arraySize = ((Type.Array) (getType(ctx.ID()))).getSize();
-				for (int i = 0; i < arraySize; i++) {
-					Instr i1 = emit(OpCode.WriteInstr, new Reg(0), offset(ctx.ID(), true, i));
-				}
-			} else {
-				int arraySize = ((Type.Array) (getType(ctx.ID()))).getSize();
-				for (int i = 0; i < arraySize; i++) {
-					Instr i1 = emit(OpCode.Push, new Reg(0));
-				}
-			}
 		}
+		int arraySize = ((Type.Array) getType(ctx.ID())).getSize();
+		int extraRegIndex = getFreeRegister();
+		lockRegister(extraRegIndex);
+		Reg extraReg = new Reg(extraRegIndex);
+		Reg valueReg;
+		int jump;
+		if (ctx.expr() != null) {
+			valueReg = reg(ctx);
+			jump = 6;
+		} else {
+			valueReg = new Reg(0);
+			jump = 5;
+		}
+
+		if (isShared(ctx)) {
+			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue,
+					this.checkResult.getBaseOffset() + this.checkResult.getOffset(ctx.ID())), reg(ctx.ID()));
+			Instr i2 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
+			Instr i3 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx.ID()), extraReg, reg(ctx.ID()));
+			Instr i4 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
+			Instr i5 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, jump));
+			if (ctx.expr() != null) {
+				Instr i6 = emit(OpCode.Pop, reg(ctx));
+			}
+			Instr i7 = emit(OpCode.WriteInstr, valueReg, new Addr(AddrImmDI.IndAddr, reg(ctx.ID()).getId()));
+			Instr i8 = emit(OpCode.Compute, new Operator(Oper.Decr), reg(ctx.ID()), new Reg(0), reg(ctx.ID()));
+			Instr i9 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
+			Instr i10 = emit(OpCode.Jump, new Target(TargetType.Rel, -jump));
+		} else {
+			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx.ID())),
+					reg(ctx.ID()));
+			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx.ID()), reg(ctx.ID()));
+			Instr i3 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
+			Instr i4 = emit(OpCode.Compute, new Operator(Oper.Sub), reg(ctx.ID()), extraReg, reg(ctx.ID()));
+			Instr i5 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
+			Instr i6 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, jump));
+			if (ctx.expr() != null) {
+				Instr i7 = emit(OpCode.Pop, reg(ctx));
+			}
+			Instr i8 = emit(OpCode.Store, valueReg, new Addr(AddrImmDI.IndAddr, reg(ctx.ID()).getId()));
+			Instr i9 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx.ID()), new Reg(0), reg(ctx.ID()));
+			Instr i10 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
+			Instr i11 = emit(OpCode.Jump, new Target(TargetType.Rel, -jump));
+		}
+		freeReg(ctx.ID());
+		freeReg(ctx);
+		freeUpRegister(extraRegIndex);
+
 		return null;
 	}
 
 	@Override
 	public Instr visitAssignStat(AssignStatContext ctx) {
-		System.out.println("Visit assignStat");
 		visit(ctx.expr());
 		visit(ctx.target());
 		if (getType(ctx.target()) == Type.INT || getType(ctx.target()) == Type.BOOL) {
@@ -232,7 +269,8 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 				Instr i4 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 6));
 				Instr i5 = emit(OpCode.Pop, reg(ctx));
 				Instr i6 = emit(OpCode.WriteInstr, reg(ctx), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
-				Instr i7 = emit(OpCode.Compute, new Operator(Oper.Decr), reg(ctx.target()), new Reg(0), reg(ctx.target()));
+				Instr i7 = emit(OpCode.Compute, new Operator(Oper.Decr), reg(ctx.target()), new Reg(0),
+						reg(ctx.target()));
 				Instr i8 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
 				Instr i9 = emit(OpCode.Jump, new Target(TargetType.Rel, -6));
 			} else {
@@ -242,7 +280,8 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 				Instr i4 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 6));
 				Instr i5 = emit(OpCode.Pop, reg(ctx));
 				Instr i6 = emit(OpCode.Store, reg(ctx), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
-				Instr i7 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx.target()), new Reg(0), reg(ctx.target()));
+				Instr i7 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx.target()), new Reg(0),
+						reg(ctx.target()));
 				Instr i8 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
 				Instr i9 = emit(OpCode.Jump, new Target(TargetType.Rel, -6));
 			}
@@ -255,7 +294,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitIfStat(IfStatContext ctx) {
-		System.out.println("Visit ifStat");
 		// Condition
 		visit(ctx.expr());
 		Reg r = reg(ctx);
@@ -282,7 +320,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitWhileStat(WhileStatContext ctx) {
-		System.out.println("Visit whileStat");
 		// Condition
 		Integer start = this.instructionCount;
 		visit(ctx.expr());
@@ -302,7 +339,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitForkStat(ForkStatContext ctx) {
-		System.out.println("Visit forkStat");
 		Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.instructionCount + 3), reg(ctx));
 		Instr i2 = emit(OpCode.WriteInstr, reg(ctx), new Addr(AddrImmDI.DirAddr, concurrentThreads + 1));
 		freeReg(ctx);
@@ -311,6 +347,10 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		int callCount = this.checkResult.decreaseThreadCallCount(concurrentThreads);
 		this.currentThreads.push(concurrentThreads + 1);
 		this.concurrentThreads++;
+		// Load local data size
+		emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getProcedureSize(ctx)), new Reg(3));
+		// Move SP to allocate local data area
+		emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(8), new Reg(3), new Reg(8));
 		visit(ctx.block());
 		this.currentThreads.pop();
 		if (callCount == 1) {
@@ -319,7 +359,9 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		} else {
 			Instr i4 = emit(OpCode.Push, new Reg(2));
 			Instr i5 = emit(OpCode.Pop, new Reg(8));
-			Instr i6 = emit(OpCode.Compute, new Operator(Oper.Incr), new Reg(8), new Reg(0), new Reg(8)); //restore SP to the start
+			Instr i6 = emit(OpCode.Compute, new Operator(Oper.Incr), new Reg(8), new Reg(0), new Reg(8)); // restore SP
+																											// to the
+																											// start
 			Instr i7 = emit(OpCode.WriteInstr, new Reg(0), new Addr(AddrImmDI.IndAddr, 1));
 			generateThreadJumping(false);
 		}
@@ -329,7 +371,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitJoinStat(JoinStatContext ctx) {
-		System.out.println("Visit joinStat");
 		generateThreadJoin(this.currentThreads.peek(), this.concurrentThreads);
 		this.concurrentThreads = this.currentThreads.peek();
 		return null;
@@ -337,7 +378,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitSyncStat(SyncStatContext ctx) {
-		System.out.println("Visit syncStat");
 		Instr i1 = emit(OpCode.TestAndSet, new Addr(AddrImmDI.DirAddr, this.checkResult.getLockAddress()));
 		Instr i2 = emit(OpCode.Receive, reg(ctx));
 		Instr i3 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 2));
@@ -350,14 +390,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitBlockStat(BlockStatContext ctx) {
-		System.out.println("Visit blockStat");
 		visit(ctx.block());
 		return null;
 	}
 
 	@Override
 	public Instr visitPrintStat(PrintStatContext ctx) {
-		System.out.println("Visit printStat");
 		visit(ctx.expr());
 		if (getType(ctx.expr()) == Type.INT || getType(ctx.expr()) == Type.BOOL) {
 			Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), Addr.NUMBER_IO);
@@ -383,8 +421,9 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			Instr i14 = emit(OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); // write '}' symbol
 			Instr i15 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 10), reg(ctx)); // load '\n' symbol
 			Instr i16 = emit(OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); // write '\n' symbol
-			Instr i17 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize), extraReg); 
-			Instr i18 = emit(OpCode.Compute, new Operator(Oper.Add), new Reg(8), extraReg, new Reg(8)); //restore SP pointer
+			Instr i17 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize), extraReg);
+			Instr i18 = emit(OpCode.Compute, new Operator(Oper.Add), new Reg(8), extraReg, new Reg(8)); // restore SP
+																										// pointer
 			freeReg(ctx);
 			freeUpRegister(extraRegIndex);
 		}
@@ -393,27 +432,28 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitCallStat(CallStatContext ctx) {
-		System.out.println("Visit callStat");
-		int returnID= this.instructionCount;
+		int returnID = this.instructionCount;
 		Reg register = reg(ctx);
-		//Precall
-		emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 0), register); //temporary value for return address
+		// Precall
+		emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 0), register); // temporary value for return address
 		emit(OpCode.Push, register); // push return address
 		emit(OpCode.Push, new Reg(2)); // push caller's ARP
-		emit(OpCode.Compute, new Operator(Oper.Decr), new Reg(8), new Reg(0), register); //save ARP position for function
+		emit(OpCode.Compute, new Operator(Oper.Decr), new Reg(8), new Reg(0), register); // save ARP position for
+																							// function
 		visit(ctx.args());
 		emit(OpCode.Compute, new Operator(Oper.Add), register, new Reg(0), new Reg(2)); // move ARP
 		freeReg(ctx);
-		//jump to procedure (temporary uses -1 because it can only be set after all functions are generated)
-		emit(OpCode.Jump, new Target(TargetType.Abs, -1)); 
-		calls.add(new FunctionCall(this.instructionCount-1, ctx.ID().getText()));
-		this.prog.updateInstr(returnID, new Instr(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.instructionCount), register));
+		// jump to procedure (temporary uses -1 because it can only be set after all
+		// functions are generated)
+		emit(OpCode.Jump, new Target(TargetType.Abs, -1));
+		calls.add(new FunctionCall(this.instructionCount - 1, ctx.ID().getText()));
+		this.prog.updateInstr(returnID,
+				new Instr(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.instructionCount), register));
 		return null;
 	}
 
 	@Override
 	public Instr visitIdTarget(IdTargetContext ctx) {
-		System.out.println("Visit idTarget");
 		if (isShared(ctx)) {
 			Instr i = emit(OpCode.Load,
 					new Addr(AddrImmDI.ImmValue, this.checkResult.getBaseOffset() + this.checkResult.getOffset(ctx)),
@@ -427,7 +467,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitArrayTarget(ArrayTargetContext ctx) {
-		System.out.println("Visit arrayTarget");
 		visit(ctx.expr());
 		if (isShared(ctx)) {
 			Instr i1 = emit(OpCode.Load,
@@ -446,15 +485,13 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitArgs(ArgsContext ctx) {
-		System.out.println("Visit args");
 		for (ExprContext expr : ctx.expr()) {
 			visit(expr);
-			if(getType(expr)==Type.INT||getType(expr)==Type.BOOL) {
+			if (getType(expr) == Type.INT || getType(expr) == Type.BOOL) {
 				Instr i1 = emit(OpCode.Push, reg(expr));
 				freeReg(expr);
-			}
-			else {
-				//array elements are already pushed on stack
+			} else {
+				// array elements are already pushed on stack
 			}
 		}
 		return null;
@@ -462,7 +499,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitPrfExpr(PrfExprContext ctx) {
-		System.out.println("Visit prfExpr");
 		visit(ctx.expr());
 		if (getType(ctx) == Type.INT) {
 			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, -1), reg(ctx));
@@ -477,7 +513,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitMultExpr(MultExprContext ctx) {
-		System.out.println("Visit multExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
 		if (ctx.multOp().STAR() != null) {
@@ -525,7 +560,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitPlusExpr(PlusExprContext ctx) {
-		System.out.println("Visit plusExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
 		if (ctx.plusOp().PLUS() != null) {
@@ -544,7 +578,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitCompExpr(CompExprContext ctx) {
-		System.out.println("Visit compExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
 		if (ctx.compOp().EQ() != null || ctx.compOp().NE() != null) {
@@ -642,7 +675,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitBoolExpr(BoolExprContext ctx) {
-		System.out.println("Visit boolExpr");
 		visit(ctx.expr(0));
 		visit(ctx.expr(1));
 		if (ctx.boolOp().AND() != null) {
@@ -660,7 +692,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitParExpr(ParExprContext ctx) {
-		System.out.println("Visit parExpr");
 		visit(ctx.expr());
 		setReg(ctx, regs.get(ctx.expr()));
 		return null;
@@ -668,7 +699,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitIdExpr(IdExprContext ctx) {
-		System.out.println("Visit idExpr");
 		if (getType(ctx) == Type.INT || getType(ctx) == Type.BOOL) {
 			if (isShared(ctx)) {
 				Instr i1 = emit(OpCode.ReadInstr, offset(ctx, true));
@@ -711,28 +741,24 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitNumExpr(NumExprContext ctx) {
-		System.out.println("Visit numExpr");
 		Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, Integer.parseInt(ctx.NUM().getText())), reg(ctx));
 		return null;
 	}
 
 	@Override
 	public Instr visitTrueExpr(TrueExprContext ctx) {
-		System.out.println("Visit trueExpr");
 		Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 1), reg(ctx));
 		return null;
 	}
 
 	@Override
 	public Instr visitFalseExpr(FalseExprContext ctx) {
-		System.out.println("Visit falseExpr");
 		setReg(ctx, new Reg(0));
 		return null;
 	}
 
 	@Override
 	public Instr visitIndexExpr(IndexExprContext ctx) {
-		System.out.println("Visit indexExpr");
 		visit(ctx.expr());
 		if (isShared(ctx)) {
 			Instr i1 = emit(OpCode.Load, new Addr(Addr.AddrImmDI.ImmValue,
@@ -753,7 +779,6 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	@Override
 	public Instr visitArrayExpr(ArrayExprContext ctx) {
-		System.out.println("Visit arrayExpr");
 		for (int i = 0; i < ctx.expr().size(); i++) {
 			visit(ctx.expr(i));
 			Instr i1 = emit(OpCode.Push, reg(ctx.expr(i)));
@@ -923,25 +948,26 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			Instr i6 = emit(OpCode.Branch, new Reg(3), new Target(TargetType.Rel, -2 - (3 * (to - from - 1))));
 		}
 	}
-	
+
 	/**
-	 * Private class to store function call instructions
-	 * so that they can be resolved after all functions have been
-	 * generated
+	 * Private class to store function call instructions so that they can be
+	 * resolved after all functions have been generated
+	 * 
 	 * @author Karolis Butkus
 	 *
 	 */
-	private class FunctionCall{
+	private class FunctionCall {
 		private int instructionNumber;
 		private String functionID;
-		public FunctionCall(int instructionNumber, String functionID){
-			this.instructionNumber=instructionNumber;
+
+		public FunctionCall(int instructionNumber, String functionID) {
+			this.instructionNumber = instructionNumber;
 			this.functionID = functionID;
 		}
 	}
-	
+
 	private void resolveFunctionCalls() {
-		for(FunctionCall call : calls) {
+		for (FunctionCall call : calls) {
 			int start = this.functionAddress.get(call.functionID);
 			this.prog.updateInstr(call.instructionNumber, new Instr(OpCode.Jump, new Target(TargetType.Abs, start)));
 		}

@@ -1,0 +1,14 @@
+cannon{
+	int a=1;
+	fork{
+		int a = 2;
+		fork{
+			int a =3;
+			print(a);
+		}
+		join;
+		print(a);
+	}
+	join;
+	print(a);
+}
