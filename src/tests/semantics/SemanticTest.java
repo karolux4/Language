@@ -55,6 +55,13 @@ public class SemanticTest {
 				"Sprockell 0 says 29\nSprockell 0 says 28\nSprockell 0 says 29\nSprockell 0 says 28\nSprockell 0 says 29");
 		check("src/tests/semantics/testSources/isPrimeExample.pickle", true, 
 				"Sprockell 0 says 1\nSprockell 0 says 1\nSprockell 0 says 0\nSprockell 0 says 0");
+		check("src/tests/semantics/testSources/arrayConcurrentSumExample.pickle", true, "Sprockell 0 says 5");
+		check("src/tests/semantics/testSources/fibonacciExample.pickle", true, 
+				"Sprockell 0 says 1\nSprockell 0 says 2\nSprockell 0 says 3\nSprockell 0 says 5\nSprockell 0 says 165580141");
+		check("src/tests/semantics/testSources/arrayMaxExample.pickle", true, 
+				"Sprockell 0 says 100\nSprockell 0 says -3\nSprockell 0 says 1000000");
+		check("src/tests/semantics/testSources/boolArrayExample.pickle", true, 
+				"Sprockell 0 says 1\nSprockell 0 says 0\nSprockell 0 says 1");
 	}
 
 	public void check(String input, String expected) {

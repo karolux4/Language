@@ -1,0 +1,19 @@
+cannon {
+	int shared a[4] = [10,5,9,-19];
+	int shared sum = 0;
+	fork{
+		int partialSum = a[0]+a[1];
+		sync{
+			sum=sum+partialSum;
+		}
+	}
+	fork
+	{
+		int partialSum = a[2]+a[3];
+		sync{
+			sum=sum+partialSum;
+		}
+	}
+	join;
+	print(sum);
+}
