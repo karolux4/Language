@@ -578,6 +578,9 @@ public class Checker extends PickleCannonBaseListener {
 	@Override
 	public void exitArrayExpr(ArrayExprContext ctx) {
 		Type type = getType(ctx.expr(0));
+		if(type!=Type.INT&&type!=Type.BOOL) {
+			addError(ctx,"Multi-dimensional arrays are not supported");
+		}
 		for (int i = 1; i < ctx.expr().size(); i++) {
 			checkType(ctx.expr(i), type);
 		}
