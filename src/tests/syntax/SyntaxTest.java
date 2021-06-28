@@ -1,12 +1,14 @@
 package tests.syntax;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.Assert;
 import org.junit.Test;
 
 import compiler.Compiler;
+import compiler.ParseException;
 
 public class SyntaxTest {
 
@@ -177,8 +179,9 @@ public class SyntaxTest {
 
 	@Test
 	public void testFiles() {
-		accepts("src/sample/concurrency/fork.pickle", true);
-		accepts("src/sample/procedures/proc.pickle", true);
+		accepts("src/tests/syntax/testSources/isPrimeExample.pickle", true);
+		accepts("src/tests/syntax/testSources/fibonacciExample.pickle", true);
+		rejects("src/tests/syntax/testSources/syntaxError.pickle", true);
 	}
 
 	public ParseTree accepts(String input) {
@@ -212,8 +215,16 @@ public class SyntaxTest {
 				compiler.parse(input);
 			}
 			Assert.fail("Should have failed, but passed (Input: " + input + ")");
-		} catch (Exception e) {
+		} catch (ParseException e) {
 			// Pass the test
+			System.out.println("Caught expected errors (Input: '"+input+"'): ");
+			e.print();
+			System.out.println();
+			
+		} catch (IOException e) {
+			Assert.fail("File does not exist");
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 

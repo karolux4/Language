@@ -114,17 +114,17 @@ public class ContextTest {
 
 	@Test
 	public void testFiles() {
-		accepts("src/sample/concurrency/fork.pickle", true);
-		accepts("src/sample/arrays/arrayCorrect.pickle", true);
-		accepts("src/sample/procedures/procCorrect.pickle", true);
-		rejects("src/sample/arrays/arrayError.pickle", true);
-		rejects("src/sample/procedures/procError.pickle", true);
-		rejects("src/sample/concurrency/sharedError.pickle", true);
-		rejects("src/sample/concurrency/forkError.pickle", true);
-		rejects("src/sample/concurrency/forkSharedError.pickle", true);
-		rejects("src/sample/general/error1.pickle", true);
-		rejects("src/sample/general/error2.pickle", true);
-		rejects("src/sample/general/error3.pickle", true);
+		accepts("src/tests/context/testSources/fork.pickle", true);
+		accepts("src/tests/context/testSources/arrayCorrect.pickle", true);
+		accepts("src/tests/context/testSources/procCorrect.pickle", true);
+		rejects("src/tests/context/testSources/arrayError.pickle", true);
+		rejects("src/tests/context/testSources/procError.pickle", true);
+		rejects("src/tests/context/testSources/sharedError.pickle", true);
+		rejects("src/tests/context/testSources/forkError.pickle", true);
+		rejects("src/tests/context/testSources/forkSharedError.pickle", true);
+		rejects("src/tests/context/testSources/error1.pickle", true);
+		rejects("src/tests/context/testSources/error2.pickle", true);
+		rejects("src/tests/context/testSources/error3.pickle", true);
 
 	}
 
@@ -158,8 +158,15 @@ public class ContextTest {
 				compiler.check(input);
 			}
 			Assert.fail("Should have thrown an exception");
-		} catch (ParseException | IOException e) {
+		} catch (ParseException e) {
 			// Pass the test
+			System.out.println("Caught expected errors (Input '"+input+"'): ");
+			e.print();
+			System.out.println();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			Assert.fail("File does not exist");
 		}
 	}
 }

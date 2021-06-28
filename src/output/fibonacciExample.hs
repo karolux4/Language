@@ -2,7 +2,9 @@ import Sprockell
 
 prog :: [Instruction]
 prog = [ 
-   Jump (Abs (74))
+   Jump (Abs (82))
+ , Load (ImmValue (3)) regB
+ , Compute Sub regA regB regSP
  , Load (ImmValue (0)) regB
  , Compute Sub regA regB regB
  , Load (IndAddr regB) regB
@@ -15,23 +17,29 @@ prog = [
  , Compute Equal regC regD regC
  , Compute Or regB regC regB
  , Compute Equal regB reg0 regC
- , Branch regC (Abs (17))
+ , Branch regC (Abs (19))
  , Load (ImmValue (1)) regB
  , WriteInstr regB numberIO
- , Jump (Abs (66))
+ , Jump (Abs (74))
  , Load (ImmValue (2)) regB
- , Push regB
+ , Load (ImmValue (1)) regC
+ , Compute Sub regA regC regC
+ , Store regB (IndAddr regC)
  , Load (ImmValue (1)) regB
- , Push regB
+ , Load (ImmValue (2)) regC
+ , Compute Sub regA regC regC
+ , Store regB (IndAddr regC)
  , Load (ImmValue (1)) regB
- , Push regB
+ , Load (ImmValue (3)) regC
+ , Compute Sub regA regC regC
+ , Store regB (IndAddr regC)
  , Load (ImmValue (0)) regB
  , Compute Sub regA regB regB
  , Load (IndAddr regB) regB
  , Load (ImmValue (2)) regC
  , Compute Gt regB regC regB
  , Compute Equal regB reg0 regC
- , Branch regC (Abs (61))
+ , Branch regC (Abs (69))
  , Load (ImmValue (3)) regB
  , Compute Sub regA regB regB
  , Load (IndAddr regB) regB
@@ -62,7 +70,7 @@ prog = [
  , Load (ImmValue (0)) regC
  , Compute Sub regA regC regC
  , Store regB (IndAddr regC)
- , Jump (Abs (23))
+ , Jump (Abs (31))
  , Nop
  , Load (ImmValue (1)) regB
  , Compute Sub regA regB regB
@@ -79,7 +87,9 @@ prog = [
  , Push regSP
  , Pop regA
  , Compute Decr regA reg0 regA
- , Load (ImmValue (85)) regB
+ , Load (ImmValue (0)) regB
+ , Compute Sub regSP regB regSP
+ , Load (ImmValue (95)) regB
  , Push regB
  , Push regA
  , Compute Decr regSP reg0 regB
@@ -87,7 +97,7 @@ prog = [
  , Push regC
  , Compute Add regB reg0 regA
  , Jump (Abs (1))
- , Load (ImmValue (93)) regB
+ , Load (ImmValue (103)) regB
  , Push regB
  , Push regA
  , Compute Decr regSP reg0 regB
@@ -95,7 +105,7 @@ prog = [
  , Push regC
  , Compute Add regB reg0 regA
  , Jump (Abs (1))
- , Load (ImmValue (101)) regB
+ , Load (ImmValue (111)) regB
  , Push regB
  , Push regA
  , Compute Decr regSP reg0 regB
@@ -103,7 +113,7 @@ prog = [
  , Push regC
  , Compute Add regB reg0 regA
  , Jump (Abs (1))
- , Load (ImmValue (109)) regB
+ , Load (ImmValue (119)) regB
  , Push regB
  , Push regA
  , Compute Decr regSP reg0 regB
@@ -111,7 +121,7 @@ prog = [
  , Push regC
  , Compute Add regB reg0 regA
  , Jump (Abs (1))
- , Load (ImmValue (117)) regB
+ , Load (ImmValue (127)) regB
  , Push regB
  , Push regA
  , Compute Decr regSP reg0 regB

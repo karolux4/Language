@@ -1,0 +1,28 @@
+pickle isPrime(int number){
+	if(number<=1){
+		print(false);
+	}
+	else{
+		int div = 2;
+		int sum = 0;
+		while(div < number){
+			int div1 = number/div;
+			if(div1*div==number){
+				sum=sum+1;
+			}
+			div=div+1;
+		}
+		if(sum==0){
+			print(true);
+		}
+		else{
+			print(false);
+		}
+	}
+}
+cannon{
+	isPrime(2);
+	isPrime(13);
+	isPrime(33);
+	isPrime(100);
+}

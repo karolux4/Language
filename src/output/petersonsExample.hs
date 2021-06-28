@@ -13,23 +13,29 @@ prog = [
  , Compute Equal regB reg0 regC
  , Branch regC (Rel (-3))
  , Jump (Ind regB)
+ , Load (ImmValue (0)) regB
+ , Compute Sub regSP regB regSP
  , WriteInstr reg0 (DirAddr (3))
  , WriteInstr reg0 (DirAddr (4))
  , WriteInstr reg0 (DirAddr (5))
  , Load (ImmValue (0)) regB
  , WriteInstr regB (DirAddr (6))
- , Load (ImmValue (19)) regB
+ , Load (ImmValue (21)) regB
  , WriteInstr regB (DirAddr (1))
- , Jump (Abs (67))
+ , Jump (Abs (73))
+ , Load (ImmValue (1)) regB
+ , Compute Sub regSP regB regSP
  , Load (ImmValue (10)) regB
- , Push regB
+ , Load (ImmValue (0)) regC
+ , Compute Sub regA regC regC
+ , Store regB (IndAddr regC)
  , Load (ImmValue (0)) regB
  , Compute Sub regA regB regB
  , Load (IndAddr regB) regB
  , Load (ImmValue (0)) regC
  , Compute Gt regB regC regB
  , Compute Equal regB reg0 regC
- , Branch regC (Abs (64))
+ , Branch regC (Abs (70))
  , Load (ImmValue (1)) regB
  , Load (ImmValue (3)) regC
  , WriteInstr regB (IndAddr regC)
@@ -46,8 +52,8 @@ prog = [
  , Compute Equal regC regD regC
  , Compute And regB regC regB
  , Compute Equal regB reg0 regC
- , Branch regC (Abs (46))
- , Jump (Abs (34))
+ , Branch regC (Abs (52))
+ , Jump (Abs (40))
  , Nop
  , ReadInstr (DirAddr (6))
  , Receive regB
@@ -65,22 +71,26 @@ prog = [
  , Load (ImmValue (0)) regC
  , Compute Sub regA regC regC
  , Store regB (IndAddr regC)
- , Jump (Abs (21))
+ , Jump (Abs (27))
  , Nop
  , WriteInstr reg0 (IndAddr regSprID)
  , EndProg
- , Load (ImmValue (70)) regB
+ , Load (ImmValue (76)) regB
  , WriteInstr regB (DirAddr (2))
- , Jump (Abs (118))
+ , Jump (Abs (128))
+ , Load (ImmValue (1)) regB
+ , Compute Sub regSP regB regSP
  , Load (ImmValue (10)) regB
- , Push regB
+ , Load (ImmValue (0)) regC
+ , Compute Sub regA regC regC
+ , Store regB (IndAddr regC)
  , Load (ImmValue (0)) regB
  , Compute Sub regA regB regB
  , Load (IndAddr regB) regB
  , Load (ImmValue (0)) regC
  , Compute Gt regB regC regB
  , Compute Equal regB reg0 regC
- , Branch regC (Abs (115))
+ , Branch regC (Abs (125))
  , Load (ImmValue (1)) regB
  , Load (ImmValue (4)) regC
  , WriteInstr regB (IndAddr regC)
@@ -97,8 +107,8 @@ prog = [
  , Compute Equal regC regD regC
  , Compute And regB regC regB
  , Compute Equal regB reg0 regC
- , Branch regC (Abs (97))
- , Jump (Abs (85))
+ , Branch regC (Abs (107))
+ , Jump (Abs (95))
  , Nop
  , ReadInstr (DirAddr (6))
  , Receive regB
@@ -116,7 +126,7 @@ prog = [
  , Load (ImmValue (0)) regC
  , Compute Sub regA regC regC
  , Store regB (IndAddr regC)
- , Jump (Abs (72))
+ , Jump (Abs (82))
  , Nop
  , WriteInstr reg0 (IndAddr regSprID)
  , EndProg
