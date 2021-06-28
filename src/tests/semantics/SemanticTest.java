@@ -100,11 +100,11 @@ public class SemanticTest {
 	    ProcessBuilder builder;
 		if(OS.contains("win")) {
 			//Windows
-			builder = new ProcessBuilder("cmd.exe", "/c", "cd "+outputDir +"&& runhaskell", name+".hs");
+			builder = new ProcessBuilder("cmd.exe", "/c", "cd "+outputDir +" && runhaskell", name+".hs");
 		}
 		else {
 			//Linux
-			builder = new ProcessBuilder("sh", "-c", "cd "+outputDir +"&& runhaskell", name+".hs");
+			builder = new ProcessBuilder("/bin/bash", "-c", "cd "+outputDir +" && runhaskell " + name+".hs");
 		}
 		builder.redirectErrorStream(true);
 		Process p = builder.start();
