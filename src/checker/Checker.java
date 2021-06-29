@@ -61,10 +61,10 @@ public class Checker extends PickleCannonBaseListener {
 	 */
 	private boolean isInMainScope;
 	/**
-	 * Integer used to indicate whether listener now is inside a while cycle(s) -
-	 * cannot fork in while cycles
+	 * Integer used to indicate whether listener now is inside a while cycle(s) or if -
+	 * cannot fork in while cycles or if constructs
 	 */
-	private int insideWhile;
+	private int insideWhileIf;
 	/** Integer used to indicate whether listener is inside forked thread(s) */
 	private int insideFork;
 	/**
@@ -87,7 +87,7 @@ public class Checker extends PickleCannonBaseListener {
 		this.result = new Result();
 		this.errors = new ArrayList<>();
 		this.isInMainScope = false;
-		this.insideWhile = 0;
+		this.insideWhileIf = 0;
 		this.insideFork = 0;
 		this.insideSync = 0;
 		this.calls = new ArrayList<>();
@@ -256,27 +256,33 @@ public class Checker extends PickleCannonBaseListener {
 	public void exitAssignStat(AssignStatContext ctx) {
 		checkType(ctx.target(), getType(ctx.expr()));
 	}
-
+	
+	@Override
+	public void enterIfStat(IfStatContext ctx) {
+		this.insideWhileIf++;
+	}
+	
 	@Override
 	public void exitIfStat(IfStatContext ctx) {
+		this.insideWhileIf--;
 		checkType(ctx.expr(), Type.BOOL);
 	}
 
 	@Override
 	public void enterWhileStat(WhileStatContext ctx) {
-		this.insideWhile++;
+		this.insideWhileIf++;
 	}
 
 	@Override
 	public void exitWhileStat(WhileStatContext ctx) {
-		this.insideWhile--;
+		this.insideWhileIf--;
 		checkType(ctx.expr(), Type.BOOL);
 	}
 
 	@Override
 	public void enterForkStat(ForkStatContext ctx) {
-		if (!this.isInMainScope || this.insideWhile > 0) {
-			addError(ctx, "Cannot fork a thread inside a function or a while loop");
+		if (!this.isInMainScope || this.insideWhileIf > 0) {
+			addError(ctx, "Cannot fork a thread inside a function, a while loop or if-else statement");
 		}
 		this.insideFork++;
 		this.result.addThread(concurrentThreads);
