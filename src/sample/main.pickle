@@ -1,15 +1,7 @@
+pickle p1(int a) {
+	print(a+1);
+}
+
 cannon {
-	int shared a=3;
-	fork {
-		fork {
-			sync {
-				a=a+1;
-			}
-		}
-		sync {
-			a=a+2;
-		}
-	}
-	join;
-	print(a);
+	p1(5);
 }
