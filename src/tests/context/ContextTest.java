@@ -66,7 +66,7 @@ public class ContextTest {
 		rejects("cannon { while(0) {print (1);}}"); // while condition must be a bool
 		rejects("cannon { while(false||true) {int a=3;} print(a); }"); // 'a' has not been declared in the outer scope
 	}
-	
+
 	@Test
 	public void testThreads() {
 		accepts("cannon { fork {print (2);} print(1);}");
@@ -79,7 +79,7 @@ public class ContextTest {
 		rejects("cannon { fork { int shared a=3; }}"); // shared variables can only be declared in outer global scope
 		rejects("cannon { fork { int a=3; } print(a); }"); // 'a' has not been declared in outer scope
 	}
-	
+
 	@Test
 	public void testArrays() {
 		accepts("cannon { int a[3];}");
@@ -90,14 +90,14 @@ public class ContextTest {
 		accepts("cannon { int shared a[3];}");
 		rejects("cannon { int a[0]; }"); // array size must be greater than 0
 		rejects("cannon { int a[3] = [1,2,false];}"); // all array elements must be of the declared type
-		rejects("cannon { int a[3]=[3,2,1]; int b[2]=a;}"); //during assignment array sizes must match
-		rejects("cannon { int a[3]; bool b[3]; bool c = a==b;}"); //mismatched array types
-		rejects("cannon { int a[2+1];}"); //array size must be declared as a number, not expression
+		rejects("cannon { int a[3]=[3,2,1]; int b[2]=a;}"); // during assignment array sizes must match
+		rejects("cannon { int a[3]; bool b[3]; bool c = a==b;}"); // mismatched array types
+		rejects("cannon { int a[2+1];}"); // array size must be declared as a number, not expression
 		// NOTE: there is no detection for trying to access elements out of array bounds
 	}
-	
+
 	@Test
-	public void testProcedures(){
+	public void testProcedures() {
 		accepts("pickle p1() { p1(); } cannon { p1(); }");
 		accepts("pickle p1(int a) { print(a);} cannon { p1(3); }");
 		accepts("pickle p1() { p2();} pickle p2() { print(0); } cannon { p1(); }");
@@ -108,7 +108,8 @@ public class ContextTest {
 		rejects("pickle p1(int a[3]) {} cannon { p1([2,3]); }"); // mismatched argument type in procedure call
 		rejects("pickle p1(int a) {} pickle p1() {} cannon { p1(false); }"); // duplicate procedure names
 		rejects("pickle p1(bool a) { int a=3;} cannon { p1(false); }"); // 'a' already declared in the scope
-		rejects("pickle p1(bool a) { int shared b=3;} cannon { p1(false); }"); // shared variables cannot be declared in procedure
+		rejects("pickle p1(bool a) { int shared b=3;} cannon { p1(false); }"); // shared variables cannot be declared in
+																				// procedure
 		rejects("pickle p1(bool a) { fork { print(3); } } cannon { p1(false); }"); // cannot fork in the procedure
 	}
 
@@ -160,11 +161,10 @@ public class ContextTest {
 			Assert.fail("Should have thrown an exception");
 		} catch (ParseException e) {
 			// Pass the test
-			System.out.println("Caught expected errors (Input '"+input+"'): ");
+			System.out.println("Caught expected errors (Input '" + input + "'): ");
 			e.print();
 			System.out.println();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 			Assert.fail("File does not exist");
 		}

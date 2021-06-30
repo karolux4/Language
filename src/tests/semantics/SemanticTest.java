@@ -69,7 +69,10 @@ public class SemanticTest {
 				"Sprockell 0 says 1\nSprockell 0 says 0\nSprockell 0 says 1");
 	}
 
-	/* Do not forget to kill ghc process manually as its execution is not stopped due to infinite cycle*/
+	/*
+	 * IMPORTANT! Do not forget to kill ghc process manually as its execution is not
+	 * stopped due to infinite cycle
+	 */
 	@Test
 	public void testInfiniteLoop() throws InterruptedException {
 		Thread thread = new Thread() {
@@ -86,8 +89,11 @@ public class SemanticTest {
 
 		Assert.assertTrue(thread.isAlive());
 	}
-	
-	/* Do not forget to kill ghc process manually as its execution is not stopped due to infinite cycle*/
+
+	/*
+	 * IMPORTANT! Do not forget to kill ghc process manually as its execution is not
+	 * stopped due to infinite cycle
+	 */
 	@Test
 	public void testDivisionByZero() throws InterruptedException {
 		Thread thread = new Thread() {
