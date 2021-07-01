@@ -210,9 +210,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			if (isShared(ctx)) {
 				Instr i = emit(OpCode.WriteInstr, reg(ctx.expr()), offset(ctx.ID(), true));
 			} else {
+				// load the offset
 				Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx.ID())),
 						reg(ctx));
+				// compute the address in activation record with the offset
 				Instr i2 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx), reg(ctx));
+				// store the value
 				Instr i3 = emit(OpCode.Store, reg(ctx.expr()), new Addr(AddrImmDI.IndAddr, reg(ctx).getId()));
 				freeReg(ctx);
 			}
@@ -221,9 +224,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			if (isShared(ctx)) {
 				Instr i = emit(OpCode.WriteInstr, new Reg(0), offset(ctx.ID(), true));
 			} else {
+				// load the offset
 				Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx.ID())),
 						reg(ctx));
+				// compute the address in activation with the offset
 				Instr i2 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx), reg(ctx));
+				// store 0 in the variable memory location
 				Instr i3 = emit(OpCode.Store, new Reg(0), new Addr(AddrImmDI.IndAddr, reg(ctx).getId()));
 				freeReg(ctx);
 			}
@@ -252,41 +258,66 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		Reg valueReg;
 		int jump;
 		if (ctx.expr() != null) {
+			// if initial value is provided register to store popped values from stack will
+			// be used
 			valueReg = reg(ctx);
 			jump = 6;
 		} else {
+			// register with default 0 value will be used
 			valueReg = new Reg(0);
 			jump = 5;
 		}
 
 		if (isShared(ctx)) {
+			// load the starting address of array in shared memory
 			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue,
 					this.checkResult.getBaseOffset() + this.checkResult.getOffset(ctx.ID())), reg(ctx.ID()));
+			// load array size
 			Instr i2 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
+			// add array size to starting address to point to the last array element because
+			// pushed values are in reverse order
 			Instr i3 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx.ID()), extraReg, reg(ctx.ID()));
+			// condition used in cycle to check if all array elements have been added
 			Instr i4 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
+			// jump over instructions if all array values have been added
 			Instr i5 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, jump));
 			if (ctx.expr() != null) {
+				// pop the value from the stack
 				Instr i6 = emit(OpCode.Pop, reg(ctx));
 			}
+			// write the array value to shared memory
 			Instr i7 = emit(OpCode.WriteInstr, valueReg, new Addr(AddrImmDI.IndAddr, reg(ctx.ID()).getId()));
+			// decrease array pointer
 			Instr i8 = emit(OpCode.Compute, new Operator(Oper.Decr), reg(ctx.ID()), new Reg(0), reg(ctx.ID()));
+			// decrease the counter
 			Instr i9 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
+			// jump back to cycle condition
 			Instr i10 = emit(OpCode.Jump, new Target(TargetType.Rel, -jump));
 		} else {
+			// load local data offset for array
 			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx.ID())),
 					reg(ctx.ID()));
+			// compute the address of array start in the stack
 			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx.ID()), reg(ctx.ID()));
+			// load array size
 			Instr i3 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
+			// make array pointer point to the end of array
 			Instr i4 = emit(OpCode.Compute, new Operator(Oper.Sub), reg(ctx.ID()), extraReg, reg(ctx.ID()));
+			// condition used in cycle to if all array elements have been added
 			Instr i5 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
+			// jump over next instructions if all array elements have been added
 			Instr i6 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, jump));
 			if (ctx.expr() != null) {
+				// pop array value from the stack
 				Instr i7 = emit(OpCode.Pop, reg(ctx));
 			}
+			// store the array value in the local data area pointed by array pointer
 			Instr i8 = emit(OpCode.Store, valueReg, new Addr(AddrImmDI.IndAddr, reg(ctx.ID()).getId()));
+			// move array pointer to the next element
 			Instr i9 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx.ID()), new Reg(0), reg(ctx.ID()));
+			// decrease the counter
 			Instr i10 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
+			// jump back to the cycle condition
 			Instr i11 = emit(OpCode.Jump, new Target(TargetType.Rel, -jump));
 		}
 		freeReg(ctx.ID());
@@ -323,26 +354,44 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			lockRegister(extraRegIndex);
 			Reg extraReg = new Reg(extraRegIndex);
 			if (isShared(ctx.target())) {
+				// load array size
 				Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
+				// add array size to make array pointer point to the last element
 				Instr i2 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx.target()), extraReg, reg(ctx.target()));
+				// condition used in cycle to check if all array elements have been added
 				Instr i3 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
+				// jump over next instructions if all array elements have been added
 				Instr i4 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 6));
+				// pop the value from the stack
 				Instr i5 = emit(OpCode.Pop, reg(ctx));
+				// write array value to the shared memory region
 				Instr i6 = emit(OpCode.WriteInstr, reg(ctx), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
+				// decrease array pointer
 				Instr i7 = emit(OpCode.Compute, new Operator(Oper.Decr), reg(ctx.target()), new Reg(0),
 						reg(ctx.target()));
+				// decrease counter
 				Instr i8 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
+				// jump back to cycle condition
 				Instr i9 = emit(OpCode.Jump, new Target(TargetType.Rel, -6));
 			} else {
+				// load array size
 				Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
+				// compute array element position in the activation record
 				Instr i2 = emit(OpCode.Compute, new Operator(Oper.Sub), reg(ctx.target()), extraReg, reg(ctx.target()));
+				// condition used in the cycle to check if all array elements have been added
 				Instr i3 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
+				// jump over next instructions if all array elements have already been added
 				Instr i4 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 6));
+				// pop the value from the stack
 				Instr i5 = emit(OpCode.Pop, reg(ctx));
+				// store the value in the local data area pointed by array pointer
 				Instr i6 = emit(OpCode.Store, reg(ctx), new Addr(AddrImmDI.IndAddr, reg(ctx.target()).getId()));
+				// move array pointer to the next element
 				Instr i7 = emit(OpCode.Compute, new Operator(Oper.Incr), reg(ctx.target()), new Reg(0),
 						reg(ctx.target()));
+				// decrease counter
 				Instr i8 = emit(OpCode.Compute, new Operator(Oper.Decr), extraReg, new Reg(0), extraReg);
+				// jump back to cycle condition
 				Instr i9 = emit(OpCode.Jump, new Target(TargetType.Rel, -6));
 			}
 			freeReg(ctx);
@@ -365,14 +414,17 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		// Condition
 		visit(ctx.expr());
 		Reg r = reg(ctx);
+		// check if if-condition is false
 		Instr i1 = emit(OpCode.Compute, new Operator(Oper.Equal), reg(ctx.expr()), new Reg(0), r);
 		freeReg(ctx.expr());
 		Integer branchID = this.instructionCount;
+		// jump over the if-statement body if condition is false
 		Instr i2 = emit(OpCode.Branch, r, new Target(TargetType.Abs, -1));
 		freeReg(ctx);
 		// Then
 		visit(ctx.block(0));
 		Integer jumpID = this.instructionCount;
+		// jump over else body
 		Instr i3 = emit(OpCode.Jump, new Target(TargetType.Abs, -1));
 		// Else
 		Integer elseStart = this.instructionCount;
@@ -381,6 +433,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		}
 		Integer endStart = this.instructionCount;
 		Instr i4 = emit(OpCode.Nop);
+		// resolve jump instruction numbers
 		this.prog.updateInstr(branchID, new Instr(OpCode.Branch, r, new Target(TargetType.Abs, elseStart)));
 		this.prog.updateInstr(jumpID, new Instr(OpCode.Jump, new Target(TargetType.Abs, endStart)));
 		return null;
@@ -399,15 +452,18 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		Integer start = this.instructionCount;
 		visit(ctx.expr());
 		Reg r = reg(ctx);
+		// check if while condition is false
 		Instr i1 = emit(OpCode.Compute, new Operator(Oper.Equal), reg(ctx.expr()), new Reg(0), r);
 		freeReg(ctx.expr());
 		Integer branchID = this.instructionCount;
+		// jump over while body if condition is false
 		Instr i2 = emit(OpCode.Branch, r, new Target(TargetType.Abs, -1));
 		freeReg(ctx);
 		// Body
 		visit(ctx.block());
 		Instr i3 = emit(OpCode.Jump, new Target(TargetType.Abs, start));
 		Instr i4 = emit(OpCode.Nop);
+		// resolve jump instruction number
 		this.prog.updateInstr(branchID, new Instr(OpCode.Branch, r, new Target(TargetType.Abs, instructionCount - 1)));
 		return null;
 	}
@@ -426,24 +482,33 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	 */
 	@Override
 	public Instr visitForkStat(ForkStatContext ctx) {
+		// load and write starting instruction number for the spawned thread
 		Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.instructionCount + 3), reg(ctx));
 		Instr i2 = emit(OpCode.WriteInstr, reg(ctx), new Addr(AddrImmDI.DirAddr, concurrentThreads + 1));
 		freeReg(ctx);
 		int jumpID = this.instructionCount;
+		// jump over new thread body
 		Instr i3 = emit(OpCode.Jump, new Target(TargetType.Abs, -1));
+		// decrease this thread call count
 		int callCount = this.checkResult.decreaseThreadCallCount(concurrentThreads);
+		// add new concurent thread to the thread stack
 		this.currentThreads.push(concurrentThreads + 1);
 		this.concurrentThreads++;
-		// Load local data size
+		// Load local data size for the new thread
 		emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getProcedureSize(ctx)), new Reg(3));
-		// Move SP to allocate local data area
+		// Move SP to allocate local data area for the new thread
 		emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(8), new Reg(3), new Reg(8));
 		visit(ctx.block());
+		// after thread end pop the thread from thread stack
 		this.currentThreads.pop();
 		if (callCount == 1) {
+			// if the thread with the same concurrent thread number won't be spawned again
+			// write zero to its synchronization area in memory and end program
 			Instr i4 = emit(OpCode.WriteInstr, new Reg(0), new Addr(AddrImmDI.IndAddr, 1));
 			Instr i5 = emit(OpCode.EndProg);
 		} else {
+			// if the thread with the same concurrent thread number will be spawned again
+			// deallocate AR, write 0 to synchronization area and generating waiting cycle
 			Instr i4 = emit(OpCode.Push, new Reg(2));
 			Instr i5 = emit(OpCode.Pop, new Reg(8));
 			Instr i6 = emit(OpCode.Compute, new Operator(Oper.Incr), new Reg(8), new Reg(0), new Reg(8)); // restore SP
@@ -524,6 +589,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			Instr i2 = emit(OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); // write '{' symbol
 			Instr i3 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 10), reg(ctx)); // load '\n' symbol
 			Instr i4 = emit(OpCode.WriteInstr, reg(ctx), Addr.CHAR_IO); // write '\n' symbol
+			// generate array cycle that retrieves values from the stack and prints them
 			Instr i5 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize - 1), extraReg);
 			Instr i6 = emit(OpCode.Compute, new Operator(Oper.Lt), extraReg, new Reg(0), reg(ctx));
 			Instr i7 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 6));
@@ -906,24 +972,38 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			int extraRegIndex = getFreeRegister();
 			lockRegister(extraRegIndex);
 			Reg extraReg = new Reg(extraRegIndex);
+			// load starting array index
 			Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 0), extraReg);
+			// load array size
 			Instr i2 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, arraySize), reg(ctx));
+			// condition used in cycle to check if all array values have been pushed
 			Instr i3 = emit(OpCode.Compute, new Operator(Oper.GtE), extraReg, reg(ctx), reg(ctx));
+			// jump over next instructions if all array values have been pushed
 			Instr i4 = emit(OpCode.Branch, reg(ctx), new Target(TargetType.Rel, 8));
 			if (isShared(ctx)) {
+				// load array starting address in shared memory
 				Instr i5 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue,
 						this.checkResult.getBaseOffset() + this.checkResult.getOffset(ctx)), reg(ctx));
+				// add current array element index
 				Instr i6 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), extraReg, reg(ctx));
+				// retrieve array element
 				Instr i7 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()));
 				Instr i8 = emit(OpCode.Receive, reg(ctx));
 			} else {
+				// load array starting address in local data memory
 				Instr i5 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
+				// add current array element index
 				Instr i6 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), extraReg, reg(ctx));
+				// get the address in the stack using ARP
 				Instr i7 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx), reg(ctx));
+				// load array element value
 				Instr i8 = emit(OpCode.Load, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()), reg(ctx));
 			}
+			// push array element value on the stack
 			Instr i9 = emit(OpCode.Push, reg(ctx));
+			// increase the index
 			Instr i10 = emit(OpCode.Compute, new Operator(Oper.Incr), extraReg, new Reg(0), extraReg);
+			// jump back to the cycle contition
 			Instr i11 = emit(OpCode.Jump, new Target(TargetType.Rel, -9));
 			freeUpRegister(extraRegIndex);
 			freeReg(ctx);
@@ -975,17 +1055,24 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	public Instr visitIndexExpr(IndexExprContext ctx) {
 		visit(ctx.expr());
 		if (isShared(ctx)) {
+			// load array starting address in shared memory
 			Instr i1 = emit(OpCode.Load, new Addr(Addr.AddrImmDI.ImmValue,
 					this.checkResult.getBaseOffset() + this.checkResult.getOffset(ctx)), reg(ctx));
+			// compute the address of array element at the specified index
 			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), reg(ctx.expr()), reg(ctx));
 			freeReg(ctx.expr());
+			// retrieve array element value
 			Instr i3 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()));
 			Instr i4 = emit(OpCode.Receive, reg(ctx));
 		} else {
+			// load array starting address in local data memory
 			Instr i1 = emit(OpCode.Load, new Addr(Addr.AddrImmDI.ImmValue, this.checkResult.getOffset(ctx)), reg(ctx));
+			// compute the address of array element at the specified index
 			Instr i2 = emit(OpCode.Compute, new Operator(Oper.Add), reg(ctx), reg(ctx.expr()), reg(ctx));
+			// get the address in the stack using ARP
 			Instr i3 = emit(OpCode.Compute, new Operator(Oper.Sub), new Reg(2), reg(ctx), reg(ctx));
 			freeReg(ctx.expr());
+			// retrieve array element value
 			Instr i4 = emit(OpCode.Load, new Addr(AddrImmDI.IndAddr, reg(ctx).getId()), reg(ctx));
 		}
 		return null;
@@ -1140,6 +1227,8 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 			Instr i1 = emit(OpCode.Branch, new Reg(1), new Target(TargetType.Rel, 2));
 			Instr i2 = emit(OpCode.Jump, new Target(TargetType.Rel, 6));
 		}
+		// non-main threads cycle until the instruction number is written in regSprID
+		// address of shared memory
 		Instr i3 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.IndAddr, 1));
 		Instr i4 = emit(OpCode.Receive, new Reg(3));
 		Instr i5 = emit(OpCode.Compute, new Operator(Oper.Equal), new Reg(3), new Reg(0), new Reg(4));
@@ -1171,6 +1260,8 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		if (from < 0 || to < 0 || from > this.checkResult.getThreadCount() || to > this.checkResult.getThreadCount()) {
 			throw new RuntimeException("Thread ids are out of bounds");
 		}
+		// instructions to read joining thread synchronization values stored in shared
+		// memory until all threads state that they have ended (contains 0)
 		if (from < to) {
 			Instr i1 = emit(OpCode.ReadInstr, new Addr(AddrImmDI.DirAddr, from + 1));
 			Instr i2 = emit(OpCode.Receive, new Reg(3)); // store in regB

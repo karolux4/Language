@@ -124,7 +124,7 @@ public class Checker extends PickleCannonBaseListener {
 	@Override
 	public void exitProgram(ProgramContext ctx) {
 		int size = this.table.scopeSize();
-		this.result.setProcedureSize(ctx, size);
+		this.result.setProcedureSize(ctx, size); // set local data size of main body
 	}
 
 	/**
@@ -145,7 +145,7 @@ public class Checker extends PickleCannonBaseListener {
 	 */
 	@Override
 	public void exitProc(ProcContext ctx) {
-		int size = this.table.scopeSize();
+		int size = this.table.scopeSize(); // retrieve procedure local data size
 		this.table.closeScope();
 		List<Type> parameters = new ArrayList<>();
 		for (ParsContext p : ctx.pars()) {
@@ -204,12 +204,13 @@ public class Checker extends PickleCannonBaseListener {
 	 */
 	@Override
 	public void enterBlock(BlockContext ctx) {
-		if (!this.scopeOpenedByFunction) {
+		if (!this.scopeOpenedByFunction) { 
 			this.table.openNestedLevel();
 			if (ctx.parent instanceof ProgramContext) {
 				this.isInMainScope = true;
 			}
 		} else {
+			// do not open another nested level if function parameters already opened it
 			this.scopeOpenedByFunction = false;
 		}
 	}
@@ -400,6 +401,7 @@ public class Checker extends PickleCannonBaseListener {
 	 */
 	@Override
 	public void exitJoinStat(JoinStatContext ctx) {
+		// after join all spawned nested threads from this thread unite into one
 		this.concurrentThreads = this.insideFork;
 	}
 
@@ -460,6 +462,7 @@ public class Checker extends PickleCannonBaseListener {
 				int offset = this.table.offset(id);
 				boolean isShared = false;
 				if (type == null) {
+					// variable may have been declared in shared memory
 					type = this.table.typeShared(id);
 					offset = this.table.offsetShared(id);
 					isShared = true;
@@ -474,6 +477,7 @@ public class Checker extends PickleCannonBaseListener {
 			int offset = this.table.offset(id);
 			boolean isShared = false;
 			if (type == null) {
+				// variable may have been declared in shared memory
 				type = this.table.typeShared(id);
 				offset = this.table.offsetShared(id);
 				isShared = true;
@@ -507,6 +511,7 @@ public class Checker extends PickleCannonBaseListener {
 				int offset = this.table.offset(id);
 				boolean isShared = false;
 				if (type == null) {
+					// variable may have been declared in shared memory
 					type = this.table.typeShared(id);
 					offset = this.table.offsetShared(id);
 					isShared = true;
@@ -527,6 +532,7 @@ public class Checker extends PickleCannonBaseListener {
 			int offset = this.table.offset(id);
 			boolean isShared = false;
 			if (type == null) {
+				// variable may have been declared in shared memory
 				type = this.table.typeShared(id);
 				offset = this.table.offsetShared(id);
 				isShared = true;
@@ -639,6 +645,7 @@ public class Checker extends PickleCannonBaseListener {
 				int offset = this.table.offset(id);
 				boolean isShared = false;
 				if (type == null) {
+					// variable may have been declared in shared memory
 					type = this.table.typeShared(id);
 					offset = this.table.offsetShared(id);
 					isShared = true;
@@ -653,6 +660,7 @@ public class Checker extends PickleCannonBaseListener {
 			int offset = this.table.offset(id);
 			boolean isShared = false;
 			if (type == null) {
+				// variable may have been declared in shared memory
 				type = this.table.typeShared(id);
 				offset = this.table.offsetShared(id);
 				isShared = true;
@@ -709,6 +717,7 @@ public class Checker extends PickleCannonBaseListener {
 				int offset = this.table.offset(id);
 				boolean isShared = false;
 				if (type == null) {
+					// variable may have been declared in shared memory
 					type = this.table.typeShared(id);
 					offset = this.table.offsetShared(id);
 					isShared = true;
@@ -729,6 +738,7 @@ public class Checker extends PickleCannonBaseListener {
 			int offset = this.table.offset(id);
 			boolean isShared = false;
 			if (type == null) {
+				// variable may have been declared in shared memory
 				type = this.table.typeShared(id);
 				offset = this.table.offsetShared(id);
 				isShared = true;
