@@ -1,6 +1,6 @@
 package checker;
 
-/** Language data types*/
+/** Pickle Cannon language data type kinds*/
 public enum TypeKind {
 	/** Integer base type. */
 	INT,

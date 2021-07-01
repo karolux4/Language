@@ -9,6 +9,7 @@ public abstract class Type {
 	public static final Type BOOL = new Bool();
 	/** The singleton instance of the {@link Int} type. */
 	public static final Type INT = new Int();
+	/** The kind of the type */
 	private final TypeKind kind;
 	
 	/** Constructor for subclasses. */
@@ -22,7 +23,7 @@ public abstract class Type {
 	}
 	
 	
-	/** returns the size (in bytes) of a value of this type. */
+	/** Returns the size (in integer units - one unit 4 bytes) of a value of this type. */
 	abstract public int size();
 	
 	/** Representation of the boolean type. */
@@ -64,6 +65,7 @@ public abstract class Type {
 		private final int size;
 		private final Type elemType;
 
+		/** Constructs a new array type*/
 		public Array(int size, Type elemType) {
 			super(TypeKind.ARRAY);
 			assert size > 0;
@@ -76,7 +78,7 @@ public abstract class Type {
 			return this.size;
 		}
 
-		/** Returns the element bound of this array type. */
+		/** Returns the type of elements stored in array. */
 		public Type getElemType() {
 			return this.elemType;
 		}
@@ -91,6 +93,7 @@ public abstract class Type {
 			return this.elemType + "[" + this.size + "]";
 		}
 		
+		/** Returns the string representation of array without a size*/
 		public String toStringWithoutSize() {
 			return this.elemType + "[]";
 		}
@@ -140,12 +143,12 @@ public abstract class Type {
 
 	}
 	
-	/** Representation of Pascal Function types. */
+	/** Representation of procedure types. */
 	static public class Proc extends Type {
 		/** List of parameter types. */
 		private final List<Type> paramTypes;
 
-		/** Constructs a new function type. */
+		/** Constructs a new procedure type. */
 		public Proc(List<Type> paramTypes) {
 			super(TypeKind.PROC);
 			this.paramTypes = new ArrayList<>(paramTypes);
