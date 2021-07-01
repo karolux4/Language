@@ -8,6 +8,12 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.Token;
 
+/**
+ * ErrorListener class that is used to collect errors detected
+ * during scanning, parsing and elaboration.
+ * @author Karolis Butkus
+ *
+ */
 public class ErrorListener  extends BaseErrorListener {
 	/** Errors collected by the listener. */
 	private final List<String> errors = new ArrayList<>();

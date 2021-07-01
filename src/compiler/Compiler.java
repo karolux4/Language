@@ -17,27 +17,35 @@ import generator.Program;
 import grammar.PickleCannonLexer;
 import grammar.PickleCannonParser;
 
+/**
+ * The main class that is used to compile Pickle Cannon language code
+ * 
+ * @author Karolis Butkus
+ *
+ */
 public class Compiler {
 	/** The singleton instance of this class. */
 	private final static Compiler instance = new Compiler();
-	/** Debug flag. */
-	private final static boolean SHOW = true;
 
 	/** Returns the singleton instance of this class. */
 	public static Compiler instance() {
 		return instance;
 	}
 
-	/** Compiles and runs the program named in the argument. */
+	/**
+	 * Compiles the program specified in the argument and writes it in the
+	 * src/output directory. If argument was not specified the
+	 * src/sample/main.pickle program is compiled
+	 * 
+	 * @param args - the path to the compiled program
+	 */
 	public static void main(String[] args) {
 		File file;
-		if(args.length == 0) {
+		if (args.length == 0) {
 			file = new File("src/sample/main.pickle");
-		}
-		else if(args.length == 1) {
+		} else if (args.length == 1) {
 			file = new File(args[0]);
-		}
-		else {
+		} else {
 			System.err.println("Usage: filename");
 			return;
 		}
@@ -64,53 +72,56 @@ public class Compiler {
 		this.generator = new Generator();
 	}
 
-	/** Typechecks a given Simple Pascal string. */
+	/** Performs elaboration on Pickle Cannon language string. */
 
 	public Result check(String text) throws ParseException {
 		return check(parse(text));
 	}
 
-	/** Typechecks a given Simple Pascal file. */
+	/** Performs elaboration on Pickle Cannon language file. */
 
 	public Result check(File file) throws ParseException, IOException {
 		return check(parse(file));
 	}
 
-	/** Typechecks a given Simple Pascal parse tree. */
+	/** Performs elaboration on Pickle Cannon language parse tree. */
 
 	public Result check(ParseTree tree) throws ParseException {
 		return this.checker.check(tree);
 	}
 
-	/** Compiles a given Simple Pascal string into an SPRIL program. */
+	/** Compiles a given Pickle Cannon language string into an Sprockell program. */
 
 	public Program compile(String text) throws ParseException {
 		return compile(parse(text));
 	}
 
-	/** Compiles a given Simple Pascal file into an SPRIL program. */
+	/** Compiles a given Pickle Cannon language file into an Sprockell program. */
 
 	public Program compile(File file) throws ParseException, IOException {
 		return compile(parse(file));
 	}
 
-	/** Compiles a given Simple Pascal parse tree into an SPRIL program. */
+	/**
+	 * Compiles a given Pickle Cannon language parse tree into an Sprockell program.
+	 */
 
 	public Program compile(ParseTree tree) throws ParseException {
 		Result checkResult = this.checker.check(tree);
 		return this.generator.generate(tree, checkResult);
 	}
 
-	/** Compiles a given Simple Pascal string into a parse tree. */
+	/** Parses a given Pickle Cannon language string into a parse tree. */
 	public ParseTree parse(String text) throws ParseException {
 		return parse(CharStreams.fromString(text));
 	}
 
-	/** Compiles a given Simple Pascal string into a parse tree. */
+	/** Parses a given Pickle Cannon language string into a parse tree. */
 	public ParseTree parse(File file) throws ParseException, IOException {
 		return parse(CharStreams.fromPath(file.toPath()));
 	}
 
+	/** Parses given Pickle Cannon language character stream into a parse tree */
 	private ParseTree parse(CharStream chars) throws ParseException {
 		ErrorListener listener = new ErrorListener();
 		Lexer lexer = new PickleCannonLexer(chars);
