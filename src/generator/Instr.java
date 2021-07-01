@@ -5,6 +5,11 @@ import java.util.List;
 
 import generator.Operand.Type;
 
+/**
+ * Instr class is class that describes Sprockell instruction objects
+ * @author Karolis Butkus
+ *
+ */
 public class Instr {
 
 	/** The operation code. */
@@ -43,6 +48,7 @@ public class Instr {
 		return this.args;
 	}
 
+	/** Prints the instructions in Sprockell instruction style*/
 	@Override
 	public String toString() {
 		StringBuilder result = new StringBuilder();

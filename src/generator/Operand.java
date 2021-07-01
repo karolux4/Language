@@ -1,8 +1,13 @@
 package generator;
 
 
-/** Abstract supertype of all kinds of operands. */
+/** Abstract supertype of all kinds of operands.
+ * 
+ * @author Karolis Butkus
+ *
+ */
 abstract public class Operand {
+	/** The type of Operand*/
 	private final Type type;
 
 	/** Constructs an operand of a given type. */

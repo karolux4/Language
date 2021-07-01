@@ -9,6 +9,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * The enumerator to store all possible Sprockell instructions used in code
+ * generation
+ * 
+ * @author Karolis Butkus
+ *
+ */
 public enum OpCode {
 
 	/** No operation */
@@ -16,13 +23,13 @@ public enum OpCode {
 
 	/** Add operation */
 	Compute(3, OPERATOR, REG, REG, REG),
-	
+
 	/** Jump operation */
-	Jump(1,TARGET),
-	
+	Jump(1, TARGET),
+
 	/** Branch operation */
 	Branch(2, REG, TARGET),
-	
+
 	/** Load operation */
 	Load(1, ADDR, REG),
 
@@ -65,6 +72,7 @@ public enum OpCode {
 	/** The operand types. */
 	private final List<Operand.Type> sig;
 
+	/** Constructs OpCode object from the given argument count and Operands*/
 	private OpCode(int sourceCount, Operand.Type... sig) {
 		this.sourceSig = new ArrayList<>(sourceCount);
 		for (int i = 0; i < sourceCount; i++) {
@@ -76,12 +84,12 @@ public enum OpCode {
 		}
 		this.sig = new ArrayList<>(Arrays.asList(sig));
 	}
-	
+
 	/** Returns the number of operands. */
 	public int getSigSize() {
 		return getSourceCount() + getTargetCount();
 	}
-	
+
 	/** Returns the list of expected operand types. */
 	public List<Operand.Type> getSig() {
 		return this.sig;
