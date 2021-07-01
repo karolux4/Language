@@ -47,6 +47,16 @@ import grammar.PickleCannonParser.SyncStatContext;
 import grammar.PickleCannonParser.TrueExprContext;
 import grammar.PickleCannonParser.WhileStatContext;
 
+/**
+ * Generator class is responsible for Sprockell code generation after the
+ * elaboration phase has been completed. Generator is a tree visitor that
+ * extends {@link PickleCannonBaseVisitor} class. Generated code is returned in
+ * {@link Program} type object which can be later be written to the specified
+ * file.
+ * 
+ * @author Karolis Butkus
+ *
+ */
 public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	/** The outcome of the checker phase. */
@@ -58,7 +68,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	/** Total register number */
 	private final static int REGISTER_COUNT = 8;
 
-	/** The array indicating if register is taken */
+	/** The list of arrays for each thread indicating if the register is taken */
 	private List<Boolean[]> isRegisterTaken;
 
 	/** The number of inserted instructions */
@@ -79,10 +89,20 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	/** Association of the first instruction number in the node with a node */
 	private ParseTreeProperty<Integer> instrID;
 
+	/** List of all procedure calls */
 	private List<FunctionCall> calls;
 
+	/** Mapping from procedure name to instruction number */
 	private Map<String, Integer> functionAddress;
 
+	/**
+	 * Generates a Sprockell code from the given parse tree and analysis made during
+	 * elaboration phase.
+	 * 
+	 * @param tree        - input program parse tree
+	 * @param checkResult - the result of elaboration phase
+	 * @return generated Sprockell program
+	 */
 	public Program generate(ParseTree tree, Result checkResult) {
 		this.checkResult = checkResult;
 		this.prog = new Program(this.checkResult.getThreadCount());
@@ -101,7 +121,13 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return prog;
 	}
 
-	// Override the visitor methods
+	/**
+	 * Visitor method that is executed when program is visited. At the start method
+	 * adds an instruction to jump to the main body instructions and skip procedures
+	 * body. Then procedures are visited. After that at the start of main body ARP
+	 * value is set and thread jumping/waiting instructions are generated. Lastly,
+	 * local data is allocated and main body instructions are visited.
+	 */
 	@Override
 	public Instr visitProgram(ProgramContext ctx) {
 		emit(OpCode.Jump, new Target(TargetType.Abs, -1));
@@ -126,6 +152,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when procedure is visited. At the start
+	 * method generates the prologue to allocate local data area and then visits the
+	 * procedure body. At the end epilogue is generated to return to the caller's
+	 * address and deallocate the memory.
+	 */
 	@Override
 	public Instr visitProc(ProcContext ctx) {
 		this.functionAddress.put(ctx.ID().getText(), this.instructionCount);
@@ -153,6 +185,10 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when block is visited. Method visits all the
+	 * statements declared in the block.
+	 */
 	@Override
 	public Instr visitBlock(BlockContext ctx) {
 		for (StatContext stat : ctx.stat()) {
@@ -161,6 +197,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when simple variable declaration is visited.
+	 * Depending whether variable is shared and is the initial value provided,
+	 * instructions are generated. If initial value is not given, variable is
+	 * initialized with 0 (for integers 0 is 0, for booleans 0 is false).
+	 */
 	@Override
 	public Instr visitSimpleVarStat(SimpleVarStatContext ctx) {
 		if (ctx.expr() != null) {
@@ -189,6 +231,15 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when array variable declaration is visited.
+	 * Depending whether variable is shared and is the initial value provided,
+	 * instructions are generated. If initial value is not given, all array elements
+	 * are initialized with 0 (for integers 0 is 0, for booleans 0 is false). For
+	 * array declaration instructions the cycle is created that retrieves the values
+	 * from the stack if the initial values were provided, or just stores 0 from
+	 * reg0 in the correct memory areas.
+	 */
 	@Override
 	public Instr visitArrayVarStat(ArrayVarStatContext ctx) {
 		if (ctx.expr() != null) {
@@ -245,6 +296,15 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when assignment is visited. Depending whether
+	 * variable is simple variable or array also is shared or not, instructions are
+	 * generated. Firstly, expression and target nodes are visited to retrieve the
+	 * values from them. Then if variable is primitive simple one instruction is
+	 * added depending whether variable is shared or not. If variable is an array, a
+	 * cycle is generated that pops the values from the stack and puts them in
+	 * correct memory areas (in shared memory or local data depending on variable).
+	 */
 	@Override
 	public Instr visitAssignStat(AssignStatContext ctx) {
 		visit(ctx.expr());
@@ -292,6 +352,14 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when if statement is visited. Firstly, if
+	 * condition is visited. Then the conditional branch and jump instructions are
+	 * added to make code execution dependent on if condition. After that if
+	 * statement body is visited, also if else body was declared it is also visited
+	 * with an added jump between them, so that program would never execute both
+	 * bodies.
+	 */
 	@Override
 	public Instr visitIfStat(IfStatContext ctx) {
 		// Condition
@@ -318,6 +386,13 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when while statement is visited. Firstly,
+	 * while condition is visited. Then the conditional branch and jump instructions
+	 * are added to make code execution dependent on while condition. After that
+	 * while body is visited and at the end of the body an instruction to jump back
+	 * to the while condition is added.
+	 */
 	@Override
 	public Instr visitWhileStat(WhileStatContext ctx) {
 		// Condition
@@ -337,6 +412,18 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when fork statement is visited. Firstly,
+	 * instructions to update special memory unit for certain thread are added.
+	 * These instructions load the address of the program that newly spawned will
+	 * start executing. After that the jump instruction is added so that father
+	 * thread jump over the spawned threads body. Then threads body is visited.
+	 * After that threads deallocates its local data area and sets its
+	 * synchronization value back to 0. If thread will be spawned again it enters
+	 * wait loop similar to the starting one, if not end program instruction is
+	 * added and threads ends its execution.
+	 * 
+	 */
 	@Override
 	public Instr visitForkStat(ForkStatContext ctx) {
 		Instr i1 = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, this.instructionCount + 3), reg(ctx));
@@ -369,6 +456,13 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when join statement is visited. This thread
+	 * generates instruction that makes thread wait while all its children and their
+	 * descendants will end their execution and set their synchronization units back
+	 * to 0.
+	 * 
+	 */
 	@Override
 	public Instr visitJoinStat(JoinStatContext ctx) {
 		generateThreadJoin(this.currentThreads.peek(), this.concurrentThreads);
@@ -376,6 +470,13 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when sync statement is visited. This visitor
+	 * generates a loop that makes thread try to set global lock from 0 to 1. After
+	 * that sync statement body is visited. At the end instruction to set sync lock
+	 * back to 0 is added.
+	 * 
+	 */
 	@Override
 	public Instr visitSyncStat(SyncStatContext ctx) {
 		Instr i1 = emit(OpCode.TestAndSet, new Addr(AddrImmDI.DirAddr, this.checkResult.getLockAddress()));
@@ -388,12 +489,26 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when block statement is visited. Method
+	 * visits the block.
+	 * 
+	 */
 	@Override
 	public Instr visitBlockStat(BlockStatContext ctx) {
 		visit(ctx.block());
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when print statement is visited. If
+	 * expression is of primitive type, then single instruction to print the
+	 * expression value is added (print the number for integers, print 0 for false
+	 * and print 1 for true). If expression is of array type, then the cycle is
+	 * generated. Firstly character '{' is printed out, then all array values are
+	 * popped from the stack and print and at the end the '}' is printed.
+	 * 
+	 */
 	@Override
 	public Instr visitPrintStat(PrintStatContext ctx) {
 		visit(ctx.expr());
@@ -430,6 +545,16 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when procedure call statement is visited.
+	 * Firstly, method generates a precall instructions that push the return address
+	 * and caller's ARP for newly created activation record. Then parameter values
+	 * are pushed. After that ARP is moved to point to the start of parameters area
+	 * and the jump to the function is added. At the time function call is visited
+	 * it is impossible to determine function jump address so it is added to the
+	 * {@link #calls} list which at the of code generation updates the jump address.
+	 * 
+	 */
 	@Override
 	public Instr visitCallStat(CallStatContext ctx) {
 		int returnID = this.instructionCount;
@@ -452,6 +577,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when identifier target is visited. Visitor
+	 * generates instructions that load the address of the identifier into the
+	 * register.
+	 * 
+	 */
 	@Override
 	public Instr visitIdTarget(IdTargetContext ctx) {
 		if (isShared(ctx)) {
@@ -465,6 +596,13 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when array target is visited. Firstly,
+	 * expression is visited to retrieve the index. Then visitor generates
+	 * instructions that load the address of the array variable at the index
+	 * position into the register.
+	 * 
+	 */
 	@Override
 	public Instr visitArrayTarget(ArrayTargetContext ctx) {
 		visit(ctx.expr());
@@ -483,6 +621,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when procedure call arguments are visited.
+	 * Visitor visits each argument expression separately and push them onto the
+	 * stack.
+	 * 
+	 */
 	@Override
 	public Instr visitArgs(ArgsContext ctx) {
 		for (ExprContext expr : ctx.expr()) {
@@ -497,6 +641,11 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when prefix expression is visited. Visitor
+	 * visits expression and generates instructions to apply prefix operation.
+	 * 
+	 */
 	@Override
 	public Instr visitPrfExpr(PrfExprContext ctx) {
 		visit(ctx.expr());
@@ -511,6 +660,16 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when multiplication/division expression is
+	 * visited. Visitor firstly visits both expressions. For multiplication,
+	 * multiplication instruction is added. For division, a cycle is created that
+	 * decrease first expression by the second instruction until first becomes
+	 * smaller than second. Because division expressions can be negative firstly the
+	 * instructions to determine the end sign are added and only then the cycle with
+	 * positive values are started. The end result is stored into the register.
+	 * 
+	 */
 	@Override
 	public Instr visitMultExpr(MultExprContext ctx) {
 		visit(ctx.expr(0));
@@ -558,6 +717,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when addition/subtraction expression is
+	 * visited. Visitor firstly visits both expressions. Then addition/subtraction
+	 * is added and result is stored into the register.
+	 * 
+	 */
 	@Override
 	public Instr visitPlusExpr(PlusExprContext ctx) {
 		visit(ctx.expr(0));
@@ -576,6 +741,15 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when comparison expression is visited.
+	 * Visitor firstly visits both expressions. Then comparison operation is added
+	 * and result is stored into the register. For the array comparison the cycle is
+	 * generated so that values would be compared value-to-value. If array sizes
+	 * differ which can be obtained from elaboration results, then simply false is
+	 * loaded for equality operation and true for inequality operation.
+	 * 
+	 */
 	@Override
 	public Instr visitCompExpr(CompExprContext ctx) {
 		visit(ctx.expr(0));
@@ -673,6 +847,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when boolean expression is visited. Visitor
+	 * firstly visits both expressions. Then AND/OR operation is added and result is
+	 * stored into the register.
+	 * 
+	 */
 	@Override
 	public Instr visitBoolExpr(BoolExprContext ctx) {
 		visit(ctx.expr(0));
@@ -690,6 +870,11 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when parenthesis expression is visited.
+	 * Visitor visits the expression and assigns its register to himself.
+	 * 
+	 */
 	@Override
 	public Instr visitParExpr(ParExprContext ctx) {
 		visit(ctx.expr());
@@ -697,6 +882,14 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when id expression is visited. For primitive
+	 * variables simple load instructions are added (load from shared or local data
+	 * memory depending on the variable). If id expression points to the array, the
+	 * cycle is created that push all array value from index 0 to end of array to
+	 * the stack.
+	 * 
+	 */
 	@Override
 	public Instr visitIdExpr(IdExprContext ctx) {
 		if (getType(ctx) == Type.INT || getType(ctx) == Type.BOOL) {
@@ -739,24 +932,45 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when number expression is visited. Visitor
+	 * adds an instruction to load a number into the register.
+	 * 
+	 */
 	@Override
 	public Instr visitNumExpr(NumExprContext ctx) {
 		Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, Integer.parseInt(ctx.NUM().getText())), reg(ctx));
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when true expression is visited. Visitor adds
+	 * an instruction to load a true into the register.
+	 * 
+	 */
 	@Override
 	public Instr visitTrueExpr(TrueExprContext ctx) {
 		Instr i = emit(OpCode.Load, new Addr(AddrImmDI.ImmValue, 1), reg(ctx));
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when false expression is visited. Visitor
+	 * assigns reg0 to this node as it already contains false value.
+	 * 
+	 */
 	@Override
 	public Instr visitFalseExpr(FalseExprContext ctx) {
 		setReg(ctx, new Reg(0));
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when array index expression is visited.
+	 * Visitor firstly visits index expression and then generates the instructions
+	 * that load the value from the specified memory region (shared or local data).
+	 * 
+	 */
 	@Override
 	public Instr visitIndexExpr(IndexExprContext ctx) {
 		visit(ctx.expr());
@@ -777,6 +991,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Visitor method that is executed when array expression is visited. Visitor
+	 * adds instructions that visits every expression push their values on the
+	 * stack.
+	 * 
+	 */
 	@Override
 	public Instr visitArrayExpr(ArrayExprContext ctx) {
 		for (int i = 0; i < ctx.expr().size(); i++) {
@@ -787,6 +1007,13 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return null;
 	}
 
+	/**
+	 * Adds the specified instruction to the program
+	 * 
+	 * @param opCode - instruction code
+	 * @param args   - instruction arguments
+	 * @return - the added instruction
+	 */
 	private Instr emit(OpCode opCode, Operand... args) {
 		Instr result = new Instr(opCode, args);
 		this.prog.addInstr(result);
@@ -794,10 +1021,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return result;
 	}
 
-	private boolean isRegisterTaken(int i) {
-		return this.isRegisterTaken.get(currentThreads.peek())[i];
-	}
-
+	/** Convenience method that returns free register id for current thread */
 	private int getFreeRegister() {
 		for (int i = 3; i < this.isRegisterTaken.get(currentThreads.peek()).length; i++) {
 			if (!this.isRegisterTaken.get(currentThreads.peek())[i]) {
@@ -807,10 +1031,12 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return -1;
 	}
 
+	/** Convenience method that free specified register */
 	private void freeUpRegister(int i) {
 		this.isRegisterTaken.get(currentThreads.peek())[i] = false;
 	}
 
+	/** Convenience method that locks specified register */
 	private void lockRegister(int i) {
 		if (this.isRegisterTaken.get(currentThreads.peek())[i]) {
 			throw new RuntimeException("Register is already locked");
@@ -818,6 +1044,10 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		this.isRegisterTaken.get(currentThreads.peek())[i] = true;
 	}
 
+	/**
+	 * Convenience method that returns Reg object associated with a node, or creates
+	 * a new one if node is not associated with any
+	 */
 	private Reg reg(ParseTree node) {
 		Reg result = this.regs.get(node);
 		if (result == null) {
@@ -832,6 +1062,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return result;
 	}
 
+	/** Convenience method that frees the register from the specified node */
 	private void freeReg(ParseTree node) {
 		Reg result = this.regs.get(node);
 		if (result == null) {
@@ -856,16 +1087,16 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	}
 
 	/**
-	 * Retrieves the offset of a variable node from the checker result, wrapped in a
-	 * {@link Addr} operand.
+	 * Retrieves the offset with an added modifier of a variable node from the
+	 * checker result, wrapped in a {@link Addr} operand.
 	 */
 	private Addr offset(ParseTree node, int modifier) {
 		return new Addr(AddrImmDI.DirAddr, modifier + this.checkResult.getOffset(node));
 	}
 
 	/**
-	 * Retrieves the offset of a variable node from the checker result, wrapped in a
-	 * {@link Addr} operand.
+	 * Retrieves the offset of a shared variable node from the checker result,
+	 * wrapped in a {@link Addr} operand.
 	 */
 	private Addr offset(ParseTree node, boolean isShared) {
 		if (isShared) {
@@ -875,8 +1106,8 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	}
 
 	/**
-	 * Retrieves the offset of a variable node from the checker result, wrapped in a
-	 * {@link Addr} operand.
+	 * Retrieves the offset with an added modifier of a shared variable node from
+	 * the checker result, wrapped in a {@link Addr} operand.
 	 */
 	private Addr offset(ParseTree node, boolean isShared, int modifier) {
 		if (isShared) {
@@ -886,7 +1117,10 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 		return new Addr(AddrImmDI.DirAddr, this.checkResult.getOffset(node) + modifier);
 	}
 
-	/** Returns a boolean is node stored in shared memory */
+	/**
+	 * Returns <code>true</code> if node is stored in shared memory, otherwise
+	 * <code>false</code>
+	 */
 	private boolean isShared(ParseTree node) {
 		Boolean result = this.checkResult.getIsShared(node);
 		if (result == null) {
@@ -932,6 +1166,7 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 
 	}
 
+	/** Convenience method to generate instruction for thread joining */
 	private void generateThreadJoin(int from, int to) {
 		if (from < 0 || to < 0 || from > this.checkResult.getThreadCount() || to > this.checkResult.getThreadCount()) {
 			throw new RuntimeException("Thread ids are out of bounds");
@@ -950,22 +1185,29 @@ public class Generator extends PickleCannonBaseVisitor<Instr> {
 	}
 
 	/**
-	 * Private class to store function call instructions so that they can be
-	 * resolved after all functions have been generated
+	 * Private class to store procedure call instructions so that they can be
+	 * resolved after all procedures have been generated
 	 * 
 	 * @author Karolis Butkus
 	 *
 	 */
 	private class FunctionCall {
+		/** Instruction number of the procedure call */
 		private int instructionNumber;
+		/** Procedure name */
 		private String functionID;
 
+		/** Constructs procedure call from the instruction number and procedure name */
 		public FunctionCall(int instructionNumber, String functionID) {
 			this.instructionNumber = instructionNumber;
 			this.functionID = functionID;
 		}
 	}
 
+	/**
+	 * Updates all procedure call jump instructions to point to correct procedure
+	 * starting addresses
+	 */
 	private void resolveFunctionCalls() {
 		for (FunctionCall call : calls) {
 			int start = this.functionAddress.get(call.functionID);
