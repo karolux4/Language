@@ -1,1 +1,8 @@
 checker
+compiler
+generator
+grammar
+tests.combined
+tests.context
+tests.semantics
+tests.syntax
