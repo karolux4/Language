@@ -67,6 +67,8 @@ public class SemanticTest {
 				"Sprockell 0 says 100\nSprockell 0 says -3\nSprockell 0 says 1000000");
 		check("src/tests/semantics/testSources/boolArrayExample.pickle", true, "boolArrayExample",
 				"Sprockell 0 says 1\nSprockell 0 says 0\nSprockell 0 says 1");
+		check("src/tests/semantics/testSources/extendedProgram.pickle", true, "extendedProgram",
+				"Sprockell 0 says 4\nSprockell 0 says 1\nSprockell 0 says 10\nSprockell 0 says 9\nSprockell 0 says 24");
 	}
 
 	/*

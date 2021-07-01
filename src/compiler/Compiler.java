@@ -30,15 +30,23 @@ public class Compiler {
 
 	/** Compiles and runs the program named in the argument. */
 	public static void main(String[] args) {
-		if (args.length != 1) {
+		File file;
+		if(args.length == 0) {
+			file = new File("src/sample/main.pickle");
+		}
+		else if(args.length == 1) {
+			file = new File(args[0]);
+		}
+		else {
 			System.err.println("Usage: filename");
 			return;
 		}
 		try {
-			System.out.println("--- Running " + args[0]);
-			Program p = instance.compile(new File(args[0]));
-			p.writeToFile("main");
-			System.out.println("--- Done with " + args[0]);
+			System.out.println("--- Running " + file.toString());
+			Program p = instance.compile(file);
+			String nameWithoutExt = file.getName().replaceFirst("[.][^.]+$", "");
+			p.writeToFile(nameWithoutExt);
+			System.out.println("--- Done with " + file.toString());
 		} catch (ParseException exc) {
 			exc.print();
 		} catch (IOException exc) {
