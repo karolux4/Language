@@ -12,8 +12,15 @@ import compiler.Compiler;
 import compiler.ParseException;
 import generator.Program;
 
+/**
+ * Semantic test class is used to perform semantic testing
+ * 
+ * @author Karolis Butkus
+ *
+ */
 public class SemanticTest {
 
+	/** Compiler instances */
 	private Compiler compiler = Compiler.instance();
 
 	@Test
@@ -113,10 +120,15 @@ public class SemanticTest {
 		Assert.assertTrue(thread.isAlive());
 	}
 
+	/** The same as check(input,false,output,expected) */
 	public void check(String input, String output, String expected) {
 		check(input, false, output, expected);
 	}
 
+	/**
+	 * Checks if input program after compilation and execution produce the correct
+	 * results
+	 */
 	public void check(String input, boolean isFilePath, String output, String expected) {
 		try {
 			Program p;
@@ -138,6 +150,7 @@ public class SemanticTest {
 		}
 	}
 
+	/** Runs the specified program in ghc */
 	public String runFile(String name) throws IOException {
 		String currentDir = System.getProperty("user.dir");
 		String sep = System.getProperty("file.separator");

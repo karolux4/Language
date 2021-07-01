@@ -10,10 +10,17 @@ import org.junit.Test;
 import compiler.Compiler;
 import compiler.ParseException;
 
+/**
+ * Syntax test class used to perform syntax testing
+ * 
+ * @author Karolis Butkus
+ *
+ */
 public class SyntaxTest {
 
+	/** Compiler instance */
 	private Compiler compiler = Compiler.instance();
-	
+
 	@Test
 	public void testBaseTypes() {
 		// Accept-reject tests
@@ -104,7 +111,7 @@ public class SyntaxTest {
 		Assert.assertEquals("else", tree.getChild(1).getChild(1).getChild(5).getText());
 		Assert.assertEquals("{a=3;}", tree.getChild(1).getChild(1).getChild(6).getText());
 	}
-	
+
 	@Test
 	public void testThreads() {
 		// Accept-reject tests
@@ -127,7 +134,7 @@ public class SyntaxTest {
 		Assert.assertEquals("{sync{a=3;}}", tree.getChild(1).getChild(2).getChild(1).getText());
 		Assert.assertEquals("sync", tree.getChild(1).getChild(2).getChild(1).getChild(1).getChild(0).getText());
 	}
-	
+
 	@Test
 	public void testArrays() {
 		// Accept-reject tests
@@ -139,7 +146,7 @@ public class SyntaxTest {
 		accepts("cannon { print(a[4]);}");
 		rejects("cannon { int a[] = [3,2];}"); // array size must be specified
 		rejects("cannon { int [3]a;}"); // array size is specified after the identifier
-		rejects("cannon { int a[2 = [1,4];}"); // missing ']' 
+		rejects("cannon { int a[2 = [1,4];}"); // missing ']'
 		rejects("cannon { int a[3][3];}"); // only one-dimension arrays are supported
 		// ParseTree tests
 		ParseTree tree = accepts("cannon { bool a[2] = [true,false];}");
@@ -149,7 +156,7 @@ public class SyntaxTest {
 		Assert.assertEquals("2", tree.getChild(1).getChild(1).getChild(3).getText());
 		Assert.assertEquals("[true,false]", tree.getChild(1).getChild(1).getChild(6).getText());
 	}
-	
+
 	@Test
 	public void testProcedures() {
 		// Accept-reject tests
@@ -162,7 +169,8 @@ public class SyntaxTest {
 		rejects("pickle p1(int a; int b;) { } cannon {int a=2;}"); // parameters need to be separated by ','
 		rejects("cannon {int a=2;} pickle p1() { } "); // procedures are declared before main body
 		rejects("pickle p1 { } cannon {int a=2;}"); // each procedure needs to have parenthesis
-		rejects("pickle p1(int a[]) { } cannon {int a=2;}"); // size of array need to be specified in procedure parameters
+		rejects("pickle p1(int a[]) { } cannon {int a=2;}"); // size of array need to be specified in procedure
+																// parameters
 		rejects("pickle p1() { return 5;} cannon {int a=2;}"); // return functionality is not-supported
 		rejects("pickle p1() { } cannon { p1;}"); // procedure calls need parenthesis
 		// ParseTree tests
@@ -184,16 +192,17 @@ public class SyntaxTest {
 		rejects("src/tests/syntax/testSources/syntaxError.pickle", true);
 	}
 
+	/** The same as accepts(input,false) */
 	public ParseTree accepts(String input) {
 		return accepts(input, false);
 	}
 
+	/** Check that the input program scans and parses correctly */
 	public ParseTree accepts(String input, boolean isFilePath) {
 		try {
-			if(isFilePath) {
+			if (isFilePath) {
 				return compiler.parse(new File(input));
-			}
-			else {
+			} else {
 				return compiler.parse(input);
 			}
 		} catch (Exception e) {
@@ -202,25 +211,26 @@ public class SyntaxTest {
 		}
 	}
 
+	/** The same as rejects(input,false) */
 	public void rejects(String input) {
 		rejects(input, false);
 	}
 
+	/** Check that the input program scans and parses incorrectly */
 	public void rejects(String input, boolean isFilePath) {
 		try {
-			if(isFilePath) {
+			if (isFilePath) {
 				compiler.parse(new File(input));
-			}
-			else {
+			} else {
 				compiler.parse(input);
 			}
 			Assert.fail("Should have failed, but passed (Input: " + input + ")");
 		} catch (ParseException e) {
 			// Pass the test
-			System.out.println("Caught expected errors (Input: '"+input+"'): ");
+			System.out.println("Caught expected errors (Input: '" + input + "'): ");
 			e.print();
 			System.out.println();
-			
+
 		} catch (IOException e) {
 			Assert.fail("File does not exist");
 			// TODO Auto-generated catch block

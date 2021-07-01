@@ -9,8 +9,15 @@ import org.junit.Test;
 import compiler.Compiler;
 import compiler.ParseException;
 
+/**
+ * Context test class used to perform context testing
+ * 
+ * @author Karolis Butkus
+ *
+ */
 public class ContextTest {
 
+	/** Compiler instance */
 	private Compiler compiler = Compiler.instance();
 
 	@Test
@@ -129,10 +136,12 @@ public class ContextTest {
 
 	}
 
+	/** The same as accepts(input,false) */
 	public void accepts(String input) {
 		accepts(input, false);
 	}
 
+	/** Check that the input program during elaboration does not produce errors */
 	public void accepts(String input, boolean isFilePath) {
 		try {
 			if (isFilePath) {
@@ -147,10 +156,12 @@ public class ContextTest {
 		}
 	}
 
+	/** The same as rejects(input,false) */
 	public void rejects(String input) {
 		rejects(input, false);
 	}
 
+	/** Check that the input program during elaboration produce errors */
 	public void rejects(String input, boolean isFilePath) {
 		try {
 			if (isFilePath) {
