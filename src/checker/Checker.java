@@ -46,6 +46,15 @@ import grammar.PickleCannonParser.TrueExprContext;
 import grammar.PickleCannonParser.VarParContext;
 import grammar.PickleCannonParser.WhileStatContext;
 
+/**
+ * Checker class is a class that is responsible for the elaboration phase of
+ * compiler. Class extends {@link PickleCannonBaseListener} and by overriding
+ * listener methods performs the elaboration. The result of elaboration is the
+ * object of {@link Result} class.
+ * 
+ * @author Karolis Butkus
+ *
+ */
 public class Checker extends PickleCannonBaseListener {
 	/** Result of the latest call of {@link #check}. */
 	private Result result;
@@ -53,7 +62,7 @@ public class Checker extends PickleCannonBaseListener {
 	private SymbolTable table;
 	/** List of errors collected in the latest call of {@link #check}. */
 	private List<String> errors;
-	/** Boolean used to indicate whether procedure has already opened the scope */
+	/** Boolean used to indicate whether procedure has opened the scope */
 	private boolean scopeOpenedByFunction;
 	/**
 	 * Boolean used to indicate whether listener now is in main scope - cannon, not
@@ -61,20 +70,28 @@ public class Checker extends PickleCannonBaseListener {
 	 */
 	private boolean isInMainScope;
 	/**
-	 * Integer used to indicate whether listener now is inside a while cycle(s) or if -
-	 * cannot fork in while cycles or if constructs
+	 * Integer used to indicate whether listener now is inside a while cycle(s) or
+	 * if/else body - cannot fork in while cycles or if constructs
 	 */
 	private int insideWhileIf;
 	/** Integer used to indicate whether listener is inside forked thread(s) */
 	private int insideFork;
 	/**
-	 * Integer used to check if one sync is already open to prevent a deadlock from
-	 * nested sync statements
+	 * Integer used to check if one sync is already opened, to prevent a deadlock
+	 * from nested sync statements
 	 */
 	private int insideSync;
-	/** Integer to keep the count of concurrently working threads (excluding the main thread)*/
+	/**
+	 * Integer to keep the count of concurrently working threads (excluding the main
+	 * thread)
+	 */
 	private int concurrentThreads = 0;
 
+	/**
+	 * List to store all procedure calls made in the program, so that they later can
+	 * be typechecked. List uses inner-class {@link FunctionCall} to store call
+	 * information.
+	 */
 	private List<FunctionCall> calls;
 
 	/**
@@ -99,12 +116,21 @@ public class Checker extends PickleCannonBaseListener {
 		return this.result;
 	}
 
+	/**
+	 * Listener method that is executed at the end of program node visit. Method
+	 * retrieves the size of symbol table scope data area and associates it with the
+	 * main body
+	 */
 	@Override
 	public void exitProgram(ProgramContext ctx) {
 		int size = this.table.scopeSize();
 		this.result.setProcedureSize(ctx, size);
 	}
 
+	/**
+	 * Listener method that is executed at the start of procedure node visit. Method
+	 * opens the scope in symbol table for the parameters.
+	 */
 	@Override
 	public void enterProc(ProcContext ctx) {
 		this.table.openScope();
@@ -112,6 +138,11 @@ public class Checker extends PickleCannonBaseListener {
 		this.scopeOpenedByFunction = true;
 	}
 
+	/**
+	 * Listener method that is executed at the end of procedure node visit. Method
+	 * retrieves the size of symbol table scope data area and associates it with
+	 * procedure. Also method checks if procedure was not declared before.
+	 */
 	@Override
 	public void exitProc(ProcContext ctx) {
 		int size = this.table.scopeSize();
@@ -131,6 +162,10 @@ public class Checker extends PickleCannonBaseListener {
 		}
 	}
 
+	/**
+	 * Listener method that is executed at the end of simple variable parameter node
+	 * visit. Method typechecks the parameter and adds it to the symbol table.
+	 */
 	@Override
 	public void exitVarPar(VarParContext ctx) {
 		boolean isAdded = this.table.put(ctx.ID().getText(), getType(ctx.type()));
@@ -142,12 +177,15 @@ public class Checker extends PickleCannonBaseListener {
 		}
 	}
 
+	/**
+	 * Listener method that is executed at the end of array parameter node visit.
+	 * Method typechecks the parameter and adds it to the symbol table.
+	 */
 	@Override
 	public void exitArrayPar(ArrayParContext ctx) {
 		if (Integer.parseInt(ctx.NUM().getText()) <= 0) {
 			addError(ctx, "Array '%s' size must be greater than 0", ctx.ID().getText());
-		} 
-		else {
+		} else {
 			Type type = new Type.Array(Integer.parseInt(ctx.NUM().getText()), getType(ctx.type()));
 			boolean isAdded = this.table.put(ctx.ID().getText(), type);
 			if (!isAdded) {
@@ -159,6 +197,11 @@ public class Checker extends PickleCannonBaseListener {
 		}
 	}
 
+	/**
+	 * Listener method that is executed at the start of block node visit. Method
+	 * opens up new nested level if it was not previously opened by the procedure
+	 * node.
+	 */
 	@Override
 	public void enterBlock(BlockContext ctx) {
 		if (!this.scopeOpenedByFunction) {
@@ -171,11 +214,22 @@ public class Checker extends PickleCannonBaseListener {
 		}
 	}
 
+	/**
+	 * Listener method that is executed at the end of block node visit. Method
+	 * closes the nested level.
+	 */
 	@Override
 	public void exitBlock(BlockContext ctx) {
 		this.table.closeNestedLevel();
 	}
 
+	/**
+	 * Listener method that is executed at the end of simple variable node
+	 * declaration visit. Method checks for declaration, also typechecks the
+	 * variable if initial value is provided and puts it into the symbol table.
+	 * Variable is added to shared memory region if variable is shared and to local
+	 * data region if it is not.
+	 */
 	@Override
 	public void exitSimpleVarStat(SimpleVarStatContext ctx) {
 		if (this.table.isUsed(ctx.ID().getText())) {
@@ -185,7 +239,7 @@ public class Checker extends PickleCannonBaseListener {
 				checkType(ctx.type(), getType(ctx.expr()));
 			}
 			if (ctx.SHARED() != null) {
-				if (!this.isInMainScope || this.table.scopeCount()!=1 || this.table.scopeDepth() > 2) {
+				if (!this.isInMainScope || this.table.scopeCount() != 1 || this.table.scopeDepth() > 2) {
 					addError(ctx, "Variable '%s' can be declared shared only in cannon outer scope",
 							ctx.ID().getText());
 				} else {
@@ -209,6 +263,13 @@ public class Checker extends PickleCannonBaseListener {
 		}
 	}
 
+	/**
+	 * Listener method that is executed at the end of array variable declaration
+	 * node visit. Method checks for declaration, also typechecks the variable if
+	 * initial value is provided and puts it into the symbol table. Variable is
+	 * added to shared memory region if variable is shared and to local data region
+	 * if it is not.
+	 */
 	@Override
 	public void exitArrayVarStat(ArrayVarStatContext ctx) {
 		if (this.table.isUsed(ctx.ID().getText())) {
@@ -219,7 +280,7 @@ public class Checker extends PickleCannonBaseListener {
 			} else {
 				Type array = new Type.Array(Integer.parseInt(ctx.NUM().getText()), getType(ctx.type()));
 				if (ctx.SHARED() != null) {
-					if (!this.isInMainScope ||this.table.scopeCount()!=1 || this.table.scopeDepth() > 2) {
+					if (!this.isInMainScope || this.table.scopeCount() != 1 || this.table.scopeDepth() > 2) {
 						addError(ctx, "Variable '%s' can be declared shared only in cannon outer scope",
 								ctx.ID().getText());
 					}
@@ -252,33 +313,63 @@ public class Checker extends PickleCannonBaseListener {
 		}
 	}
 
+	/**
+	 * Listener method that is executed at the end of assign node visit. Method
+	 * typechecks if target and expression types match.
+	 */
 	@Override
 	public void exitAssignStat(AssignStatContext ctx) {
 		checkType(ctx.target(), getType(ctx.expr()));
 	}
-	
+
+	/**
+	 * Listener method that is executed at the start of if statement. Method
+	 * increases {@link #insideWhileIf} variable by 1 to indicate that listener is
+	 * inside if statement.
+	 */
 	@Override
 	public void enterIfStat(IfStatContext ctx) {
 		this.insideWhileIf++;
 	}
-	
+
+	/**
+	 * Listener method that is executed at the end of if statement. Method decreases
+	 * {@link #insideWhileIf} variable by 1 to indicate that listener has left if
+	 * statement. Method also typechecks if if-condition is a boolean.
+	 */
 	@Override
 	public void exitIfStat(IfStatContext ctx) {
 		this.insideWhileIf--;
 		checkType(ctx.expr(), Type.BOOL);
 	}
 
+	/**
+	 * Listener method that is executed at the start of while statement. Method
+	 * increases {@link #insideWhileIf} variable by 1 to indicate that listener is
+	 * inside while statement.
+	 */
 	@Override
 	public void enterWhileStat(WhileStatContext ctx) {
 		this.insideWhileIf++;
 	}
 
+	/**
+	 * Listener method that is executed at the end of while statement. Method
+	 * decreases {@link #insideWhileIf} variable by 1 to indicate that listener has
+	 * left while statement. Method also typechecks if while-condition is a boolean.
+	 */
 	@Override
 	public void exitWhileStat(WhileStatContext ctx) {
 		this.insideWhileIf--;
 		checkType(ctx.expr(), Type.BOOL);
 	}
 
+	/**
+	 * Listener method that is executed at the start of fork statement. Method
+	 * increases {@link #insideFork} variable by 1 to indicate that listener is
+	 * inside fork statement. Also it add thread call to the result of program and
+	 * opens new scope
+	 */
 	@Override
 	public void enterForkStat(ForkStatContext ctx) {
 		if (!this.isInMainScope || this.insideWhileIf > 0) {
@@ -290,6 +381,11 @@ public class Checker extends PickleCannonBaseListener {
 		this.table.openScope();
 	}
 
+	/**
+	 * Listener method that is executed at the end of fork statement. Method
+	 * decreases {@link #insideFork} variable by 1 to indicate that listener left
+	 * fork statement. Also it closes the scope
+	 */
 	@Override
 	public void exitForkStat(ForkStatContext ctx) {
 		this.insideFork--;
@@ -297,11 +393,22 @@ public class Checker extends PickleCannonBaseListener {
 		this.table.closeScope();
 	}
 
+	/**
+	 * Listener method that is executed at the end of join statement. Method updates
+	 * {@link #concurrentThreads} variable to indicate concurrently working thread
+	 * count after the join
+	 */
 	@Override
 	public void exitJoinStat(JoinStatContext ctx) {
-		this.concurrentThreads=this.insideFork;
+		this.concurrentThreads = this.insideFork;
 	}
 
+	/**
+	 * Listener method that is executed at the start of sync statement. Method
+	 * updates {@link #insideSync} variable to indicate that listener enter sync
+	 * statement. Also it checks if sync statement was not opened inside another
+	 * sync statement which would cause the deadlock.
+	 */
 	@Override
 	public void enterSyncStat(SyncStatContext ctx) {
 		if (this.insideSync > 0) {
@@ -310,19 +417,20 @@ public class Checker extends PickleCannonBaseListener {
 		this.insideSync++;
 	}
 
+	/**
+	 * Listener method that is executed at the end of sync statement. Method updates
+	 * {@link #insideSync} variable to indicate that listener left sync statement.
+	 */
 	@Override
 	public void exitSyncStat(SyncStatContext ctx) {
 		this.insideSync--;
 	}
 
-	@Override
-	public void exitBlockStat(BlockStatContext ctx) {
-	}
-
-	@Override
-	public void exitPrintStat(PrintStatContext ctx) {
-	}
-
+	/**
+	 * Listener method that is executed at the end of procedure call statement.
+	 * Method creates a {@link FunctionCall} object that is added to the list of
+	 * function calls to typecheck them at the end of elaboration.
+	 */
 	@Override
 	public void exitCallStat(CallStatContext ctx) {
 		List<Type> args = new ArrayList<>();
@@ -335,6 +443,11 @@ public class Checker extends PickleCannonBaseListener {
 		setType(ctx, type);
 	}
 
+	/**
+	 * Listener method that is executed at the end of identifier target node. Method
+	 * checks identifier for the declaration and associates the node with the type
+	 * and offset retrieved from the symbol table.
+	 */
 	@Override
 	public void exitIdTarget(IdTargetContext ctx) {
 		String id = ctx.ID().getText();
@@ -376,6 +489,11 @@ public class Checker extends PickleCannonBaseListener {
 		}
 	}
 
+	/**
+	 * Listener method that is executed at the end of array target node. Method
+	 * checks array for the declaration, and typechecks the index. After that method
+	 * associates the node with the type and offset retrieved from the symbol table.
+	 */
 	@Override
 	public void exitArrayTarget(ArrayTargetContext ctx) {
 		String id = ctx.ID().getText();
@@ -427,6 +545,10 @@ public class Checker extends PickleCannonBaseListener {
 		}
 	}
 
+	/**
+	 * Listener method that is executed at the end of prefix expression node. Method
+	 * typechecks the expressions.
+	 */
 	@Override
 	public void exitPrfExpr(PrfExprContext ctx) {
 		Type type;
@@ -440,6 +562,10 @@ public class Checker extends PickleCannonBaseListener {
 		setType(ctx, type);
 	}
 
+	/**
+	 * Listener method that is executed at the end of multiplication/division
+	 * expression node. Method typechecks the expressions.
+	 */
 	@Override
 	public void exitMultExpr(MultExprContext ctx) {
 		checkType(ctx.expr(0), Type.INT);
@@ -447,6 +573,10 @@ public class Checker extends PickleCannonBaseListener {
 		setType(ctx, Type.INT);
 	}
 
+	/**
+	 * Listener method that is executed at the end of plus/minus expression node.
+	 * Method typechecks the expressions.
+	 */
 	@Override
 	public void exitPlusExpr(PlusExprContext ctx) {
 		checkType(ctx.expr(0), Type.INT);
@@ -454,6 +584,10 @@ public class Checker extends PickleCannonBaseListener {
 		setType(ctx, Type.INT);
 	}
 
+	/**
+	 * Listener method that is executed at the end of comparison expression node.
+	 * Method typechecks the expressions.
+	 */
 	@Override
 	public void exitCompExpr(CompExprContext ctx) {
 		if (ctx.compOp().EQ() != null || ctx.compOp().NE() != null) {
@@ -468,6 +602,10 @@ public class Checker extends PickleCannonBaseListener {
 		setType(ctx, Type.BOOL);
 	}
 
+	/**
+	 * Listener method that is executed at the end of boolean expression node.
+	 * Method typechecks the expressions.
+	 */
 	@Override
 	public void exitBoolExpr(BoolExprContext ctx) {
 		checkType(ctx.expr(0), Type.BOOL);
@@ -475,11 +613,20 @@ public class Checker extends PickleCannonBaseListener {
 		setType(ctx, Type.BOOL);
 	}
 
+	/**
+	 * Listener method that is executed at the end of parenthesis expression node.
+	 * Method typechecks the expressions.
+	 */
 	@Override
 	public void exitParExpr(ParExprContext ctx) {
 		setType(ctx, getType(ctx.expr()));
 	}
 
+	/**
+	 * Listener method that is executed at the end of identifier expression node.
+	 * Method checks for declaration and retrieves the type and offset from the
+	 * symbol table.
+	 */
 	@Override
 	public void exitIdExpr(IdExprContext ctx) {
 		String id = ctx.ID().getText();
@@ -521,21 +668,35 @@ public class Checker extends PickleCannonBaseListener {
 		}
 	}
 
+	/**
+	 * Listener method that is executed at the end of number expression node.
+	 */
 	@Override
 	public void exitNumExpr(NumExprContext ctx) {
 		setType(ctx, Type.INT);
 	}
 
+	/**
+	 * Listener method that is executed at the end of true expression node.
+	 */
 	@Override
 	public void exitTrueExpr(TrueExprContext ctx) {
 		setType(ctx, Type.BOOL);
 	}
 
+	/**
+	 * Listener method that is executed at the end of false expression node.
+	 */
 	@Override
 	public void exitFalseExpr(FalseExprContext ctx) {
 		setType(ctx, Type.BOOL);
 	}
 
+	/**
+	 * Listener method that is executed at the end of array index expression node.
+	 * Method typechecks the index and checks for identifier declaration. Also,
+	 * method retrieves the type and offset of the identifier.
+	 */
 	@Override
 	public void exitIndexExpr(IndexExprContext ctx) {
 		String id = ctx.ID().getText();
@@ -586,11 +747,15 @@ public class Checker extends PickleCannonBaseListener {
 		}
 	}
 
+	/**
+	 * Listener method that is executed at the end of array expression node.
+	 * Method typechecks all array expressions.
+	 */
 	@Override
 	public void exitArrayExpr(ArrayExprContext ctx) {
 		Type type = getType(ctx.expr(0));
-		if(type!=Type.INT&&type!=Type.BOOL) {
-			addError(ctx,"Multi-dimensional arrays are not supported");
+		if (type != Type.INT && type != Type.BOOL) {
+			addError(ctx, "Multi-dimensional arrays are not supported");
 		}
 		for (int i = 1; i < ctx.expr().size(); i++) {
 			checkType(ctx.expr(i), type);
@@ -600,11 +765,17 @@ public class Checker extends PickleCannonBaseListener {
 
 	}
 
+	/**
+	 * Listener method that is executed at the end of int type node.
+	 */
 	@Override
 	public void exitIntType(IntTypeContext ctx) {
 		setType(ctx, Type.INT);
 	}
 
+	/**
+	 * Listener method that is executed at the end of bool type node.
+	 */
 	@Override
 	public void exitBoolType(BoolTypeContext ctx) {
 		setType(ctx, Type.BOOL);
@@ -627,8 +798,7 @@ public class Checker extends PickleCannonBaseListener {
 	private void checkType(ParserRuleContext node, Type expected) {
 		Type actual = getType(node);
 		if (actual == null || expected == null) {
-			// throw new IllegalArgumentException("Missing inferred type of " +
-			// node.getText());
+			
 		} else if (!actual.equals(expected)) {
 			addError(node, "Expected type '%s' but found '%s'", expected, actual);
 		}
@@ -642,21 +812,18 @@ public class Checker extends PickleCannonBaseListener {
 	private void checkTypeWithoutSize(ParserRuleContext node, Type expected) {
 		Type actual = getType(node);
 		if (actual == null || expected == null) {
-			// throw new IllegalArgumentException("Missing inferred type of " +
-			// node.getText());
-		}
-		else if(actual instanceof Type.Array){
-			if(!((Type.Array)actual).equalsWithoutSize(expected)) {
-				if(expected instanceof Type.Array) {
-					addError(node, "Expected type '%s' but found '%s'", ((Type.Array)expected).toStringWithoutSize(),
-							((Type.Array)actual).toStringWithoutSize());
-				}
-				else {
-					addError(node, "Expected type '%s' but found '%s'", expected, ((Type.Array)actual).toStringWithoutSize());
+			
+		} else if (actual instanceof Type.Array) {
+			if (!((Type.Array) actual).equalsWithoutSize(expected)) {
+				if (expected instanceof Type.Array) {
+					addError(node, "Expected type '%s' but found '%s'", ((Type.Array) expected).toStringWithoutSize(),
+							((Type.Array) actual).toStringWithoutSize());
+				} else {
+					addError(node, "Expected type '%s' but found '%s'", expected,
+							((Type.Array) actual).toStringWithoutSize());
 				}
 			}
-		}
-		else if (!actual.equals(expected)) {
+		} else if (!actual.equals(expected)) {
 			addError(node, "Expected type '%s' but found '%s'", expected, actual);
 		}
 	}
@@ -708,29 +875,43 @@ public class Checker extends PickleCannonBaseListener {
 	}
 
 	/**
-	 * Class to store Function call parameters for function call correctness check
+	 * Class to store Function call parameters for procedure call correctness check.
 	 * 
 	 * @author Karolis Butkus
 	 *
 	 */
 	private class FunctionCall {
+		/** Procedure call node*/
 		private ParserRuleContext node;
+		/** Name of the called function*/
 		private String function;
 
+		/** Constructs the FunctionCall object from the call node and function name*/
 		private FunctionCall(ParserRuleContext node, String function) {
 			this.node = node;
 			this.function = function;
 		}
-
+		/** 
+		 * Return the name of the called function
+		 * @return function name
+		 */
 		public String getID() {
 			return this.function;
 		}
 
+		/**
+		 * Return the node at which call occurred
+		 * @return parse tree node
+		 */
 		public ParserRuleContext getNode() {
 			return this.node;
 		}
 	}
 
+	/**
+	 * Checks function calls for procedure declaration and parameter types.
+	 * @param calls - the list of all procedure calls
+	 */
 	private void checkCalls(List<FunctionCall> calls) {
 		for (FunctionCall call : calls) {
 			Type type = this.table.type(call.getID());
